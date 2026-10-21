@@ -1,0 +1,4259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<script>
+!(function(j,a,g){j.__itrace_conf = {bid: 'f43basl8-6nqu7l3w',rel: '0.0.1', spa: true, uid: '', plugins:['jserror','interface','perf','resource','flow','blank']};var b = a.createElement("script");var d = a.getElementsByTagName("script")[0];b.type = "text/javascript";b.crossorigin = true;b.async = true;b.onload = function(){j.__itrace && j.__itrace.setReady()};d.parentNode.insertBefore(b,d);b.src = g})(window, document, "https://g.alicdn.com/woodpeckerx/itrace-next/itrace.iife.js")
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>AI大模型知识中枢 · 生命体 × 请求链路 × 模型内部 × 应用体系</title>
+<style>
+/* ============================================================
+   Design Tokens
+   ============================================================ */
+:root{
+  --line:rgba(120,200,255,.22);
+  --line2:rgba(120,200,255,.4);
+  --cyan:#5ee7ff;
+  --blue:#6b8cff;
+  --purple:#b07bff;
+  --pink:#ff7ad1;
+  --green:#7cffb2;
+  --amber:#ffd166;
+  --text:#dff4ff;
+  --muted:#8aa0c7;
+  --muted-dim:#63779b;
+  --card:rgba(17,25,42,.72);
+  --radius:18px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --pop:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:#05070d;
+  color:var(--text);
+  font-family:'Inter','PingFang SC','Hiragino Sans GB','Microsoft YaHei',system-ui,-apple-system,sans-serif;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.6;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(circle at 18% 6%,rgba(107,140,255,.20),transparent 42%),
+    radial-gradient(circle at 82% 22%,rgba(176,123,255,.16),transparent 44%),
+    radial-gradient(circle at 50% 96%,rgba(94,231,255,.13),transparent 52%),
+    linear-gradient(180deg,#080c18 0%,#03040a 100%);
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.55;
+  background-image:
+    linear-gradient(rgba(94,231,255,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(94,231,255,.045) 1px,transparent 1px);
+  background-size:52px 52px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 15%,transparent 72%);
+  mask-image:radial-gradient(ellipse at 50% 0%,#000 15%,transparent 72%);
+}
+::selection{background:rgba(94,231,255,.3);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#060912}
+::-webkit-scrollbar-thumb{background:rgba(94,231,255,.22);border-radius:8px;border:2px solid #060912}
+::-webkit-scrollbar-thumb:hover{background:rgba(94,231,255,.4)}
+
+.page{position:relative;z-index:1}
+.wrap{max-width:1520px;margin:0 auto;padding:0 22px}
+
+/* ============================================================
+   HUD
+   ============================================================ */
+.hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+.hud-item{position:absolute;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-dim)}
+.hud-tl{top:18px;left:22px}
+.hud-tr{top:18px;right:22px;font-variant-numeric:tabular-nums;color:rgba(94,231,255,.75)}
+.hud-bl{bottom:18px;left:22px}
+.hud-br{bottom:18px;right:22px}
+.hud-br .online{color:var(--green);text-shadow:0 0 10px rgba(124,255,178,.6)}
+@media(max-width:860px){.hud-bl,.hud-br{display:none}}
+
+/* ============================================================
+   Header / Hero
+   ============================================================ */
+.hero{padding:72px 0 30px;text-align:center;position:relative}
+.hero-kicker{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:11px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--cyan);
+  padding:6px 16px;border-radius:999px;margin-bottom:22px;
+  border:1px solid rgba(94,231,255,.3);
+  background:rgba(94,231,255,.06);
+}
+.hero-kicker::before{
+  content:"";width:6px;height:6px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 10px var(--cyan);
+  animation:bk 2s infinite;
+}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.25}}
+.hero h1{
+  margin:0;
+  font-size:clamp(28px,5.2vw,50px);
+  font-weight:850;
+  letter-spacing:-.02em;
+  background:linear-gradient(100deg,#a9f4ff 0%,#8fb4ff 42%,#e4a6ff 78%,#ffa8dc 100%);
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent;
+  line-height:1.15;
+}
+.hero p{
+  margin:18px auto 0;max-width:760px;
+  color:var(--muted);font-size:14.5px;line-height:1.85;
+}
+.hero-nav{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:28px}
+
+.stats{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:28px}
+.stat{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:12px 22px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);min-width:118px;
+}
+.stat b{display:block;font-size:24px;font-weight:800;color:var(--cyan);line-height:1.2;
+  font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted-dim)}
+
+/* ============================================================
+   Buttons / Chips
+   ============================================================ */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:inherit;font-size:13px;font-weight:600;
+  padding:10px 18px;border-radius:11px;cursor:pointer;
+  color:#c7f4ff;
+  background:linear-gradient(180deg,rgba(94,231,255,.13),rgba(107,140,255,.08));
+  border:1px solid rgba(94,231,255,.32);
+  transition:all .25s var(--ease);
+  text-decoration:none;
+  white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:hover{
+  border-color:rgba(94,231,255,.6);
+  box-shadow:0 0 22px rgba(94,231,255,.22);
+  transform:translateY(-1px);
+}
+.btn:active{transform:translateY(0)}
+.btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.btn.primary{
+  background:linear-gradient(180deg,#3adcff,#4f7cff);
+  border-color:transparent;color:#031020;font-weight:800;
+  box-shadow:0 6px 22px rgba(79,124,255,.32);
+}
+.btn.primary:hover{box-shadow:0 8px 30px rgba(58,220,255,.45)}
+.btn:disabled{
+  opacity:.32;cursor:not-allowed;
+  transform:none!important;box-shadow:none!important;
+}
+
+.chip{
+  display:inline-flex;align-items:center;
+  padding:5px 11px;border-radius:8px;
+  font-size:11.5px;line-height:1.5;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.1);
+  color:#c3d8f5;
+  transition:all .2s var(--ease);
+}
+.chip:hover{background:rgba(94,231,255,.1);border-color:rgba(94,231,255,.35);color:#dff6ff}
+
+/* ============================================================
+   Panel
+   ============================================================ */
+.panel{
+  position:relative;
+  background:linear-gradient(180deg,rgba(16,23,42,.82),rgba(9,14,26,.88));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:0 22px 60px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.045);
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+  padding:30px;
+  margin-bottom:26px;
+  scroll-margin-top:24px;
+}
+.panel::before,.panel::after{
+  content:"";position:absolute;width:16px;height:16px;
+  border:2px solid rgba(94,231,255,.5);
+  pointer-events:none;
+}
+.panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-radius:var(--radius) 0 0 0}
+.panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0;border-radius:0 0 var(--radius) 0}
+.sec-head{margin-bottom:22px}
+.kicker{
+  font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;
+  color:rgba(94,231,255,.72);font-weight:700;
+}
+.sec-title{margin:7px 0 8px;font-size:clamp(19px,2.5vw,26px);font-weight:800;letter-spacing:-.01em}
+.sec-sub{margin:0;color:var(--muted);font-size:13.5px;line-height:1.8;max-width:900px}
+.sec-sub b{color:#bff2ff;font-weight:700}
+
+/* ============================================================
+   01 · 知识生命体
+   ============================================================ */
+.organism-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 440px;
+  gap:26px;align-items:start;
+}
+.stage{
+  position:relative;
+  background:radial-gradient(ellipse at 50% 45%,rgba(20,32,56,.62) 0%,rgba(9,14,26,.28) 62%,transparent 100%);
+  border:1px solid var(--line);border-radius:20px;padding:8px;overflow:hidden;
+}
+.stage::before{
+  content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;
+  background:radial-gradient(circle at 50% 50%,rgba(56,189,248,.06),transparent 62%);
+}
+#organism{width:100%;height:auto;display:block;position:relative;z-index:1}
+
+.stage-legend{
+  position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:10px 22px;
+  padding:10px 16px 12px;border-top:1px solid var(--line);margin-top:-4px;
+}
+.stage-legend span{display:inline-flex;align-items:center;gap:8px;
+  font-size:11.5px;color:var(--muted-dim)}
+.stage-legend i{display:inline-block;width:26px;height:2px;border-radius:2px;
+  flex:0 0 auto;background:rgba(99,140,200,.5)}
+.stage-legend i.dashed{background:none;border-top:2px dashed rgba(99,140,200,.55);height:0}
+.stage-legend i.arc{background:none;border-top:2px solid rgba(99,140,200,.55);
+  height:0;border-radius:0}
+.stage-legend i.rad{background:linear-gradient(90deg,rgba(125,211,252,.9),rgba(125,211,252,.15))}
+
+.conn{fill:none;stroke:rgba(99,140,200,.24);stroke-width:1.6;
+  stroke-dasharray:3 9;animation:flow 3.2s linear infinite;
+  transition:stroke .3s,stroke-width .3s,opacity .3s}
+@keyframes flow{from{stroke-dashoffset:0}to{stroke-dashoffset:-72}}
+.conn.lit{stroke-width:2.6;stroke-dasharray:none;animation:none;opacity:1}
+.conn.dim{opacity:.16}
+.ring-arc{fill:none;stroke-width:1;transition:stroke .3s,stroke-width .3s}
+.ring-arc.lit{stroke-width:2.4}
+.node{cursor:pointer;outline:none}
+.node .halo{fill:none;stroke-width:2;opacity:0;
+  transform-box:fill-box;transform-origin:center;transition:opacity .3s}
+.node.active .halo{opacity:.75;animation:halo 2.2s ease-out infinite}
+@keyframes halo{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.42);opacity:0}}
+.node .disc{transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+  transform-box:fill-box;transform-origin:center}
+.node:hover .disc,.node:focus-visible .disc{transform:scale(1.075)}
+.node.active .disc{transform:scale(1.11)}
+.node .num{font-size:20px;font-weight:800;fill:rgba(230,237,247,.42);
+  pointer-events:none;font-variant-numeric:tabular-nums}
+.node .nm{font-size:21px;font-weight:750;fill:#eaf2ff;pointer-events:none}
+.node.active .num{fill:rgba(255,255,255,.75)}
+.node.active .nm{fill:#fff}
+.core-pulse{transform-box:fill-box;transform-origin:center;
+  animation:corep 4.2s ease-in-out infinite}
+@keyframes corep{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.09);opacity:.85}}
+
+.panel-detail{
+  position:sticky;top:22px;max-height:calc(100vh - 44px);overflow-y:auto;
+  background:var(--card);border:1px solid var(--line);border-radius:20px;
+  padding:26px 24px 30px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  scrollbar-width:thin;
+}
+.panel-detail::-webkit-scrollbar{width:6px}
+.panel-detail::-webkit-scrollbar-thumb{background:rgba(99,140,200,.3);border-radius:3px}
+.p-role{display:inline-block;font-size:12px;letter-spacing:.08em;
+  padding:4px 12px;border-radius:999px;border:1px solid currentColor;
+  opacity:.92;margin-bottom:14px}
+.p-title{font-size:27px;font-weight:820;line-height:1.24;letter-spacing:-.01em}
+.p-en{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted-dim);margin-top:5px}
+.p-sum{margin-top:16px;font-size:14px;color:var(--muted);
+  padding-left:13px;border-left:2.5px solid currentColor}
+.p-sec{margin-top:26px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted-dim);display:flex;align-items:center;gap:10px}
+.p-sec::after{content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,var(--line2),transparent)}
+.metrics{display:grid;grid-template-columns:1fr;gap:9px;margin-top:14px}
+.metric{
+  display:flex;align-items:baseline;gap:12px;
+  background:rgba(255,255,255,.026);border:1px solid var(--line);
+  border-radius:10px;padding:10px 14px;
+  transition:border-color .25s,background .25s;
+}
+.metric:hover{border-color:var(--line2);background:rgba(255,255,255,.045)}
+.metric b{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;
+  white-space:nowrap;letter-spacing:-.01em}
+.metric span{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+.concepts{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+details.concept{
+  background:rgba(255,255,255,.026);border:1px solid var(--line);
+  border-radius:11px;overflow:hidden;
+  transition:border-color .25s,background .25s;
+}
+details.concept:hover{border-color:var(--line2);background:rgba(255,255,255,.045)}
+details.concept[open]{border-color:var(--line2);background:rgba(255,255,255,.05)}
+details.concept > summary{
+  list-style:none;cursor:pointer;user-select:none;
+  padding:12px 15px 8px;display:block;position:relative;
+}
+details.concept > summary::-webkit-details-marker{display:none}
+details.concept > summary::after{
+  content:"▼";position:absolute;right:15px;top:13px;
+  font-size:10px;color:var(--muted-dim);transition:transform .35s;
+}
+details.concept[open] > summary::after{transform:rotate(180deg)}
+.concept-title{font-size:13.5px;font-weight:750;color:var(--text);
+  display:flex;align-items:center;gap:8px;line-height:1.5}
+.concept-title::before{content:"";width:5px;height:5px;border-radius:50%;
+  background:currentColor;flex:0 0 auto}
+.concept-brief{padding:0 15px 12px 32px;font-size:12.5px;
+  color:var(--muted);line-height:1.65}
+.concept-detail{
+  padding:14px 15px 16px 32px;
+  border-top:1px dashed var(--line);margin-top:2px;
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}
+  to{opacity:1;transform:translateY(0)}}
+.concept-detail p{font-size:13px;color:var(--muted);line-height:1.78;
+  margin-bottom:13px}
+.cd-keys{list-style:none;display:flex;flex-direction:column;gap:8px}
+.cd-keys li{font-size:12.5px;color:var(--muted);line-height:1.62;
+  padding-left:14px;position:relative}
+.cd-keys li::before{content:"";position:absolute;left:0;top:9px;
+  width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.75}
+.cd-keys li b{color:var(--text);font-weight:700;margin-right:7px}
+.cd-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px}
+.cd-tags span{font-size:11px;padding:3px 9px;border-radius:6px;
+  border:1px solid var(--line2);color:var(--muted-dim);background:rgba(255,255,255,.03)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip-jump{
+  font-size:12.5px;padding:6px 14px;border-radius:999px;
+  border:1px solid var(--line2);background:rgba(255,255,255,.032);
+  color:var(--muted);cursor:pointer;font-family:inherit;transition:all .24s;
+}
+.chip-jump:hover{color:var(--text);transform:translateY(-2px);
+  box-shadow:0 5px 18px rgba(0,0,0,.4)}
+
+.tree-stage{
+  margin-top:22px;
+  background:radial-gradient(ellipse at 50% 45%,rgba(20,32,56,.62) 0%,rgba(9,14,26,.28) 62%,transparent 100%);
+  border:1px solid var(--line);border-radius:20px;padding:8px;overflow:hidden;
+  position:relative;
+}
+.tree-stage::before{
+  content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;
+  background:radial-gradient(circle at 50% 50%,rgba(56,189,248,.06),transparent 62%);
+}
+.tree-head{display:flex;align-items:baseline;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;padding:14px 18px 6px;position:relative;z-index:2}
+.tree-head h2{font-size:16px;font-weight:800;display:flex;
+  align-items:center;gap:10px;margin:0}
+.tree-head h2 em{font-style:normal;font-size:11.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted-dim)}
+.tree-head .hint{font-size:11.5px;color:var(--muted-dim)}
+#treeSvg{width:100%;height:auto;display:block;position:relative;z-index:1}
+
+.legend-area{
+  margin-top:22px;
+  background:var(--card);border:1px solid var(--line);border-radius:20px;
+  padding:24px 26px 28px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+}
+.legend-area h2{font-size:16px;font-weight:800;display:flex;
+  align-items:center;gap:10px;margin:0 0 6px}
+.legend-area h2 em{font-style:normal;font-size:11.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted-dim)}
+.legend-sub{font-size:12.5px;color:var(--muted-dim);margin:0 0 20px}
+.legend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:14px;margin-bottom:24px}
+.legend-card{
+  background:rgba(255,255,255,.026);border:1px solid var(--line);
+  border-radius:12px;padding:15px 17px;
+  transition:border-color .25s,background .25s;
+}
+.legend-card:hover{border-color:var(--line2);background:rgba(255,255,255,.045)}
+.legend-card h4{font-size:13px;font-weight:750;margin:0 0 9px;
+  display:flex;align-items:center;gap:9px;color:var(--text)}
+.legend-card h4 i{display:inline-block;width:26px;height:0;
+  border-top:2px solid;flex:0 0 auto}
+.legend-card h4 i.dashed{border-top-style:dashed}
+.legend-card p{font-size:12.5px;color:var(--muted);line-height:1.7;margin:0}
+
+.cross-wrap{border-top:1px dashed var(--line);padding-top:22px}
+.cross-wrap h3{font-size:13px;font-weight:750;color:var(--text);margin:0 0 6px}
+.cross-wrap .cross-sub{font-size:12px;color:var(--muted-dim);margin:0 0 14px}
+.cross-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));
+  gap:11px}
+.cross-item{
+  background:rgba(255,255,255,.026);border:1px solid var(--line);
+  border-radius:11px;padding:12px 15px;
+  transition:border-color .25s,background .25s;
+}
+.cross-item:hover{border-color:var(--line2);background:rgba(255,255,255,.045)}
+.cross-item h5{font-size:12.5px;font-weight:750;color:var(--text);margin:0 0 5px}
+.cross-item p{font-size:12px;color:var(--muted);line-height:1.62;margin:0 0 9px}
+.cross-chips{display:flex;flex-wrap:wrap;gap:6px}
+.cross-chips button{
+  font-size:11px;padding:3px 10px;border-radius:999px;
+  border:1px solid var(--line2);background:rgba(255,255,255,.03);
+  color:var(--muted);cursor:pointer;font-family:inherit;transition:all .22s;
+}
+.cross-chips button:hover{color:var(--text);transform:translateY(-1px)}
+
+/* ============================================================
+   02 · 请求生命周期
+   ============================================================ */
+.demo-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;margin-bottom:6px;
+}
+.tb-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.speed{
+  display:flex;align-items:center;gap:4px;
+  padding:4px 6px 4px 12px;border-radius:11px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.1);
+  font-size:11.5px;color:var(--muted);
+}
+.spd,.mspd{
+  font-family:inherit;font-size:11.5px;font-weight:600;
+  padding:5px 10px;border-radius:8px;cursor:pointer;
+  background:transparent;border:0;color:var(--muted);
+  transition:all .2s var(--ease);
+}
+.spd:hover,.mspd:hover{color:var(--cyan)}
+.spd.active,.mspd.active{background:rgba(94,231,255,.16);color:#bff2ff}
+.spd:focus-visible,.mspd:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+
+.progress-track{
+  position:relative;
+  display:grid;grid-template-columns:repeat(8,1fr);
+  gap:4px;padding-top:4px;margin:18px 0 4px;
+}
+.pnode{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:none;border:0;padding:0;cursor:pointer;
+  font-family:inherit;color:inherit;
+  -webkit-tap-highlight-color:transparent;
+}
+.pnode:focus-visible{outline:2px solid var(--cyan);outline-offset:4px;border-radius:8px}
+.pnode:not(:last-child)::after{
+  content:"";position:absolute;top:16px;
+  left:calc(50% + 15px);right:calc(-50% + 9px);
+  height:2px;border-radius:2px;background:rgba(255,255,255,.08);
+  transform:translateY(-50%);z-index:-1;
+  transition:background .35s var(--ease),box-shadow .35s var(--ease);
+}
+.pnode.done:not(:last-child)::after{
+  background:linear-gradient(90deg,rgba(124,255,178,.65),rgba(94,231,255,.5));
+  box-shadow:0 0 8px rgba(94,231,255,.3);
+}
+.pnode.active:not(:last-child)::after{
+  background:linear-gradient(90deg,rgba(94,231,255,.7),rgba(107,140,255,.35));
+  box-shadow:0 0 8px rgba(94,231,255,.35);
+}
+.pdot{
+  width:30px;height:30px;border-radius:9px;
+  display:grid;place-items:center;
+  font-size:11.5px;font-weight:800;
+  background:#0c1424;border:2px solid rgba(120,200,255,.28);
+  color:var(--muted-dim);transition:all .35s var(--pop);
+  position:relative;z-index:2;font-variant-numeric:tabular-nums;
+}
+.pnode.done .pdot{border-color:rgba(124,255,178,.75);color:var(--green);background:rgba(124,255,178,.1)}
+.pnode.active .pdot{
+  border-color:transparent;color:#031020;
+  background:linear-gradient(180deg,#7ff0ff,#4f7cff);
+  box-shadow:0 0 0 4px rgba(94,231,255,.14),0 0 22px rgba(94,231,255,.55);
+  transform:scale(1.08);
+}
+.plabel{font-size:10px;color:var(--muted-dim);white-space:nowrap;transition:color .3s}
+.pnode.active .plabel{color:var(--cyan);font-weight:700}
+.pnode.done .plabel{color:rgba(124,255,178,.8)}
+
+.demo-grid{
+  display:grid;grid-template-columns:minmax(0,1.62fr) minmax(0,1fr);
+  gap:16px;margin-top:20px;
+}
+.demo-stage-wrap{
+  border-radius:16px;
+  border:1px solid rgba(94,231,255,.16);
+  background:linear-gradient(180deg,rgba(94,231,255,.035),rgba(107,140,255,.015));
+  overflow:hidden;
+}
+.demo-stage-head{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;
+  border-bottom:1px solid rgba(94,231,255,.12);
+  background:rgba(6,10,20,.5);
+}
+.stage-badge{
+  font-size:10px;font-weight:800;letter-spacing:.18em;
+  padding:3px 9px;border-radius:6px;
+  background:rgba(94,231,255,.14);color:var(--cyan);
+  border:1px solid rgba(94,231,255,.28);
+  white-space:nowrap;
+}
+.stage-name{font-size:13px;font-weight:700;color:#cdefff}
+.stage-canvas{
+  min-height:360px;padding:24px 22px;
+  display:flex;align-items:center;justify-content:center;
+  background-image:
+    linear-gradient(rgba(94,231,255,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(94,231,255,.045) 1px,transparent 1px);
+  background-size:26px 26px;
+  position:relative;
+}
+.stage-canvas::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(5,7,13,.75) 100%);
+}
+
+.idle-hint{position:relative;z-index:1;text-align:center;padding:20px}
+.idle-icon{font-size:40px;margin-bottom:12px;filter:drop-shadow(0 0 18px rgba(94,231,255,.6))}
+.idle-title{font-size:15px;font-weight:700;color:#bfeaff}
+.idle-sub{font-size:12.5px;color:var(--muted);margin-top:7px}
+
+.viz{width:100%;max-width:640px;position:relative;z-index:1}
+.viz-label{
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(94,231,255,.72);text-align:center;margin-bottom:14px;font-weight:700;
+}
+.viz-note{
+  margin-top:16px;text-align:center;font-size:11.5px;color:var(--muted-dim);line-height:1.7;
+}
+.viz-flowline{
+  position:relative;text-align:center;margin:18px 0;
+  font-size:11px;letter-spacing:.12em;color:rgba(94,231,255,.85);
+}
+.viz-flowline::before{
+  content:"";position:absolute;left:0;right:0;top:50%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(94,231,255,.4),transparent);
+}
+.viz-flowline span{position:relative;background:#070c17;padding:0 14px}
+
+@keyframes popIn{from{opacity:0;transform:translateY(8px) scale(.82)}to{opacity:1;transform:none}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes growUp{from{transform:scaleY(0);opacity:0}to{transform:scaleY(1);opacity:1}}
+@keyframes blink{50%{opacity:0}}
+@keyframes beamMove{0%{left:-70px}100%{left:100%}}
+@keyframes cellIn{from{transform:scale(.35);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes barGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes barGrowX{from{transform:scaleX(0);transform-origin:left}to{transform:scaleX(1);transform-origin:left}}
+@keyframes scanX{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+.client-flow{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.client-box{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:14px 20px;border-radius:12px;
+  background:rgba(94,231,255,.06);
+  border:1px solid rgba(94,231,255,.28);
+  animation:popIn .45s var(--pop) both;
+}
+.client-box .cb-icon{font-size:28px;line-height:1}
+.client-box .cb-name{font-size:12px;font-weight:700;color:#cdefff}
+.flow-arrow{color:var(--cyan);font-size:18px;animation:fadeIn .4s var(--ease) both}
+
+.rewrite-box{
+  padding:14px 18px;border-radius:12px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.1);
+  animation:popIn .45s var(--pop) both;
+}
+.rewrite-box .rb-label{font-size:10.5px;letter-spacing:.14em;color:var(--muted-dim);margin-bottom:6px;text-transform:uppercase}
+.rewrite-box .rb-text{font-size:14px;font-weight:600;color:#dff6ff;line-height:1.7}
+.rewrite-arrow{
+  text-align:center;font-size:12px;color:var(--cyan);
+  margin:10px 0;animation:fadeIn .4s var(--ease) both;
+  letter-spacing:.1em;
+}
+
+.retrieval-split{
+  display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;
+  max-width:520px;margin:0 auto;
+}
+.retrieval-branch{
+  padding:12px 14px;border-radius:12px;text-align:center;
+  animation:popIn .45s var(--pop) both;
+}
+.retrieval-branch.bm25{background:rgba(94,231,255,.08);border:1px solid rgba(94,231,255,.32)}
+.retrieval-branch.vec{background:rgba(176,123,255,.08);border:1px solid rgba(176,123,255,.32)}
+.retrieval-branch .rbt{font-size:13px;font-weight:700;color:#d9f7ff}
+.retrieval-branch .rbs{font-size:10.5px;color:var(--muted-dim);margin-top:3px}
+.merge-node{
+  width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;font-size:18px;
+  background:rgba(124,255,178,.1);
+  border:1px solid rgba(124,255,178,.4);
+  color:var(--green);
+  animation:popIn .45s var(--pop) both;
+}
+
+.rerank-list{display:flex;flex-direction:column;gap:7px;max-width:520px;margin:0 auto}
+.rerank-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 13px;border-radius:10px;
+  background:rgba(255,255,255,.028);
+  border:1px solid rgba(255,255,255,.08);
+  animation:fadeSlide .4s var(--ease) both;
+}
+.rerank-item.hot{background:rgba(124,255,178,.07);border-color:rgba(124,255,178,.32)}
+.rerank-item .ri-score{
+  flex:none;font-size:11px;font-weight:800;
+  font-variant-numeric:tabular-nums;
+  color:var(--cyan);min-width:32px;
+}
+.rerank-item.hot .ri-score{color:var(--green)}
+.rerank-item .ri-bar{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+.rerank-item .ri-bar>i{
+  display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  transform-origin:left;animation:barGrow .6s var(--ease) both;
+}
+.rerank-item .ri-name{font-size:11.5px;color:#c3d8f5;flex:none;width:130px;text-align:right}
+
+.substep-wrap{width:100%;position:relative;z-index:1}
+.substep-track{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  max-width:480px;margin:0 auto 18px;position:relative;
+}
+.subnode{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  background:none;border:0;padding:0;cursor:default;
+  font-family:inherit;color:inherit;position:relative;z-index:1;
+}
+.subnode:not(:last-child)::after{
+  content:"";position:absolute;top:11px;
+  left:calc(50% + 11px);right:calc(-50% + 6px);
+  height:2px;background:rgba(255,255,255,.08);
+  transform:translateY(-50%);z-index:-1;border-radius:2px;
+  transition:background .3s var(--ease);
+}
+.subnode.done:not(:last-child)::after{background:rgba(124,255,178,.5)}
+.subnode.active:not(:last-child)::after{background:rgba(94,231,255,.55)}
+.subdot{
+  width:22px;height:22px;border-radius:50%;
+  display:grid;place-items:center;font-size:10px;font-weight:800;
+  background:#0c1424;border:2px solid rgba(120,200,255,.28);
+  color:var(--muted-dim);transition:all .3s var(--pop);
+}
+.subnode.done .subdot{border-color:rgba(124,255,178,.7);color:var(--green);background:rgba(124,255,178,.1)}
+.subnode.active .subdot{
+  border-color:transparent;color:#031020;
+  background:linear-gradient(180deg,#7ff0ff,#4f7cff);
+  box-shadow:0 0 0 3px rgba(94,231,255,.14),0 0 16px rgba(94,231,255,.5);
+  transform:scale(1.1);
+}
+.sublabel{font-size:9.5px;color:var(--muted-dim);white-space:nowrap}
+.subnode.active .sublabel{color:var(--cyan);font-weight:700}
+.subnode.done .sublabel{color:rgba(124,255,178,.8)}
+
+.char-row{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+.char{
+  font-size:19px;font-weight:600;padding:7px 11px;border-radius:9px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  animation:popIn .42s var(--pop) both;
+}
+.token-row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+.token-chip{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:9px 14px;border-radius:11px;
+  background:linear-gradient(180deg,rgba(94,231,255,.15),rgba(107,140,255,.06));
+  border:1px solid rgba(94,231,255,.36);
+  box-shadow:0 0 20px rgba(94,231,255,.12);
+  animation:popIn .48s var(--pop) both;
+}
+.tk-text{font-size:14.5px;font-weight:700;color:#d9f7ff}
+.tk-id{font-size:9.5px;color:rgba(138,160,199,.9);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+.embed-list{display:flex;flex-direction:column;gap:9px}
+.embed-item{display:flex;align-items:center;gap:12px;animation:fadeSlide .45s var(--ease) both}
+.embed-token{
+  width:62px;flex:none;text-align:right;
+  font-size:12.5px;font-weight:600;color:#bfe9ff;
+}
+.embed-vec{
+  flex:1;display:flex;align-items:flex-end;gap:3px;
+  height:36px;padding:0 9px;border-radius:9px;
+  background:rgba(255,255,255,.028);
+  border:1px solid rgba(255,255,255,.06);
+}
+.vec-bar{
+  flex:1;min-width:2px;border-radius:2px;
+  background:linear-gradient(180deg,var(--cyan),rgba(107,140,255,.35));
+  transform-origin:bottom;
+  animation:growUp .5s var(--ease) both;
+}
+
+.att-col-labels{
+  display:grid;gap:5px;width:100%;max-width:320px;margin:0 auto 7px;
+  font-size:10px;color:var(--muted-dim);text-align:center;
+}
+.att-grid{
+  display:grid;gap:5px;width:100%;max-width:320px;margin:0 auto;
+}
+.att-cell{
+  aspect-ratio:1;border-radius:5px;
+  background:rgba(94,231,255,var(--v,.2));
+  border:1px solid rgba(94,231,255,.16);
+  animation:cellIn .34s var(--ease) both;
+}
+
+.layer-stack{display:flex;flex-direction:column;gap:8px}
+.lstack-item{
+  position:relative;display:flex;align-items:center;gap:12px;
+  padding:11px 15px;border-radius:11px;overflow:hidden;
+  background:linear-gradient(90deg,rgba(176,123,255,.14),rgba(107,140,255,.04));
+  border:1px solid rgba(176,123,255,.24);
+  animation:fadeSlide .45s var(--ease) both;
+}
+.lstack-idx{
+  flex:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:10.5px;font-weight:700;color:var(--purple);letter-spacing:.06em;
+}
+.lstack-desc{font-size:12.5px;color:#cfe4ff}
+.lstack-beam{
+  position:absolute;top:0;bottom:0;left:-70px;width:70px;
+  background:linear-gradient(90deg,transparent,rgba(94,231,255,.4),transparent);
+  animation:beamMove 1.4s var(--ease) infinite;
+}
+
+.tool-loop{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  max-width:440px;margin:0 auto;position:relative;
+}
+.tool-step{
+  padding:11px 18px;border-radius:11px;
+  font-size:12.5px;font-weight:600;
+  display:flex;align-items:center;gap:8px;
+  animation:popIn .42s var(--pop) both;
+}
+.tool-step.model{background:rgba(94,231,255,.1);border:1px solid rgba(94,231,255,.35);color:#d9f7ff}
+.tool-step.call{background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.35);color:#ffe6b8}
+.tool-step.exec{background:rgba(176,123,255,.1);border:1px solid rgba(176,123,255,.35);color:#e0ccff}
+.tool-step.result{background:rgba(124,255,178,.1);border:1px solid rgba(124,255,178,.35);color:#c8ffe0}
+.tool-loop-arrow{color:var(--amber);font-size:15px;animation:fadeIn .35s var(--ease) both}
+.tool-loop-back{
+  font-size:10.5px;color:var(--amber);letter-spacing:.08em;
+  display:flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:99px;
+  background:rgba(255,209,102,.06);
+  border:1px dashed rgba(255,209,102,.4);
+  animation:fadeIn .4s var(--ease) both;
+}
+
+.stream-window{
+  max-width:520px;margin:0 auto;
+  border-radius:14px;overflow:hidden;
+  border:1px solid rgba(94,231,255,.22);
+  background:rgba(3,6,12,.6);
+}
+.stream-head{
+  display:flex;align-items:center;gap:7px;
+  padding:9px 14px;
+  background:rgba(94,231,255,.06);
+  border-bottom:1px solid rgba(94,231,255,.14);
+  font-size:10.5px;letter-spacing:.14em;color:var(--cyan);
+  text-transform:uppercase;font-weight:700;
+}
+.stream-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:blink 1.4s steps(2,start) infinite;
+}
+.stream-body{
+  padding:16px 18px;font-size:13.5px;line-height:1.9;color:#e6f8ff;
+  min-height:110px;
+}
+.stream-caret{
+  display:inline-block;width:7px;height:14px;
+  background:var(--cyan);vertical-align:-2px;border-radius:1px;
+  box-shadow:0 0 10px var(--cyan);
+  animation:blink .9s steps(2,start) infinite;
+  margin-left:1px;
+}
+
+.trace-timeline{max-width:560px;margin:0 auto}
+.trace-bar{
+  display:flex;align-items:center;gap:10px;margin-bottom:7px;
+  animation:fadeSlide .4s var(--ease) both;
+}
+.trace-name{flex:none;width:80px;font-size:11px;color:var(--muted);text-align:right}
+.trace-track{
+  flex:1;height:16px;border-radius:8px;
+  background:rgba(255,255,255,.04);
+  position:relative;overflow:hidden;
+}
+.trace-fill{
+  position:absolute;top:0;bottom:0;border-radius:8px;
+  animation:barGrowX .6s var(--ease) both;
+}
+.trace-ms{flex:none;width:52px;font-size:10.5px;color:var(--muted-dim);font-variant-numeric:tabular-nums}
+.trace-summary{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;
+}
+.trace-stat{
+  padding:8px 14px;border-radius:10px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  text-align:center;animation:popIn .4s var(--pop) both;
+}
+.trace-stat .ts-val{font-size:14px;font-weight:800;color:var(--cyan);font-variant-numeric:tabular-nums}
+.trace-stat .ts-label{font-size:10px;color:var(--muted-dim);letter-spacing:.1em;margin-top:2px}
+
+.demo-side{display:flex;flex-direction:column;gap:14px}
+.io-card{
+  position:relative;overflow:hidden;
+  border-radius:14px;padding:15px 17px;
+  border:1px solid rgba(94,231,255,.22);
+  background:linear-gradient(180deg,rgba(94,231,255,.07),rgba(107,140,255,.02));
+  flex:1;
+}
+.io-card.out{
+  border-color:rgba(255,122,209,.26);
+  background:linear-gradient(180deg,rgba(255,122,209,.07),rgba(176,123,255,.02));
+}
+.io-card::before{
+  content:"";position:absolute;top:0;left:0;height:2px;width:100%;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  animation:scanX 3.6s linear infinite;opacity:.55;
+}
+.io-card.out::before{
+  background:linear-gradient(90deg,transparent,var(--pink),transparent);
+  animation-duration:4.8s;
+}
+.io-label{
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:800;margin-bottom:9px;
+}
+.io-card.in .io-label{color:var(--cyan)}
+.io-card.out .io-label{color:var(--pink)}
+.io-body{font-size:13px;line-height:1.8;color:#e6f6ff;min-height:78px}
+
+.knowledge-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;margin-top:18px;
+}
+.k-card{
+  padding:16px 18px;border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.022);
+  transition:all .3s var(--ease);
+}
+.k-card:hover{border-color:rgba(94,231,255,.28);background:rgba(94,231,255,.04)}
+.k-card h5{margin:0 0 9px;font-size:12.5px;font-weight:800;letter-spacing:.02em}
+.k-card .k-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:8px}
+.k-card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.8}
+.k-card.c1{border-color:rgba(94,231,255,.18);background:rgba(94,231,255,.035)}
+.k-card.c2{border-color:rgba(107,140,255,.18);background:rgba(107,140,255,.035)}
+.k-card.c3{border-color:rgba(176,123,255,.18);background:rgba(176,123,255,.035)}
+.k-card.c1 h5{color:var(--cyan)}
+.k-card.c2 h5{color:#a5bcff}
+.k-card.c3 h5{color:#d3b6ff}
+
+/* ============================================================
+   03 · 模型内部
+   ============================================================ */
+.internals-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.42fr) minmax(0,1fr);
+  gap:18px;align-items:start;margin-top:20px;
+}
+
+.embed-pipeline{
+  border-radius:16px;
+  border:1px solid rgba(94,231,255,.18);
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(94,231,255,.08),transparent 60%),
+    linear-gradient(180deg,rgba(94,231,255,.035),rgba(107,140,255,.01));
+  padding:16px 18px 18px;
+  margin-bottom:16px;
+  overflow:hidden;
+  position:relative;
+}
+.embed-pipeline::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(94,231,255,.6),transparent);
+  animation:scanX 4.2s linear infinite;opacity:.6;
+}
+.pipe-title{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(94,231,255,.78);font-weight:800;margin-bottom:14px;
+}
+.pipe-title .pipe-case{
+  margin-left:auto;font-size:11px;letter-spacing:.02em;
+  color:var(--muted-dim);text-transform:none;font-weight:500;
+}
+.pipe-flow{
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) 22px minmax(0,1fr) 22px minmax(0,1.25fr);
+  gap:8px;align-items:stretch;
+}
+.pipe-arrow{
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(94,231,255,.55);font-size:15px;font-weight:800;
+  transition:color .4s var(--ease),text-shadow .4s var(--ease);
+}
+.pipe-arrow.on{color:var(--cyan);text-shadow:0 0 14px rgba(94,231,255,.8)}
+.pipe-step{
+  position:relative;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(3,6,12,.5);
+  padding:11px 13px 12px;
+  min-height:118px;
+  transition:border-color .45s var(--ease),
+             background .45s var(--ease),
+             box-shadow .45s var(--ease),
+             transform .45s var(--ease);
+}
+.pipe-step.on{
+  border-color:rgba(94,231,255,.6);
+  background:linear-gradient(180deg,rgba(94,231,255,.13),rgba(107,140,255,.03));
+  box-shadow:0 0 0 1px rgba(94,231,255,.16),0 12px 30px rgba(0,0,0,.34),0 0 30px rgba(94,231,255,.16);
+  transform:translateY(-2px);
+}
+.pipe-step.done{
+  border-color:rgba(124,255,178,.26);
+  background:linear-gradient(180deg,rgba(124,255,178,.055),rgba(255,255,255,.006));
+}
+.ps-label{
+  font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted-dim);font-weight:800;margin-bottom:9px;
+  display:flex;align-items:center;gap:7px;
+}
+.ps-label i{
+  display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:rgba(120,200,255,.35);flex:0 0 auto;
+  transition:background .4s var(--ease),box-shadow .4s var(--ease);
+}
+.pipe-step.on .ps-label{color:var(--cyan)}
+.pipe-step.on .ps-label i{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.pipe-step.done .ps-label{color:rgba(124,255,178,.85)}
+.pipe-step.done .ps-label i{background:var(--green);box-shadow:0 0 10px rgba(124,255,178,.7)}
+.ps-text{
+  font-size:12.5px;font-weight:600;color:#dff6ff;line-height:1.6;
+  word-break:break-word;
+}
+.ps-text .hl{color:var(--cyan);font-weight:800}
+
+.ps-tokens{display:flex;flex-wrap:wrap;gap:5px}
+.ps-token{
+  font-size:11px;padding:3px 8px;border-radius:6px;
+  background:rgba(94,231,255,.1);
+  border:1px solid rgba(94,231,255,.3);
+  color:#cdefff;font-weight:600;
+  opacity:0;transform:translateY(5px) scale(.9);
+  transition:opacity .4s var(--ease),transform .4s var(--pop);
+}
+.ps-token.show{opacity:1;transform:none}
+
+.ps-vecs{display:flex;flex-direction:column;gap:5px}
+.ps-vec-row{
+  display:grid;grid-template-columns:52px minmax(0,1fr);gap:7px;align-items:center;
+  opacity:0;transform:translateX(-6px);
+  transition:opacity .4s var(--ease),transform .4s var(--ease);
+}
+.ps-vec-row.show{opacity:1;transform:none}
+.ps-vec-tok{
+  font-size:10.5px;font-weight:700;color:#bfe9ff;
+  text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ps-vec-bars{
+  display:flex;align-items:flex-end;gap:2px;height:16px;
+  padding:0 5px;border-radius:5px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.05);
+  overflow:hidden;
+}
+.ps-vec-bar{
+  flex:1;min-width:2px;border-radius:1px;
+  background:linear-gradient(180deg,var(--cyan),rgba(107,140,255,.3));
+  transform-origin:bottom;height:0%;
+  transition:height .55s var(--ease);
+}
+.ps-note{
+  margin-top:9px;font-size:10.5px;color:var(--muted-dim);
+  line-height:1.55;
+  border-top:1px dashed rgba(120,200,255,.14);
+  padding-top:8px;
+}
+.pipe-dim{
+  display:inline-block;padding:1px 6px;border-radius:4px;
+  background:rgba(94,231,255,.1);color:var(--cyan);
+  font-weight:700;font-size:10px;font-variant-numeric:tabular-nums;
+}
+
+.building-wrap{
+  border-radius:18px;overflow:hidden;
+  border:1px solid rgba(94,231,255,.16);
+  background:
+    radial-gradient(ellipse at 50% 100%,rgba(94,231,255,.09),transparent 62%),
+    linear-gradient(180deg,rgba(94,231,255,.035),rgba(107,140,255,.012));
+}
+.building-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 16px;
+  border-bottom:1px solid rgba(94,231,255,.12);
+  background:rgba(6,10,20,.5);
+}
+.building-tip{
+  margin-left:auto;font-size:10.5px;color:var(--muted-dim);letter-spacing:.06em;
+  white-space:nowrap;
+}
+.building{
+  display:flex;flex-direction:column-reverse;gap:7px;
+  padding:16px 14px;
+  position:relative;
+}
+.building::before{
+  content:"";position:absolute;left:22px;top:16px;bottom:16px;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(94,231,255,.28),transparent);
+  pointer-events:none;
+}
+
+.floor{
+  position:relative;
+  display:grid;
+  grid-template-columns:50px 92px 40px minmax(0,1fr);
+  gap:10px;align-items:center;
+  padding:9px 13px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg,rgba(255,255,255,.026),rgba(255,255,255,.006));
+  transition:border-color .45s var(--ease),
+             background .45s var(--ease),
+             box-shadow .45s var(--ease),
+             transform .45s var(--ease);
+}
+.floor.on{
+  border-color:rgba(94,231,255,.55);
+  background:linear-gradient(180deg,rgba(94,231,255,.13),rgba(107,140,255,.03));
+  box-shadow:0 0 0 1px rgba(94,231,255,.16),0 10px 26px rgba(0,0,0,.34),0 0 28px rgba(94,231,255,.16);
+  transform:translateX(5px);
+}
+.floor.done{
+  border-color:rgba(124,255,178,.24);
+  background:linear-gradient(180deg,rgba(124,255,178,.05),rgba(255,255,255,.006));
+}
+
+.fl-idx{
+  font-size:11px;font-weight:800;letter-spacing:.06em;
+  font-variant-numeric:tabular-nums;text-align:center;
+  padding:3px 0;border-radius:7px;
+  border:1px solid rgba(120,200,255,.22);
+  color:var(--muted-dim);
+  transition:all .45s var(--ease);
+}
+.floor.done .fl-idx{color:rgba(124,255,178,.85);border-color:rgba(124,255,178,.32)}
+.floor.on .fl-idx{
+  color:#031020;border-color:transparent;
+  background:linear-gradient(180deg,#7ff0ff,#4f7cff);
+  box-shadow:0 0 16px rgba(94,231,255,.5);
+}
+.fl-desc{
+  font-size:11.5px;color:var(--muted-dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color .45s var(--ease);
+}
+.floor.on .fl-desc{color:#bff2ff;font-weight:600}
+.floor.done .fl-desc{color:rgba(124,255,178,.6)}
+
+.fl-router{
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:30px;
+  border-radius:9px;
+  border:1px solid rgba(255,209,102,.22);
+  background:rgba(255,209,102,.05);
+  transition:all .45s var(--ease);
+}
+.fl-router .rt-icon{
+  font-size:14px;line-height:1;
+  filter:grayscale(.5) brightness(.8);
+  transition:filter .45s var(--ease),transform .45s var(--pop);
+}
+.floor.on .fl-router{
+  border-color:rgba(255,209,102,.85);
+  background:rgba(255,209,102,.18);
+  box-shadow:0 0 18px rgba(255,209,102,.45);
+}
+.floor.on .fl-router .rt-icon{
+  filter:none;
+  transform:scale(1.16);
+  animation:rtPulse 1.4s ease-in-out infinite;
+}
+@keyframes rtPulse{
+  0%,100%{transform:scale(1.16)}
+  50%{transform:scale(1.32)}
+}
+.fl-router .rt-ring{
+  position:absolute;inset:-4px;border-radius:11px;
+  border:1px solid rgba(255,209,102,.5);
+  opacity:0;pointer-events:none;
+}
+.floor.on .fl-router .rt-ring{animation:rtRing 1.8s ease-out infinite}
+@keyframes rtRing{
+  0%{opacity:.85;transform:scale(.86)}
+  100%{opacity:0;transform:scale(1.5)}
+}
+
+.fl-experts{
+  display:flex;gap:5px;align-items:center;
+  min-width:0;flex-wrap:wrap;
+}
+.exp{
+  flex:0 0 auto;width:38px;text-align:center;
+  font-size:10px;line-height:1.5;
+  padding:3px 0;border-radius:6px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  color:rgba(138,160,199,.7);
+  white-space:nowrap;position:relative;
+  transition:all .45s var(--pop);
+}
+.exp.hot{
+  color:#031020;font-weight:800;
+  background:linear-gradient(180deg,#ffe08a,#ffb340);
+  border-color:transparent;
+  box-shadow:0 0 18px rgba(255,209,102,.7);
+  transform:scale(1.12);
+}
+.exp .exp-score{
+  position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  font-size:8.5px;font-weight:800;color:var(--amber);
+  opacity:0;transition:opacity .4s var(--ease);white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.exp.hot .exp-score{opacity:1}
+
+.internals-side{display:flex;flex-direction:column;gap:14px}
+.vec-card{
+  position:relative;overflow:hidden;
+  border-radius:16px;padding:15px 17px;
+  border:1px solid rgba(94,231,255,.22);
+  background:linear-gradient(180deg,rgba(94,231,255,.07),rgba(107,140,255,.02));
+}
+.vec-card::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  animation:scanX 3.6s linear infinite;opacity:.55;
+}
+.vec-card .io-label{color:var(--cyan)}
+.vec-bars{
+  display:flex;align-items:flex-end;gap:3px;
+  height:100px;padding:0 3px;margin-top:12px;
+  border-radius:10px;
+  background:rgba(3,6,12,.5);
+  border:1px solid rgba(255,255,255,.05);
+  overflow:hidden;
+}
+.vbar{
+  flex:1;min-width:2px;height:6%;opacity:.35;
+  border-radius:3px 3px 0 0;
+  background:linear-gradient(180deg,var(--cyan),rgba(107,140,255,.32));
+  transition:height .62s var(--ease),opacity .45s var(--ease);
+}
+.vec-meta{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  margin-top:11px;font-size:11px;color:var(--muted-dim);
+  font-variant-numeric:tabular-nums;
+}
+.vec-meta span:last-child{color:var(--cyan);font-weight:600}
+
+.mstat-card{
+  border-radius:16px;padding:15px 17px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.024);
+  display:flex;flex-direction:column;gap:11px;
+}
+.mstat-row{display:flex;align-items:flex-start;gap:12px}
+.mstat-k{
+  flex:0 0 70px;font-size:10.5px;letter-spacing:.1em;
+  color:var(--muted-dim);text-transform:uppercase;padding-top:2px;
+}
+.mstat-v{
+  flex:1;font-size:13px;font-weight:600;color:#cdefff;
+  word-break:break-word;line-height:1.55;
+}
+.mstat-v.hot{color:var(--cyan);text-shadow:0 0 14px rgba(94,231,255,.4)}
+
+.router-card{
+  border-radius:16px;padding:14px 16px 15px;
+  border:1px solid rgba(255,209,102,.28);
+  background:
+    radial-gradient(ellipse at 100% 0%,rgba(255,209,102,.09),transparent 62%),
+    linear-gradient(180deg,rgba(255,209,102,.06),rgba(255,209,102,.012));
+  position:relative;overflow:hidden;
+}
+.router-card::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(255,209,102,.75),transparent);
+  animation:scanX 4.4s linear infinite;opacity:.65;
+}
+.router-head{
+  display:flex;align-items:center;gap:9px;margin-bottom:12px;
+}
+.router-avatar{
+  width:26px;height:26px;border-radius:8px;flex:0 0 auto;
+  display:grid;place-items:center;font-size:14px;
+  background:rgba(255,209,102,.16);
+  border:1px solid rgba(255,209,102,.45);
+  transition:all .45s var(--ease);
+}
+.router-card.active .router-avatar{
+  background:rgba(255,209,102,.32);
+  box-shadow:0 0 18px rgba(255,209,102,.55);
+  animation:rtPulse 1.4s ease-in-out infinite;
+}
+.router-name{
+  font-size:12px;font-weight:800;color:var(--amber);letter-spacing:.02em;
+}
+.router-sub{
+  margin-left:auto;font-size:10px;color:var(--muted-dim);
+  letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+}
+.router-stage{
+  font-size:11.5px;color:var(--muted);line-height:1.65;
+  margin-bottom:11px;
+  min-height:34px;
+}
+.router-stage b{color:var(--amber);font-weight:800}
+.router-list{display:flex;flex-direction:column;gap:6px}
+.router-row{
+  display:grid;grid-template-columns:44px minmax(0,1fr) 40px;
+  gap:8px;align-items:center;
+  opacity:.42;
+  transition:opacity .45s var(--ease);
+}
+.router-row.pick{opacity:1}
+.router-row .rr-name{
+  font-size:10.5px;color:var(--muted-dim);text-align:right;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.router-row.pick .rr-name{color:var(--amber);font-weight:800}
+.router-row .rr-bar{
+  height:6px;border-radius:99px;overflow:hidden;
+  background:rgba(255,255,255,.055);
+}
+.router-row .rr-fill{
+  display:block;height:100%;width:0%;border-radius:99px;
+  background:linear-gradient(90deg,rgba(255,209,102,.55),#ffd166);
+  transition:width .6s var(--ease);
+}
+.router-row.pick .rr-fill{
+  box-shadow:0 0 12px rgba(255,209,102,.6);
+}
+.router-row .rr-score{
+  font-size:10px;font-weight:800;text-align:right;
+  color:var(--muted-dim);font-variant-numeric:tabular-nums;
+}
+.router-row.pick .rr-score{color:var(--amber)}
+.router-foot{
+  margin-top:11px;padding-top:10px;
+  border-top:1px dashed rgba(255,209,102,.22);
+  font-size:10.5px;color:var(--muted-dim);line-height:1.6;
+}
+.router-foot b{color:var(--amber)}
+
+.moemini{
+  border-radius:16px;padding:14px 17px;
+  border:1px dashed rgba(176,123,255,.32);
+  background:rgba(176,123,255,.05);
+  display:flex;flex-direction:column;gap:10px;
+}
+.moemini-row{display:flex;gap:10px;align-items:baseline;font-size:12px;line-height:1.62}
+.mm-k{
+  flex:0 0 66px;font-size:11px;font-weight:800;
+  color:#d3b6ff;letter-spacing:.02em;
+}
+.mm-v{flex:1;color:var(--muted)}
+
+/* ============================================================
+   输出与传输区域（新增）
+   ============================================================ */
+.output-zone{
+  display:none;
+  margin-top:18px;
+  border-radius:18px;
+  border:1px solid rgba(124,255,178,.28);
+  background:
+    radial-gradient(ellipse at 0% 0%,rgba(124,255,178,.09),transparent 62%),
+    radial-gradient(ellipse at 100% 100%,rgba(94,231,255,.07),transparent 62%),
+    linear-gradient(180deg,rgba(124,255,178,.045),rgba(94,231,255,.015));
+  padding:18px 20px 20px;
+  position:relative;overflow:hidden;
+}
+.output-zone.show{
+  display:block;
+  animation:fadeSlide .55s var(--ease) both;
+}
+.output-zone::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);
+  animation:scanX 4s linear infinite;opacity:.6;
+}
+.oz-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.oz-badge{
+  font-size:10px;font-weight:800;letter-spacing:.18em;
+  padding:3px 9px;border-radius:6px;
+  background:rgba(124,255,178,.14);color:var(--green);
+  border:1px solid rgba(124,255,178,.35);
+  white-space:nowrap;
+}
+.oz-title{
+  font-size:14px;font-weight:750;color:#d6ffe8;
+}
+.oz-tech{
+  margin-left:auto;font-size:11px;letter-spacing:.12em;
+  color:var(--green);font-weight:700;
+  padding:3px 10px;border-radius:999px;
+  background:rgba(124,255,178,.08);
+  border:1px solid rgba(124,255,178,.28);
+  white-space:nowrap;
+}
+.oz-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);
+  gap:16px;
+  align-items:start;
+}
+.oz-col-head{
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted-dim);font-weight:800;
+  margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.oz-col-head::after{
+  content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,rgba(124,255,178,.3),transparent);
+}
+.oz-item{
+  padding:10px 13px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.025);
+  margin-bottom:7px;
+  transition:border-color .25s var(--ease),background .25s var(--ease);
+}
+.oz-item:last-child{margin-bottom:0}
+.oz-item:hover{border-color:rgba(124,255,178,.35);background:rgba(124,255,178,.04)}
+.oz-item b{
+  display:block;font-size:12px;font-weight:800;
+  color:var(--green);margin-bottom:3px;letter-spacing:.02em;
+}
+.oz-item span{
+  display:block;font-size:11.5px;color:var(--muted);line-height:1.6;
+}
+.oz-code{
+  margin:0;
+  font-family:ui-monospace,SFMono-Regular,Menlo,'Cascadia Code',monospace;
+  font-size:11.5px;
+  line-height:1.75;
+  color:#cdefff;
+  white-space:pre;
+  overflow-x:auto;
+  padding:14px 16px;
+  border-radius:11px;
+  background:rgba(3,6,12,.65);
+  border:1px solid rgba(94,231,255,.18);
+  box-shadow:inset 0 0 30px rgba(94,231,255,.04);
+}
+.oz-code::-webkit-scrollbar{height:6px}
+.oz-code::-webkit-scrollbar-thumb{background:rgba(94,231,255,.25);border-radius:3px}
+.oz-code .k{color:#ff9bd0}
+.oz-code .s{color:#b9f5c9}
+.oz-code .c{color:#6d8098;font-style:italic}
+.oz-code .f{color:#8fd0ff}
+.oz-code .n{color:#ffd166}
+
+.oz-sse{
+  margin:0;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11px;
+  line-height:1.8;
+  color:#a8e6ff;
+  white-space:pre;
+  overflow-x:auto;
+  padding:12px 14px;
+  border-radius:11px;
+  background:rgba(3,6,12,.65);
+  border:1px solid rgba(94,231,255,.14);
+}
+.oz-typing{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12.5px;
+  color:#dff6ff;
+  padding:14px 16px;
+  border-radius:11px;
+  background:rgba(3,6,12,.6);
+  border:1px solid rgba(94,231,255,.18);
+  min-height:60px;
+  line-height:1.8;
+}
+.oz-caret{
+  display:inline-block;width:7px;height:13px;
+  background:var(--green);vertical-align:-2px;border-radius:1px;
+  box-shadow:0 0 10px var(--green);
+  animation:blink .9s steps(2,start) infinite;
+  margin-left:2px;
+}
+
+/* ============================================================
+   04 · Application
+   ============================================================ */
+.app-tabs{
+  display:inline-flex;gap:4px;padding:5px;border-radius:13px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.09);
+  margin-bottom:22px;flex-wrap:wrap;
+}
+.app-tab{
+  font-family:inherit;font-size:13px;font-weight:600;
+  padding:9px 18px;border-radius:9px;cursor:pointer;
+  background:transparent;border:0;color:var(--muted);
+  transition:all .25s var(--ease);
+  display:inline-flex;align-items:center;gap:7px;
+  -webkit-tap-highlight-color:transparent;
+}
+.app-tab:hover{color:#cdefff}
+.app-tab.active{
+  background:linear-gradient(180deg,rgba(94,231,255,.2),rgba(107,140,255,.12));
+  color:#d8f7ff;
+  box-shadow:0 0 0 1px rgba(94,231,255,.28),0 4px 16px rgba(0,0,0,.3);
+}
+.app-tab:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.app-panel{display:none;animation:fadeSlide .4s var(--ease) both}
+.app-panel.active{display:block}
+
+.level-list{display:flex;flex-direction:column;gap:12px}
+.level-card{
+  position:relative;
+  padding:18px 20px 16px 22px;
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(255,255,255,.032),rgba(255,255,255,.008));
+  border:1px solid rgba(255,255,255,.08);
+  transition:all .3s var(--ease);
+}
+.level-card::before{
+  content:"";position:absolute;left:0;top:16px;bottom:16px;width:3px;
+  border-radius:0 3px 3px 0;background:linear-gradient(180deg,var(--accent,var(--cyan)),transparent);
+}
+.level-card:hover{
+  border-color:rgba(94,231,255,.3);
+  transform:translateX(4px);
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+}
+.level-head{display:flex;align-items:flex-start;gap:13px;margin-bottom:12px}
+.level-badge{
+  flex:none;padding:4px 11px;border-radius:8px;
+  font-size:11px;font-weight:800;letter-spacing:.08em;
+  background:rgba(94,231,255,.13);
+  color:var(--accent,var(--cyan));
+  border:1px solid currentColor;opacity:.95;
+}
+.level-head h4{margin:0 0 3px;font-size:15px;font-weight:700}
+.level-head p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.7}
+.chip-row{display:flex;flex-wrap:wrap;gap:7px}
+
+.maturity{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:24px}
+.mat-step{
+  position:relative;padding:16px 14px;
+  border-radius:13px;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.008));
+  border:1px solid rgba(255,255,255,.08);
+  transition:all .3s var(--ease);
+}
+.mat-step:hover{border-color:rgba(94,231,255,.35);transform:translateY(-3px)}
+.mat-step .m-tag{font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--cyan);margin-bottom:7px}
+.mat-step h5{margin:0 0 6px;font-size:13.5px;font-weight:700}
+.mat-step p{margin:0;font-size:11.5px;color:var(--muted);line-height:1.7}
+.mat-step::after{content:"";position:absolute;right:-10px;top:50%;width:10px;height:1px;background:rgba(94,231,255,.4)}
+.mat-step:last-child::after{display:none}
+
+.dim-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.dim-card{
+  padding:17px 18px;border-radius:14px;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.008));
+  border:1px solid rgba(255,255,255,.08);
+  transition:all .3s var(--ease);
+}
+.dim-card:hover{border-color:rgba(176,123,255,.3);background:rgba(176,123,255,.035)}
+.dim-head{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.dim-icon{
+  width:30px;height:30px;border-radius:9px;flex:none;
+  display:grid;place-items:center;font-size:15px;
+  background:rgba(176,123,255,.12);
+  border:1px solid rgba(176,123,255,.25);
+}
+.dim-head h4{margin:0;font-size:14px;font-weight:700}
+
+.traps{margin-top:22px}
+.trap{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;margin-bottom:9px;
+  background:rgba(255,255,255,.018);
+  overflow:hidden;
+  transition:border-color .25s var(--ease);
+}
+.trap[open]{border-color:rgba(255,209,102,.28)}
+.trap summary{
+  cursor:pointer;list-style:none;
+  padding:13px 17px;font-size:13px;font-weight:600;
+  display:flex;align-items:center;gap:10px;
+  transition:background .25s var(--ease);
+}
+.trap summary::-webkit-details-marker{display:none}
+.trap summary:hover{background:rgba(255,209,102,.05)}
+.trap summary::after{content:"＋";margin-left:auto;color:var(--muted-dim);font-size:15px;transition:transform .25s var(--ease)}
+.trap[open] summary::after{content:"－";color:var(--amber)}
+.trap-body{padding:0 17px 15px;font-size:12.5px;color:var(--muted);line-height:1.85}
+.trap-num{
+  flex:none;width:22px;height:22px;border-radius:6px;
+  display:grid;place-items:center;font-size:11px;font-weight:800;
+  background:rgba(255,209,102,.12);color:var(--amber);
+  border:1px solid rgba(255,209,102,.28);
+}
+
+/* ============================================================
+   跳转提示条
+   ============================================================ */
+.jump-bar{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:14px 18px;border-radius:14px;margin-top:18px;
+  background:linear-gradient(135deg,rgba(94,231,255,.06),rgba(176,123,255,.04));
+  border:1px solid rgba(94,231,255,.18);
+}
+.jump-bar .jb-icon{font-size:20px;flex:none;line-height:1}
+.jump-bar .jb-text{flex:1;font-size:12.5px;color:var(--muted);line-height:1.75;min-width:240px}
+.jump-bar .jb-text strong{color:var(--cyan);font-weight:600}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.footer{
+  text-align:center;padding:36px 20px 60px;
+  font-size:13px;color:var(--muted);line-height:1.9;
+}
+.footer strong{color:var(--cyan);font-weight:600}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width:1180px){
+  .organism-grid{grid-template-columns:1fr;gap:22px}
+  .panel-detail{position:static;max-height:none}
+  .demo-grid{grid-template-columns:1fr}
+  .demo-side{flex-direction:row}
+  .knowledge-grid{grid-template-columns:1fr}
+  .maturity{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mat-step::after{display:none}
+  .plabel{font-size:9px}
+  .pdot{width:26px;height:26px;font-size:10.5px}
+  .pnode:not(:last-child)::after{top:13px;left:calc(50% + 12px);right:calc(-50% + 7px)}
+  .internals-grid{grid-template-columns:1fr}
+}
+@media (max-width:980px){
+  .pipe-flow{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .pipe-arrow{transform:rotate(90deg);height:14px}
+  .oz-grid{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  .floor{grid-template-columns:46px 80px 36px minmax(0,1fr);gap:9px;padding:8px 11px}
+  .exp{width:34px;font-size:9.5px}
+  .fl-router{width:32px;height:28px}
+  .fl-router .rt-icon{font-size:12px}
+}
+@media (max-width:640px){
+  .floor{grid-template-columns:44px 36px minmax(0,1fr);gap:8px}
+  .fl-desc{display:none}
+  .building{padding:12px 10px}
+  .building::before{left:18px}
+  .building-tip{display:none}
+}
+@media (max-width:760px){
+  .panel{padding:20px 16px;border-radius:16px}
+  .hero{padding:62px 0 22px}
+  .wrap{padding:0 14px}
+  .demo-side{flex-direction:column}
+  .dim-grid{grid-template-columns:1fr}
+  .maturity{grid-template-columns:1fr}
+  .stage-canvas{min-height:300px;padding:18px 14px}
+  .panel-detail{padding:20px 17px 24px;border-radius:16px}
+  .p-title{font-size:22px}
+  .progress-track{grid-template-columns:repeat(4,1fr);gap:8px;row-gap:14px}
+  .pnode:not(:last-child)::after{display:none}
+  .pdot{width:24px;height:24px;font-size:10px}
+  .plabel{font-size:9px}
+  .panel::before,.panel::after{width:12px;height:12px}
+  .legend-area{padding:18px 16px 20px;border-radius:16px}
+  .tree-head{padding:12px 12px 4px}
+  .stats{gap:8px}
+  .stat{padding:10px 15px;min-width:98px}
+  .stat b{font-size:20px}
+  /* 紧凑度：小屏整体收紧留白，一屏看到更多内容 */
+  .panel{padding:18px 14px;margin-bottom:18px}
+  .sec-head{margin-bottom:15px}
+  .sec-title{font-size:18px;margin:5px 0 6px}
+  .sec-sub{font-size:12.5px;line-height:1.7}
+  .hero{padding:52px 0 18px}
+  .hero p{font-size:13px;line-height:1.75;margin-top:12px}
+  .hero-nav{margin-top:16px;gap:8px}
+  .btn{padding:9px 14px;font-size:12.5px}
+  .demo-toolbar{gap:8px}
+  .demo-grid{gap:12px;margin-top:14px}
+  .knowledge-grid{gap:10px;margin-top:14px}
+  .k-card{padding:13px 14px;border-radius:12px}
+  .k-card p{font-size:12px;line-height:1.7}
+  .jump-bar{padding:12px 14px;margin-top:14px}
+  .jump-bar .jb-text{font-size:12px;line-height:1.65;min-width:200px}
+  .embed-pipeline{padding:13px 13px 14px;margin-bottom:12px}
+  .internals-grid{gap:12px;margin-top:14px}
+  .building{padding:12px 10px;gap:6px}
+  .floor{padding:7px 10px}
+  .legend-area{padding:16px 14px 18px}
+  .legend-grid{gap:10px;margin-bottom:16px}
+  .legend-card{padding:12px 14px}
+  details.concept>summary{padding:10px 13px 7px}
+  .concept-brief{padding:0 13px 10px 30px;font-size:12px}
+  .concept-detail{padding:12px 13px 13px 30px}
+  .cd-keys li{font-size:12px}
+  .level-card{padding:14px 15px 13px 18px}
+  .chip{padding:4px 9px;font-size:11px}
+  .chip-row{gap:6px}
+  .maturity{gap:8px;margin-bottom:16px}
+  .mat-step{padding:13px 12px}
+  .dim-grid{gap:10px}
+  .dim-card{padding:14px}
+  .trap summary{padding:11px 14px;font-size:12.5px}
+  .trap-body{padding:0 14px 13px;font-size:12px;line-height:1.75}
+  .stage-canvas{min-height:260px;padding:14px 10px}
+  .tree-stage{margin-top:16px}
+  .output-zone{padding:14px 14px 16px}
+  .oz-grid{gap:12px}
+  .vec-card,.mstat-card,.router-card,.moemini{padding:12px 14px}
+  .io-card{padding:12px 14px}
+  .panel-detail{padding:17px 14px 20px}
+  .metric{padding:8px 11px}
+  .footer{padding:26px 16px 44px;font-size:12px}
+}
+@media (max-width:480px){
+  .wrap{padding:0 10px}
+  .panel{padding:15px 11px;border-radius:14px}
+  .hero h1{font-size:24px}
+  .hero-kicker{font-size:10px;letter-spacing:.18em;padding:5px 12px;margin-bottom:16px}
+  .stats{gap:6px;margin-top:14px}
+  .stat{padding:8px 10px;min-width:72px;border-radius:10px}
+  .stat b{font-size:17px}
+  .stat span{font-size:10.5px}
+  .hero-nav .btn,.demo-toolbar .btn{flex:1 1 auto;justify-content:center;padding:9px 10px}
+  .sec-title{font-size:17px}
+  .k-card .k-title{font-size:13px}
+  .stage-legend{gap:6px 14px;padding:8px 10px 10px}
+  .stage-legend span{font-size:10.5px}
+  .exp{width:30px;font-size:9px}
+  .floor{grid-template-columns:40px 32px minmax(0,1fr);gap:6px;padding:6px 8px}
+  .fl-idx{font-size:10px}
+  .fl-router{width:28px;height:26px}
+  .pipe-step{padding:9px 10px 10px;min-height:0}
+  .ps-text{font-size:11.5px}
+  .ps-note{font-size:10px}
+  .oz-code{font-size:10.5px;padding:10px 12px}
+  .p-title{font-size:20px}
+  .metric b{font-size:14px}
+  .metric span{font-size:11.5px}
+  .trace-name{width:64px;font-size:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.001ms!important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="hud" aria-hidden="true">
+  <div class="hud-item hud-tl">SYSTEM · AI KNOWLEDGE ORGANISM</div>
+  <div class="hud-item hud-tr" id="clock">00:00:00</div>
+  <div class="hud-item hud-bl">v6.1 · Organism × Lifecycle × Internals × Router × Output</div>
+  <div class="hud-item hud-br">STATUS: <span class="online">ONLINE</span></div>
+</div>
+
+<div class="page">
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <div class="hero-kicker">Knowledge Organism · 2026</div>
+    <h1>AI 大模型知识中枢</h1>
+    <p>从八个知识系统构成的「生命体」出发，看一次真实请求如何穿过整个系统，再钻进模型内部看向量、层数与专家如何协作 —— 输入、嵌入、调度员分配、逐层加工、输出与传输全程可见，最后落到个人开发者与企业两条应用路径。</p>
+    <nav class="hero-nav">
+      <a href="#organism-sec" class="btn primary">① 知识生命体</a>
+      <a href="#inference" class="btn">② 请求链路</a>
+      <a href="#internals" class="btn">③ 模型内部</a>
+      <a href="#application" class="btn">④ 应用体系</a>
+    </nav>
+    <div class="stats">
+      <div class="stat"><b id="s1">8</b><span>知识系统</span></div>
+      <div class="stat"><b id="s2">32</b><span>核心概念</span></div>
+      <div class="stat"><b id="s3">96</b><span>知识要点</span></div>
+      <div class="stat"><b id="s4">8</b><span>请求环节</span></div>
+    </div>
+  </header>
+
+  <!-- ==================================================
+       01 · 知识生命体
+  =================================================== -->
+  <section id="organism-sec" class="panel">
+    <div class="sec-head">
+      <div class="kicker">01 · Knowledge Organism · 图谱视角</div>
+      <h2 class="sec-title">大模型知识生命体</h2>
+      <p class="sec-sub">把散落的知识点组织成一个会呼吸的整体。八个系统环环相扣，点击任一器官看它在整条链路里的位置，再展开概念卡钻到要点层。同一概念可在多个系统间交叉引用，形成有向网络而非清单。</p>
+    </div>
+
+    <div class="organism-grid">
+      <!-- 主生命体 -->
+      <div>
+        <section class="stage">
+          <svg id="organism" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet"
+               role="img" aria-label="大模型知识生命体：核心与八个知识系统">
+            <defs>
+              <radialGradient id="coreGrad" cx="50%" cy="42%">
+                <stop offset="0%" stop-color="#7dd3fc" stop-opacity=".95"/>
+                <stop offset="52%" stop-color="#38bdf8" stop-opacity=".34"/>
+                <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="coreInner" cx="42%" cy="36%">
+                <stop offset="0%" stop-color="#132a45"/>
+                <stop offset="100%" stop-color="#0a1626"/>
+              </radialGradient>
+            </defs>
+
+            <circle cx="500" cy="400" r="278" fill="none"
+                    stroke="rgba(99,140,200,.14)" stroke-width="1" stroke-dasharray="2 12"/>
+
+            <path class="ring-arc" data-a="arch" data-b="train"
+                  d="M 500 122 A 278 278 0 0 1 696.6 203.4" stroke="#38bdf8" opacity=".26"/>
+            <path class="ring-arc" data-a="train" data-b="align"
+                  d="M 696.6 203.4 A 278 278 0 0 1 778 400" stroke="#818cf8" opacity=".26"/>
+            <path class="ring-arc" data-a="align" data-b="infer"
+                  d="M 778 400 A 278 278 0 0 1 696.6 596.6" stroke="#f472b6" opacity=".26"/>
+            <path class="ring-arc" data-a="infer" data-b="rag"
+                  d="M 696.6 596.6 A 278 278 0 0 1 500 678" stroke="#fbbf24" opacity=".26"/>
+            <path class="ring-arc" data-a="rag" data-b="agent"
+                  d="M 500 678 A 278 278 0 0 1 303.4 596.6" stroke="#34d399" opacity=".26"/>
+            <path class="ring-arc" data-a="agent" data-b="mm"
+                  d="M 303.4 596.6 A 278 278 0 0 1 222 400" stroke="#22d3ee" opacity=".26"/>
+            <path class="ring-arc" data-a="mm" data-b="eval"
+                  d="M 222 400 A 278 278 0 0 1 303.4 203.4" stroke="#a78bfa" opacity=".26"/>
+            <path class="ring-arc" data-a="eval" data-b="arch"
+                  d="M 303.4 203.4 A 278 278 0 0 1 500 122" stroke="#fb7185" opacity=".26"/>
+
+            <line class="conn" data-id="arch" x1="500" y1="316" x2="500" y2="194" stroke="#38bdf8"/>
+            <line class="conn" data-id="train" x1="559.4" y1="340.6" x2="645.7" y2="254.4" stroke="#818cf8"/>
+            <line class="conn" data-id="align" x1="584" y1="400" x2="706" y2="400" stroke="#f472b6"/>
+            <line class="conn" data-id="infer" x1="559.4" y1="459.4" x2="645.7" y2="545.6" stroke="#fbbf24"/>
+            <line class="conn" data-id="rag" x1="500" y1="484" x2="500" y2="606" stroke="#34d399"/>
+            <line class="conn" data-id="agent" x1="440.6" y1="459.4" x2="354.3" y2="545.6" stroke="#22d3ee"/>
+            <line class="conn" data-id="mm" x1="416" y1="400" x2="294" y2="400" stroke="#a78bfa"/>
+            <line class="conn" data-id="eval" x1="440.6" y1="340.6" x2="354.3" y2="254.4" stroke="#fb7185"/>
+
+            <circle class="core-pulse" cx="500" cy="400" r="142" fill="url(#coreGrad)"/>
+            <circle cx="500" cy="400" r="80" fill="url(#coreInner)"
+                    stroke="rgba(125,211,252,.55)" stroke-width="1.6"/>
+            <circle cx="500" cy="400" r="91" fill="none"
+                    stroke="rgba(125,211,252,.18)" stroke-width="1" stroke-dasharray="3 7"/>
+            <text x="500" y="391" text-anchor="middle" dominant-baseline="central"
+                  font-size="30" font-weight="850" fill="#7dd3fc" letter-spacing="1">LLM</text>
+            <text x="500" y="420" text-anchor="middle" dominant-baseline="central"
+                  font-size="13" fill="#5f7391" letter-spacing="3">知识核心</text>
+
+            <g class="node active" data-id="arch" tabindex="0" role="button" aria-label="架构骨架">
+              <circle class="halo" cx="500" cy="122" r="72" stroke="#38bdf8"/>
+              <circle class="disc" cx="500" cy="122" r="72" fill="rgba(11,18,32,.94)"
+                      stroke="#38bdf8" stroke-width="2"
+                      style="filter:drop-shadow(0 0 16px rgba(56,189,248,.3))"/>
+              <circle cx="500" cy="122" r="64" fill="none" stroke="rgba(56,189,248,.22)" stroke-width="1"/>
+              <text class="num" x="500" y="107" text-anchor="middle" dominant-baseline="central">01</text>
+              <text class="nm" x="500" y="139" text-anchor="middle" dominant-baseline="central">架构骨架</text>
+            </g>
+
+            <g class="node" data-id="train" tabindex="0" role="button" aria-label="训练微调">
+              <circle class="halo" cx="696.6" cy="203.4" r="72" stroke="#818cf8"/>
+              <circle class="disc" cx="696.6" cy="203.4" r="72" fill="rgba(11,18,32,.94)"
+                      stroke="#818cf8" stroke-width="2"
+                      style="filter:drop-shadow(0 0 16px rgba(129,140,248,.3))"/>
+              <circle cx="696.6" cy="203.4" r="64" fill="none" stroke="rgba(129,140,248,.22)" stroke-width="1"/>
+              <text class="num" x="696.6" y="188.4" text-anchor="middle" dominant-baseline="central">02</text>
+              <text class="nm" x="696.6" y="220.4" text-anchor="middle" dominant-baseline="central">训练微调</text>
+            </g>
+
+            <g class="node" data-id="align" tabindex="0" role="button" aria-label="对齐增强">
+              <circle class="halo" cx="778" cy="400" r="72" stroke="#f472b6"/>
+              <circle class="disc" cx="778" cy="400" r="72" fill="rgba(11,18,32,.94)"
+                      stroke="#f472b6" stroke-width="2"
+                      style="filter:drop-shadow(0 0 16px rgba(244,114,182,.3))"/>
+              <circle cx="778" cy="400" r="64" fill="none" stroke="rgba(244,114,182,.22)" stroke-width="1"/>
+              <text class="num" x="778" y="385" text-anchor="middle" dominant-baseline="central">03</text>
+              <text class="nm" x="778" y="417" text-anchor="middle" dominant-baseline="central">对齐增强</text>
+            </g>
+
+            <g class="node" data-id="infer" tabindex="0" role="button" aria-label="推理部署">
+              <circle class="halo" cx="696.6" cy="596.6" r="72" stroke="#fbbf24"/>
+              <circle class="disc" cx="696.6" cy="596.6" r="72" fill="rgba(11,18,32,.94)"
+                      stroke="#fbbf24" stroke-width="2"
+                      style="filter:drop-shadow(0 0 16px rgba(251,191,36,.3))"/>
+              <circle cx="696.6" cy="596.6" r="64" fill="none" stroke="rgba(251,191,36,.22)" stroke-width="1"/>
+              <text class="num" x="696.6" y="581.6" text-anchor="middle" dominant-baseline="central">04</text>
+              <text class="nm" x="696.6" y="613.6" text-anchor="middle" dominant-baseline="central">推理部署</text>
+            </g>
+
+            <g class="node" data-id="rag" tabindex="0" role="button" aria-label="检索增强">
+              <circle class="halo" cx="500" cy="678" r="72" stroke="#34d399"/>
+              <circle class="disc" cx="500" cy="678" r="72" fill="rgba(11,18,32,.94)"
+                      stroke="#34d399" stroke-width="2"
+                      style="filter:drop-shadow(0 0 16px rgba(52,211,153,.3))"/>
+              <circle cx="500" cy="678" r="64" fill="none" stroke="rgba(52,211,153,.22)" stroke-width="1"/>
+              <text class="num" x="500" y="663" text-anchor="middle" dominant-baseline="central">05</text>
+              <text class="nm" x="500" y="695" text-anchor="middle" dominant-baseline="central">检索增强</text>
+            </g>
+
+            <g class="node" data-id="agent" tabindex="0" role="button" aria-label="智能体">
+              <circle class="halo" cx="303.4" cy="596.6" r="72" stroke="#22d3ee"/>
+              <circle class="disc" cx="303.4" cy="596.6" r="72" fill="rgba(11,18,32,.94)"
+                      stroke="#22d3ee" stroke-width="2"
+                      style="filter:drop-shadow(0 0 16px rgba(34,211,238,.3))"/>
+              <circle cx="303.4" cy="596.6" r="64" fill="none" stroke="rgba(34,211,238,.22)" stroke-width="1"/>
+              <text class="num" x="303.4" y="581.6" text-anchor="middle" dominant-baseline="central">06</text>
+              <text class="nm" x="303.4" y="613.6" text-anchor="middle" dominant-baseline="central">智能体</text>
+            </g>
+
+            <g class="node" data-id="mm" tabindex="0" role="button" aria-label="多模态">
+              <circle class="halo" cx="222" cy="400" r="72" stroke="#a78bfa"/>
+              <circle class="disc" cx="222" cy="400" r="72" fill="rgba(11,18,32,.94)"
+                      stroke="#a78bfa" stroke-width="2"
+                      style="filter:drop-shadow(0 0 16px rgba(167,139,250,.3))"/>
+              <circle cx="222" cy="400" r="64" fill="none" stroke="rgba(167,139,250,.22)" stroke-width="1"/>
+              <text class="num" x="222" y="385" text-anchor="middle" dominant-baseline="central">07</text>
+              <text class="nm" x="222" y="417" text-anchor="middle" dominant-baseline="central">多模态</text>
+            </g>
+
+            <g class="node" data-id="eval" tabindex="0" role="button" aria-label="评测安全">
+              <circle class="halo" cx="303.4" cy="203.4" r="72" stroke="#fb7185"/>
+              <circle class="disc" cx="303.4" cy="203.4" r="72" fill="rgba(11,18,32,.94)"
+                      stroke="#fb7185" stroke-width="2"
+                      style="filter:drop-shadow(0 0 16px rgba(251,113,133,.3))"/>
+              <circle cx="303.4" cy="203.4" r="64" fill="none" stroke="rgba(251,113,133,.22)" stroke-width="1"/>
+              <text class="num" x="303.4" y="188.4" text-anchor="middle" dominant-baseline="central">08</text>
+              <text class="nm" x="303.4" y="220.4" text-anchor="middle" dominant-baseline="central">评测安全</text>
+            </g>
+          </svg>
+          <div class="stage-legend">
+            <span><i class="rad"></i>放射线：核心 → 系统（基础支撑）</span>
+            <span><i class="arc"></i>弧线：相邻系统（协同演进）</span>
+            <span><i class="dashed"></i>虚线：信息流动方向</span>
+          </div>
+        </section>
+
+        <!-- 知识脉络体 -->
+        <section class="tree-stage">
+          <div class="tree-head">
+            <h2>知识脉络体 <em id="treeEn">Architecture</em></h2>
+            <span class="hint">系统 → 概念 → 要点，三层结构</span>
+          </div>
+          <svg id="treeSvg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"
+               role="img" aria-label="知识脉络图"></svg>
+        </section>
+
+        <!-- 关联图例 -->
+        <section class="legend-area">
+          <h2>知识关联图例 <em>Connection Map</em></h2>
+          <p class="legend-sub">整张图里的每一条线、每一种关系都讲清楚——知识不是清单，而是有方向、有强弱的网络。</p>
+
+          <div class="legend-grid">
+            <div class="legend-card">
+              <h4><i style="border-color:#38bdf8"></i>放射线 · 基础支撑</h4>
+              <p>从核心 LLM 指向八个系统，表示「这一层为模型能力提供底层支撑」。架构与训练是地基，对齐与推理是上层，越靠近核心越不可绕过。</p>
+            </div>
+            <div class="legend-card">
+              <h4><i style="border-color:#818cf8"></i>弧线 · 协同演进</h4>
+              <p>相邻系统之间的弧线表示「二者在设计上互相牵制」。架构决定推理的显存上限，推理的需求又反过来推动架构（如 GQA、MLA）的演进。</p>
+            </div>
+            <div class="legend-card">
+              <h4><i class="dashed" style="border-color:#fbbf24"></i>虚线 · 信息流动</h4>
+              <p>表示数据或信号的方向。请求从用户进入，穿过检索、推理、工具、输出，最终回流到观测与评测——这是一条闭环，不是单向流水线。</p>
+            </div>
+            <div class="legend-card">
+              <h4><i style="border-color:#fb7185"></i>贯穿线 · 评测与安全</h4>
+              <p>评测与安全不占据某一段链路，而是横跨全部七个系统。它既是裁判，也是免疫系统：任何一层改动，都要在这里留下可比较的证据。</p>
+            </div>
+          </div>
+
+          <div class="cross-wrap">
+            <h3>跨系统概念索引</h3>
+            <p class="cross-sub">同一概念往往同时属于多个系统。点击任一系统标签，可跳转查看它在那个系统里的上下文。</p>
+            <div class="cross-list" id="crossList"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 详情面板 -->
+      <aside class="panel-detail" id="panelDetail">
+        <div class="p-role" style="color:#38bdf8">地基 · 决定能力上限</div>
+        <div class="p-title" style="color:#38bdf8">架构骨架</div>
+        <div class="p-en">Architecture</div>
+        <p class="p-sum" style="border-color:#38bdf8">
+          Decoder-only 架构、注意力、位置编码与稀疏化构成模型的骨骼。这一层决定了模型能表达什么、不能表达什么。
+        </p>
+        <div class="p-sec">加载中</div>
+        <p style="font-size:13px;color:#9fb0c9;margin-top:10px">
+          若此处长时间保持此状态，说明脚本未能执行，请检查浏览器控制台。
+        </p>
+      </aside>
+    </div>
+
+    <div class="jump-bar">
+      <div class="jb-icon">🔗</div>
+      <div class="jb-text">
+        八个系统不是孤立的清单。它们<b>共同支撑起一次真实请求的完整流转</b> —— 从用户按下发送键的那一刻，到最终回答上屏。下面这条 <strong>8 步请求链路</strong>，就是把生命体「跑起来」的过程。
+      </div>
+      <a href="#inference" class="btn">查看请求链路 →</a>
+    </div>
+  </section>
+
+  <!-- ==================================================
+       02 · 请求生命周期（8步）
+  =================================================== -->
+  <section id="inference" class="panel">
+    <div class="sec-head">
+      <div class="kicker">02 · Request Lifecycle · 流程视角</div>
+      <h2 class="sec-title">一次请求穿过整个生命体</h2>
+      <p class="sec-sub">从用户按下发送键，到回答逐字上屏，中间经过意图改写、检索召回、重排组装、模型推理、工具调用、流式输出、观测归因八个环节。其中「模型推理」内部，进一步展开为分词、向量、注意力、推理决策四个微观步骤 —— 这正是生命体中「推理部署」系统的运行时形态。</p>
+    </div>
+
+    <div class="demo-toolbar">
+      <div class="tb-group">
+        <button class="btn" id="btnPrev" type="button">⏮ 上一步</button>
+        <button class="btn primary" id="btnPlay" type="button">▶ 自动演示</button>
+        <button class="btn" id="btnNext" type="button">下一步 ⏭</button>
+      </div>
+      <div class="tb-group">
+        <button class="btn" id="btnReset" type="button">⟲ 重置</button>
+        <div class="speed">
+          <span>速度</span>
+          <button class="spd" data-spd="0.5" type="button">0.5×</button>
+          <button class="spd active" data-spd="1" type="button">1×</button>
+          <button class="spd" data-spd="2" type="button">2×</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-track">
+      <button class="pnode" data-step="1" type="button"><span class="pdot">01</span><span class="plabel">用户提问</span></button>
+      <button class="pnode" data-step="2" type="button"><span class="pdot">02</span><span class="plabel">意图与改写</span></button>
+      <button class="pnode" data-step="3" type="button"><span class="pdot">03</span><span class="plabel">检索召回</span></button>
+      <button class="pnode" data-step="4" type="button"><span class="pdot">04</span><span class="plabel">重排与组装</span></button>
+      <button class="pnode" data-step="5" type="button"><span class="pdot">05</span><span class="plabel">模型推理</span></button>
+      <button class="pnode" data-step="6" type="button"><span class="pdot">06</span><span class="plabel">工具调用</span></button>
+      <button class="pnode" data-step="7" type="button"><span class="pdot">07</span><span class="plabel">流式输出</span></button>
+      <button class="pnode" data-step="8" type="button"><span class="pdot">08</span><span class="plabel">观测与归因</span></button>
+    </div>
+
+    <div class="demo-grid">
+      <div class="demo-stage-wrap">
+        <div class="demo-stage-head">
+          <span class="stage-badge" id="stageBadge">STANDBY</span>
+          <span class="stage-name" id="stageName">等待开始</span>
+        </div>
+        <div class="stage-canvas" id="stageCanvas"></div>
+      </div>
+
+      <div class="demo-side">
+        <div class="io-card in">
+          <div class="io-label">Input · 用户输入</div>
+          <div class="io-body">如何系统学习大模型？</div>
+        </div>
+        <div class="io-card out">
+          <div class="io-label">Output · 模型输出</div>
+          <div class="io-body" id="modelOutput">等待模型生成…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="knowledge-grid">
+      <div class="k-card c1">
+        <h5>🔹 阶段知识</h5>
+        <div class="k-title" id="stageTitle">等待开始推理</div>
+        <p id="stageDesc">点击「自动演示」，查看每个阶段的运行原理。</p>
+      </div>
+      <div class="k-card c2">
+        <h5>🔹 关键数据</h5>
+        <p id="stageData">用户提问 → 意图改写 → 检索召回 → 重排组装 → 模型推理 → 工具调用 → 流式输出 → 观测归因</p>
+      </div>
+      <div class="k-card c3">
+        <h5>🔹 学习要点</h5>
+        <p id="stageKey">理解一次真实请求，是如何穿过整个系统生命体的。</p>
+      </div>
+    </div>
+
+    <div class="jump-bar">
+      <div class="jb-icon">🔬</div>
+      <div class="jb-text">
+        上面第 5 步「模型推理」被一笔带过了 —— 那里面其实是<strong>几十层楼的接力加工，还有一位调度员在每层挑专家，最后还要把 Token 流送回客户端</strong>。下面钻进模型内部，看向量、层数、专家、调度员与输出到底怎么协作。
+      </div>
+      <a href="#internals" class="btn">进入模型内部 →</a>
+    </div>
+  </section>
+
+  <!-- ==================================================
+       03 · 模型内部：向量 × 层数 × 专家 × 调度员 × 输出
+  =================================================== -->
+  <section id="internals" class="panel">
+    <div class="sec-head">
+      <div class="kicker">03 · Model Internals · 微观视角</div>
+      <h2 class="sec-title">模型内部：向量 × 层数 × 专家 × 调度员 × 输出</h2>
+      <p class="sec-sub">
+        用「<b>一群专家顾问团队，一层层开会审材料</b>」这个统一比喻，把整个推理过程串成一条可播放的动画。
+        本次演示的案例问题是：<b>「写一段 FastAPI 的接口代码」</b> ——
+        文字先被分词、翻译成向量（数字简历），再由每层楼里的 <b>调度员（Router / Gate）</b>打分，只叫醒最对口的 2 个领域专家来修改这份向量，改完交给上一层；最后 <b>向量被解码成 Token，通过 SSE 流式传输到用户眼前</b>。
+      </p>
+    </div>
+
+    <div class="demo-toolbar">
+      <div class="tb-group">
+        <button class="btn" id="mBtnPrev" type="button">⏮ 上一步</button>
+        <button class="btn primary" id="mBtnPlay" type="button">▶ 自动演示</button>
+        <button class="btn" id="mBtnNext" type="button">下一步 ⏭</button>
+      </div>
+      <div class="tb-group">
+        <button class="btn" id="mBtnReset" type="button">⟲ 重置</button>
+        <div class="speed">
+          <span>速度</span>
+          <button class="mspd" data-mspd="0.5" type="button">0.5×</button>
+          <button class="mspd active" data-mspd="1" type="button">1×</button>
+          <button class="mspd" data-mspd="2" type="button">2×</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 输入 → 分词 → 嵌入 管线 -->
+    <div class="embed-pipeline">
+      <div class="pipe-title">
+        <span>INPUT → TOKENIZE → EMBEDDING · 输入与向量化</span>
+        <span class="pipe-case">案例：「写一段 FastAPI 的接口代码」</span>
+      </div>
+      <div class="pipe-flow" id="pipeFlow">
+        <div class="pipe-step" data-pipe="input">
+          <div class="ps-label"><i></i>① 原始输入</div>
+          <div class="ps-text" id="pipeInput">写一段 FastAPI 的接口代码</div>
+          <div class="ps-note">用户输入的是自然语言。模型不认识文字，第一步必须把它切分并翻译成数字。</div>
+        </div>
+        <div class="pipe-arrow" data-pipe-arrow="1">→</div>
+        <div class="pipe-step" data-pipe="tokenize">
+          <div class="ps-label"><i></i>② 分词 Tokenize</div>
+          <div class="ps-tokens" id="pipeTokens"></div>
+          <div class="ps-note">切成 7 个 Token，每个 Token 对应词表里的一个整数编号。</div>
+        </div>
+        <div class="pipe-arrow" data-pipe-arrow="2">→</div>
+        <div class="pipe-step" data-pipe="embed">
+          <div class="ps-label"><i></i>③ 向量嵌入 Embedding</div>
+          <div class="ps-vecs" id="pipeVecs"></div>
+          <div class="ps-note">每个 Token 映射成 <span class="pipe-dim">1024 维</span> 向量（示意值，真实 7B 级模型常见 4096 维），此后所有层都在修改这些数字。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="internals-grid">
+      <!-- 办公楼 -->
+      <div class="building-wrap">
+        <div class="building-head">
+          <span class="stage-badge" id="mBadge">STANDBY</span>
+          <span class="stage-name" id="mStageName">等待开始</span>
+          <span class="building-tip">示意 8 层 · 真实模型 30～40 层 · 每层 8 位专家</span>
+        </div>
+        <div class="building" id="mBuilding"></div>
+      </div>
+
+      <!-- 侧栏 -->
+      <aside class="internals-side">
+        <div class="vec-card">
+          <div class="io-label">CURRENT VECTOR · 数字简历</div>
+          <div class="vec-bars" id="vecBars"></div>
+          <div class="vec-meta">
+            <span>维度 1024（示意）</span>
+            <span id="mCurVec">v0 · 未生成</span>
+          </div>
+        </div>
+
+        <div class="mstat-card">
+          <div class="mstat-row">
+            <span class="mstat-k">当前环节</span>
+            <span class="mstat-v" id="mCurPhase">等待开始</span>
+          </div>
+          <div class="mstat-row">
+            <span class="mstat-k">激活专家</span>
+            <span class="mstat-v hot" id="mCurExpert">—</span>
+          </div>
+        </div>
+
+        <!-- 调度员决策面板 -->
+        <div class="router-card" id="routerCard">
+          <div class="router-head">
+            <span class="router-avatar">🎯</span>
+            <span class="router-name">调度员 Router</span>
+            <span class="router-sub" id="routerLayer">IDLE</span>
+          </div>
+          <div class="router-stage" id="routerStage">
+            等待向量到达。调度员只在每层内部工作，负责把当前向量<strong>分给最对口的专家</strong>。
+          </div>
+          <div class="router-list" id="routerList"></div>
+          <div class="router-foot" id="routerFoot">
+            未激活任何专家。<b>其余专家本轮休眠，不参与计算、不消耗算力</b> —— 这就是 MoE 稀疏激活的核心。
+          </div>
+        </div>
+
+        <div class="moemini">
+          <div class="moemini-row">
+            <span class="mm-k">稠密模型</span>
+            <span class="mm-v">每层 1 个全能专家 · 不管什么问题，全部参数都参与计算</span>
+          </div>
+          <div class="moemini-row">
+            <span class="mm-k">MoE 模型</span>
+            <span class="mm-v">每层 N 个领域专家 · 每次只激活少数几个，其余本轮休眠</span>
+          </div>
+          <div class="moemini-row">
+            <span class="mm-k">调度员</span>
+            <span class="mm-v">Router / Gate · 给每个专家打分，选 top-k 唤醒，是 MoE 的关键角色</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ==================================================
+         输出与传输区域（阶段 12-13 显示）
+    =================================================== -->
+    <div class="output-zone" id="outputZone">
+      <div class="oz-head">
+        <span class="oz-badge" id="ozBadge">OUTPUT</span>
+        <span class="oz-title" id="ozTitle">输出与传输</span>
+        <span class="oz-tech" id="ozTech">—</span>
+      </div>
+      <div class="oz-grid">
+        <div class="oz-col">
+          <div class="oz-col-head">技术方案</div>
+          <div id="ozTechList"></div>
+        </div>
+        <div class="oz-col">
+          <div class="oz-col-head">实际输出</div>
+          <div id="ozOutput"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="knowledge-grid">
+      <div class="k-card c1">
+        <h5>🔹 当前阶段</h5>
+        <div class="k-title" id="mStageTitle">等待开始</div>
+        <p id="mStageDesc">点击「自动演示」，看向量如何被一层层加工、调度员如何挑专家、结果如何输出。</p>
+      </div>
+      <div class="k-card c2">
+        <h5>🔹 关键数据</h5>
+        <p id="mStageData">文字 → 分词 → 向量 → 逐层加工（调度员挑专家）→ 解码 → SSE 输出</p>
+      </div>
+      <div class="k-card c3">
+        <h5>🔹 学习要点</h5>
+        <p id="mStageKey">向量是唯一被反复修改的载体；层数是加工轮次；调度员每层重新挑专家；最终通过 SSE 逐 Token 推送给用户。</p>
+      </div>
+    </div>
+
+    <div class="jump-bar">
+      <div class="jb-icon">🧩</div>
+      <div class="jb-text">
+        这一节讲的是<strong>模型内部</strong>怎么运转、怎么输出。回到宏观层面，这些能力最终会组合成 <strong>应用层知识体系</strong> —— 个人开发者的学习路径与企业落地的成熟度阶梯。
+      </div>
+      <a href="#application" class="btn">查看应用体系 →</a>
+    </div>
+  </section>
+
+  <!-- ==================================================
+       04 · 应用体系
+  =================================================== -->
+  <section id="application" class="panel">
+    <div class="sec-head">
+      <div class="kicker">04 · Application Layer · 落地视角</div>
+      <h2 class="sec-title">应用层知识体系</h2>
+      <p class="sec-sub">模型能力只是起点。真正产生价值的是把能力组织成产品与流程 —— 下面分别给出个人开发者与企业两条落地路径。</p>
+    </div>
+
+    <div class="app-tabs" role="tablist">
+      <button class="app-tab active" data-tab="dev" role="tab" aria-selected="true">👤 个人开发者知识体系</button>
+      <button class="app-tab" data-tab="org" role="tab" aria-selected="false">🏢 企业 AI-Native 落地</button>
+    </div>
+
+    <div class="app-panel active" id="tab-dev" role="tabpanel">
+      <div class="level-list">
+        <div class="level-card" style="--accent:var(--cyan)">
+          <div class="level-head">
+            <span class="level-badge">L1</span>
+            <div>
+              <h4>基础底座 · 决定你能不能“看懂”模型</h4>
+              <p>这一层不追求深，但必须扎实。它决定了后面学习是“照抄教程”还是“真正理解”。</p>
+            </div>
+          </div>
+          <div class="chip-row">
+            <span class="chip">Python 工程能力</span>
+            <span class="chip">线性代数 · 概率统计</span>
+            <span class="chip">机器学习基础</span>
+            <span class="chip">PyTorch</span>
+            <span class="chip">Linux / Git</span>
+            <span class="chip">数据处理 pandas</span>
+          </div>
+        </div>
+
+        <div class="level-card" style="--accent:#8fb4ff">
+          <div class="level-head">
+            <span class="level-badge">L2</span>
+            <div>
+              <h4>模型能力 · 理解大模型本身</h4>
+              <p>从“会调 API”进阶到“知道模型为什么这样回答”，是能力分水岭。</p>
+            </div>
+          </div>
+          <div class="chip-row">
+            <span class="chip">Transformer 原理</span>
+            <span class="chip">注意力机制</span>
+            <span class="chip">层数 / 专家数 / MoE / Router</span>
+            <span class="chip">Prompt 工程</span>
+            <span class="chip">SFT / LoRA 微调</span>
+            <span class="chip">模型评测与对比</span>
+            <span class="chip">量化与本地部署</span>
+          </div>
+        </div>
+
+        <div class="level-card" style="--accent:var(--purple)">
+          <div class="level-head">
+            <span class="level-badge">L3</span>
+            <div>
+              <h4>应用工程 · 把模型变成可用系统</h4>
+              <p>绝大多数开发者真正的战场。模型是黑盒，但工程链路是你能完全掌控的部分。</p>
+            </div>
+          </div>
+          <div class="chip-row">
+            <span class="chip">RAG 系统设计</span>
+            <span class="chip">向量数据库</span>
+            <span class="chip">文档切分与重排</span>
+            <span class="chip">Agent 编排</span>
+            <span class="chip">Function Calling / MCP</span>
+            <span class="chip">SSE / WebSocket 流式</span>
+            <span class="chip">上下文工程</span>
+            <span class="chip">可观测与追踪</span>
+            <span class="chip">缓存与成本控制</span>
+          </div>
+        </div>
+
+        <div class="level-card" style="--accent:var(--green)">
+          <div class="level-head">
+            <span class="level-badge">L4</span>
+            <div>
+              <h4>产品落地 · 让能力真正被使用</h4>
+              <p>技术之外的维度。能否判断“什么场景值得做”，往往比“能不能做出来”更重要。</p>
+            </div>
+          </div>
+          <div class="chip-row">
+            <span class="chip">需求拆解与场景选择</span>
+            <span class="chip">人机协作交互设计</span>
+            <span class="chip">评测集与回归测试</span>
+            <span class="chip">数据飞轮</span>
+            <span class="chip">安全与合规</span>
+            <span class="chip">延迟 / 成本权衡</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-panel" id="tab-org" role="tabpanel">
+      <div class="maturity">
+        <div class="mat-step">
+          <div class="m-tag">L0</div>
+          <h5>试点探索</h5>
+          <p>零散试用、个人提效。缺少统一入口与数据沉淀，成果难以复用。</p>
+        </div>
+        <div class="mat-step">
+          <div class="m-tag">L1</div>
+          <h5>单点应用</h5>
+          <p>在客服、文档、编码等明确场景上线，形成可量化的效率指标。</p>
+        </div>
+        <div class="mat-step">
+          <div class="m-tag">L2</div>
+          <h5>流程嵌入</h5>
+          <p>AI 进入核心工作流，与既有系统打通，沉淀企业知识资产。</p>
+        </div>
+        <div class="mat-step">
+          <div class="m-tag">L3</div>
+          <h5>AI-Native 重构</h5>
+          <p>以 AI 为前提重新设计流程与组织，人机协同成为默认工作方式。</p>
+        </div>
+      </div>
+
+      <div class="dim-grid">
+        <div class="dim-card">
+          <div class="dim-head"><span class="dim-icon">🎯</span><h4>战略与组织</h4></div>
+          <div class="chip-row">
+            <span class="chip">场景盘点与优先级</span>
+            <span class="chip">ROI 评估模型</span>
+            <span class="chip">跨部门 AI 小组</span>
+            <span class="chip">能力中心 / 中台</span>
+            <span class="chip">人才梯队培养</span>
+          </div>
+        </div>
+
+        <div class="dim-card">
+          <div class="dim-head"><span class="dim-icon">📚</span><h4>数据与知识</h4></div>
+          <div class="chip-row">
+            <span class="chip">数据治理与脱敏</span>
+            <span class="chip">企业知识库建设</span>
+            <span class="chip">文档结构化</span>
+            <span class="chip">权限与分级</span>
+            <span class="chip">反馈数据闭环</span>
+          </div>
+        </div>
+
+        <div class="dim-card">
+          <div class="dim-head"><span class="dim-icon">⚙️</span><h4>平台与基建</h4></div>
+          <div class="chip-row">
+            <span class="chip">模型网关 / 路由</span>
+            <span class="chip">多模型灰度切换</span>
+            <span class="chip">算力调度</span>
+            <span class="chip">向量库与检索服务</span>
+            <span class="chip">评测平台</span>
+            <span class="chip">调用监控与成本看板</span>
+          </div>
+        </div>
+
+        <div class="dim-card">
+          <div class="dim-head"><span class="dim-icon">🔄</span><h4>流程与场景</h4></div>
+          <div class="chip-row">
+            <span class="chip">Copilot 嵌入现有工具</span>
+            <span class="chip">工作流重构</span>
+            <span class="chip">Agent 自动化任务</span>
+            <span class="chip">人机审核节点</span>
+            <span class="chip">效果度量与迭代</span>
+          </div>
+        </div>
+
+        <div class="dim-card">
+          <div class="dim-head"><span class="dim-icon">🛡️</span><h4>安全与治理</h4></div>
+          <div class="chip-row">
+            <span class="chip">数据不出域</span>
+            <span class="chip">幻觉治理与溯源</span>
+            <span class="chip">输出审核与兜底</span>
+            <span class="chip">合规审计日志</span>
+            <span class="chip">Prompt 注入防护</span>
+          </div>
+        </div>
+
+        <div class="dim-card">
+          <div class="dim-head"><span class="dim-icon">💰</span><h4>成本与效率</h4></div>
+          <div class="chip-row">
+            <span class="chip">模型分级使用</span>
+            <span class="chip">缓存与批处理</span>
+            <span class="chip">上下文压缩</span>
+            <span class="chip">本地化推理</span>
+            <span class="chip">单位任务成本核算</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="traps">
+        <details class="trap">
+          <summary><span class="trap-num">1</span>先买模型，再找场景</summary>
+          <div class="trap-body">典型反模式。正确顺序是：先盘点高频、高价值、可衡量的业务痛点，再倒推需要什么模型能力。否则很容易做出“演示很惊艳、上线没人用”的系统。</div>
+        </details>
+        <details class="trap">
+          <summary><span class="trap-num">2</span>把 RAG 当成“接个知识库就完事”</summary>
+          <div class="trap-body">检索质量才是 RAG 的上限。文档切分策略、embedding 选型、重排序、查询改写、上下文组装，每一环都会显著影响最终效果。检索不准，模型再强也会一本正经地胡说。</div>
+        </details>
+        <details class="trap">
+          <summary><span class="trap-num">3</span>没有评测集，靠“感觉”迭代</summary>
+          <div class="trap-body">没有评测集就无法判断一次改动是变好还是变差。建议从第一天就积累真实场景的问答对，建立自动 + 人工结合的回归评测流程。</div>
+        </details>
+        <details class="trap">
+          <summary><span class="trap-num">4</span>只关注效果，不关注成本与延迟</summary>
+          <div class="trap-body">在 Demo 阶段效果优先没问题，但进入生产后，单位任务成本、P95 延迟、并发能力往往才是项目能否持续的关键。模型分级 + 缓存 + 上下文压缩是常用手段。</div>
+        </details>
+        <details class="trap">
+          <summary><span class="trap-num">5</span>忽视人的角色，追求完全自动化</summary>
+          <div class="trap-body">多数高价值场景的最佳形态是“人机协作”：AI 完成 80% 的初稿或检索，人做最终判断。合理设计审核与反馈节点，反而能显著提升整体效率与信任度。</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <p>四层视角贯通：<strong>图谱视角</strong>（知识生命体）→ <strong>流程视角</strong>（请求链路）→ <strong>微观视角</strong>（模型内部）→ <strong>落地视角</strong>（应用体系）。</p>
+    <p style="margin-top:6px">先看清知识网络，再看它如何运转，再钻进内部搞懂向量、专家、调度员与输出，最后落到你自己的场景 —— 这才是完整的大模型知识体系。</p>
+    <p style="margin-top:14px;font-size:11.5px;color:var(--muted-dim)">由《大模型（LLM）系统学习与求职手册》重构 · 知识截止 2026 年 9 月</p>
+  </div>
+
+</div>
+</div>
+
+<script>
+/* ============================================================
+   时钟
+   ============================================================ */
+(function initClock(){
+  const el = document.getElementById('clock');
+  const pad = n => String(n).padStart(2,'0');
+  function tick(){
+    const d = new Date();
+    el.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+/* ============================================================
+   PART 1 · 知识生命体
+   ============================================================ */
+(function(){
+  'use strict';
+
+  var SYS = [
+    {
+      id:'arch', num:'01', name:'架构骨架', en:'Architecture', color:'#38bdf8',
+      role:'地基 · 决定能力上限',
+      sum:'Decoder-only 架构、注意力、位置编码与稀疏化构成模型的骨骼。这一层决定了模型能表达什么、不能表达什么，也决定了后面所有成本结构的上限。',
+      mets:[
+        ['O(L²)','注意力的时间与显存复杂度，所有长上下文成本的源头'],
+        ['2·L·H_kv·d_h·S','每 token 的 KV Cache 字节数，GQA 压的就是 H_kv 这一项'],
+        ['1/8','GQA-8 相对同等 MHA 的 KV Cache 占用']
+      ],
+      cons:[
+        {
+          t:'自注意力', b:'每个位置用相似度决定从哪里取信息，代价是平方级增长',
+          d:'把输入投影成 Q、K、V 三组向量，用 Q·Kᵀ 衡量相关性，除以 √d_k 抑制量级后做 softmax 归一化，再对 V 加权求和。因果掩码保证位置 i 只能看到 j ≤ i，不做掩码模型会在训练时偷看未来，指标好看但上线全崩。主流 LLM 均采用只堆解码器的 decoder-only 架构：每层 = 因果自注意力 + FFN（或 MoE），以 Next Token Prediction 自回归生成，结构统一、易扩展、天然支持流式；工程实现上，FlashAttention 以 IO 感知分块计算避免物化整个注意力矩阵，已是长上下文的事实标准。',
+          ks:['缩放除以 √d_k：抑制 logits 量级，避免 softmax 进入饱和区','因果掩码防偷看：位置 i 只能注意 j ≤ i','复杂度随 L² 增长：长上下文成本的第一来源'],
+          tags:['O(L²)','因果掩码','decoder-only']
+        },
+        {
+          t:'多头与变体', b:'在多个子空间并行关注，并用共享换显存',
+          d:'一个头只能输出一条关注路线，多头把 d_model 切成 H 个子空间并行计算，让同层同时表达多种关联模式。总 FLOPs 与单头基本持平，代价落在 KV Cache 上。MHA 每个头独立缓存最贵；MQA 全部共享但质量损失明显；GQA 分组共享成为主流；MLA 换思路，把 K/V 压成低维潜向量再还原。',
+          ks:['MHA / MQA / GQA / MLA：同一条主线，降低 KV Cache 开销','压的是 KV 头数：GQA-8 把 KV 头从 64 降到 8','多头不增总 FLOPs，代价在缓存不在计算'],
+          tags:['GQA','KV 头数','1/8 显存']
+        },
+        {
+          t:'RoPE 旋转位置', b:'用旋转把相对位置编码进 Q/K 的内积',
+          d:'把 d 维向量两两配对成 d/2 个二维平面，对第 i 个平面施加角度为 m·θ_i 的旋转。核心性质是旋转内积只依赖夹角差 (m−n)θ，于是用绝对位置的旋转实现了相对位置的表达。频率随维度指数衰减：低维高频管局部，高维低频管远距离。',
+          ks:['旋转内积 = 相对位置：结果只依赖位置差 (m−n)','频率按维度指数衰减：低维高频管局部，高维低频管远距离','外推必须配合缩放：位置插值 / NTK / YaRN'],
+          tags:['RoPE','外推','相对位置']
+        },
+        {
+          t:'MoE 稀疏激活', b:'总参数与每 token 激活参数解耦',
+          d:'把 FFN 复制成 N 个专家，路由器为每个 token 挑 top-k 个参与计算。收益是容量按总参数给、算力按激活参数付。代价有三：权重必须全部驻留显存；专家并行要 all-to-all 交换 token；路由容易塌缩到少数专家，需要负载均衡。',
+          ks:['总参数 ≠ 激活参数：671B 总参 / 37B 激活','路由坍塌是主要风险：少数专家垄断多数 token','偏置式负载均衡：把均衡从损失惩罚改成路由层控制'],
+          tags:['MoE','路由坍塌','稀疏激活']
+        }
+      ],
+      links:['train','infer']
+    },
+    {
+      id:'train', num:'02', name:'训练微调', en:'Training', color:'#818cf8',
+      role:'血脉 · 知识与能力的来源',
+      sum:'从原始文本到可用权重。数据工程决定上限，并行策略与数值精度决定成本与稳定。',
+      mets:[
+        ['16 B/参数','混合精度训练的参数+梯度+优化器状态，显存估算基线'],
+        ['112 GB','7B 模型全参微调的静态显存，单张 80G 卡装不下'],
+        ['≈0.5%','LoRA r=16 的可训练参数占比，单卡微调的现实路径']
+      ],
+      cons:[
+        {
+          t:'数据工程', b:'优先级是去重 > 过滤 > 配比 > 规模',
+          d:'数据决定能力上限。去重排第一，因为重复样本会反复计算同一梯度，等效于用更少的信息训练，还会加剧记忆化与评测泄漏。模糊去重常用 MinHash + LSH，用签名碰撞概率估计 Jaccard 相似度，把比较量从平方级压到近线性。公开语料趋于枯竭后，合成数据成为第二来源：用强模型生成、再经拒绝采样与规则/模型过滤入库，Self-Instruct 与 RFT 都属此范式——质量控制核心在过滤而不在生成。另一条低成本路径是蒸馏：让学生模型学教师的输出文本或 logits，部署级小模型多由此而来。',
+          ks:['MinHash + LSH：把去重从 O(N²) 压到近线性','污染检测不可省：改写样本能绕过 n-gram 匹配','合成数据靠过滤：拒绝采样只留高质量样本'],
+          tags:['MinHash','去重','合成数据']
+        },
+        {
+          t:'扩展定律', b:'参数量与数据量应等比例放大',
+          d:'Kaplan 给出偏向做大的指数，Chinchilla 修正为两者都 ∝ C^0.50，等价于约 20 token/参数。但 Chinchilla 最优只最小化训练 FLOPs，不计推理成本。工程上推理是长期开销，所以现实是刻意过训练。',
+          ks:['C^0.5 修正了 C^0.73 的口径问题','约 20 token/参数：Chinchilla 最优配比','现实是刻意过训练：推理是长期开销'],
+          tags:['Chinchilla','过训练','幂律']
+        },
+        {
+          t:'并行四维', b:'DP 切 batch、TP 切层内、PP 切层间、EP 切专家',
+          d:'每维的通信量与适用规模完全不同。DP 通信/计算比低可跨机；TP 每层多次 all-reduce，必须放在 NVLink 域内；PP 只在相邻 stage 间传激活，代价是流水线气泡；EP 每 MoE 层两次 all-to-all。组合原则是 TP/EP 放域内，PP/DP 跨机。',
+          ks:['通信量排序 TP > EP > PP > DP','TP 通常不出单机：跨机用会被通信拖死','流水线气泡 ≈ (P−1)/(M+P−1)'],
+          tags:['TP','PP','EP']
+        },
+        {
+          t:'LoRA / QLoRA', b:'冻结主干，只训 0.1%–2% 的低秩增量',
+          d:'把 ΔW 分解成 B·A，前向变成 W₀x + (α/r)·BAx。A 用高斯初始化、B 初始化为零，保证训练第一步的输出与基座完全一致。推理时可数学等价合并回主干，零额外延迟——这是它成为事实标准的关键。',
+          ks:['B 初始化为零：训练起点与基座完全一致','可合并零推理延迟：W ← W₀ + (α/r)BA','NF4 + 双重量化：65B 可塞进单张 48G 卡'],
+          tags:['LoRA','QLoRA','低秩']
+        }
+      ],
+      links:['arch','align']
+    },
+    {
+      id:'align', num:'03', name:'对齐增强', en:'Alignment', color:'#f472b6',
+      role:'意志 · 决定模型的取舍与行为',
+      sum:'从模仿到偏好，再到可验证奖励。这是全领域迭代最快、也最容易答出「知识陈旧」的一段。',
+      mets:[
+        ['4 → 2','PPO 到 DPO 所需的模型数量，显存与复杂度同步下降'],
+        ['组内标准化','GRPO 用同题多次采样的相对得分替代 critic'],
+        ['pass@1 领先','RLVR 提升的是采样效率；大 k 时基座可能反超']
+      ],
+      cons:[
+        {
+          t:'SFT 打底', b:'教格式与行为，但仍未被取代',
+          d:'用「指令—回答」对做监督学习，只对助手回复计算 loss。loss mask 是关键细节：prompt 部分必须置为 -100，否则模型会学到复述用户问题；多轮数据要对每一轮助手回复都算 loss。2026 年的 SFT 数据里，长思维链与工具轨迹占比大幅提高。',
+          ks:['只算 assistant 段 loss，prompt 置 -100','多轮逐轮掩码：每一轮助手回复都要算','长 CoT 与工具轨迹占比大幅提高'],
+          tags:['SFT','loss mask','长 CoT']
+        },
+        {
+          t:'RLHF / PPO', b:'三阶段范式，但工程链路最重',
+          d:'四个模型同时驻留：actor 生成、critic 估计基线、reward 打分、reference 算 KL。痛点：critic 与 actor 同规模，显存翻倍且最难训稳；on-policy 采样效率低；KL 系数、裁剪范围、学习率互相耦合。',
+          ks:['四模型同时驻留，复杂度最高','critic 最难训稳：误差变成梯度偏差','on-policy 采样贵：采一次只能更新几步'],
+          tags:['PPO','critic','KL']
+        },
+        {
+          t:'DPO', b:'把奖励隐式表示为策略与参考的对数比',
+          d:'推导四步：写出带 KL 约束的目标 → 有闭式解 → 取对数移项得到 r 的表达式 → 代回 Bradley-Terry 模型，配分函数在相减时抵消。结果是损失里只剩策略与冻结的参考模型，不需要奖励模型也不需要采样。',
+          ks:['配分函数 Z(x) 在相减时抵消','副产品是隐式奖励，可用于排序与拒绝采样','离线、无探索：分布外偏好覆盖有限'],
+          tags:['DPO','隐式奖励','离线']
+        },
+        {
+          t:'GRPO 与 RLVR', b:'组内相对得分替代价值网络，可验证奖励替代人工标注',
+          d:'对同一 prompt 采样 G 个回答（常用 4–64），用组内标准化后的分数当优势：Â = (r − mean)/std，直接砍掉 critic，省下一份与 actor 同规模的训练态显存；代价是采样成本线性上升，组内奖励全相同时优势为零。在数学、代码这类能自动判对错的任务上，奖励直接取程序验证结果（RLVR），无需人工偏好标注——这正是 o1 / DeepSeek-R1 范式长思维链的训练底座，也打开了参数与数据之外的第三条扩展轴：测试时算力。推理时想得越久、准确率越高，代价是延迟与 token 成本同步上升。',
+          ks:['组内标准化替代 critic，省掉一份大模型显存','RLVR：可验证奖励替代人工标注，数学/代码先行','测试时算力：长 CoT 换准确率的第三条扩展轴'],
+          tags:['GRPO','RLVR','长 CoT']
+        }
+      ],
+      links:['train','infer']
+    },
+    {
+      id:'infer', num:'04', name:'推理部署', en:'Inference', color:'#fbbf24',
+      role:'呼吸 · 决定能否便宜稳定地跑',
+      sum:'Prefill 与 Decode 是两种物理性质完全不同的负载。所有推理优化，本质上都在围绕它们各自的瓶颈做文章。',
+      mets:[
+        ['TTFT / TPOT','首 token 延迟与 token 间延迟，必须分开看'],
+        ['带宽 ÷ 权重字节','batch=1 时 decode 速度的理论上界'],
+        ['2–4×','连续批处理在长短混跑负载下的典型收益']
+      ],
+      cons:[
+        {
+          t:'Prefill 与 Decode', b:'两个物理性质完全不同的阶段',
+          d:'Prefill 吃下整段提示，N 个 token 在同一个矩阵乘里并行算完，是算力密集；Decode 每步只出 1 个 token，却要读完整份权重与全部历史 KV，是显存带宽密集。凡是「加卡不涨吞吐」的推理问题，九成卡在 decode 的带宽上。',
+          ks:['算力密集 vs 带宽密集','TTFT 由 prefill 决定，与 prompt 长度近似线性','ITL 由 decode 决定：提 batch 能摊薄权重读取'],
+          tags:['TTFT','ITL','带宽密集']
+        },
+        {
+          t:'KV Cache', b:'用 O(S) 显存换掉 O(S²) 的重复计算',
+          d:'因果掩码下位置 i 只依赖 ≤ i 的 K/V，所以每步只需追加新 token。单 token 字节数 = 2 × 层数 × KV 头数 × head_dim × 每元素字节，前面的 2 是 K 与 V 两份。以 64 层、8 KV 头、head_dim 128、FP8 为例，单 token 是 128 KB。',
+          ks:['2 × L × H_kv × d_h：每 token 字节数公式','随序列长度线性增长，长上下文成本第一来源','GQA 压的是 H_kv：从 64 降到 8 翻八倍并发'],
+          tags:['KV Cache','显存','GQA']
+        },
+        {
+          t:'连续批处理', b:'一个管显存，一个管调度，两者互补',
+          d:'朴素实现为每条请求按最大长度预留连续显存，碎片浪费可达 60–90%。PagedAttention 把 KV 切成块按需分配，顺带支持前缀共享。连续批处理以「一次前向」为调度单位，每步结束就回收槽位补入新请求。等长负载下收益是 1.00 倍，重尾负载下可到 6 倍以上。',
+          ks:['按需分配消碎片：浪费从 60–90% 降到个位数','每步重新调度：槽位持续满载','长度越散收益越大：等长 1.00 倍，重尾 6 倍以上'],
+          tags:['PagedAttention','连续批处理','碎片']
+        },
+        {
+          t:'投机解码', b:'用多余算力换更少的串行步数',
+          d:'decode 的瓶颈是每步只能串行吐 1 个 token。投机解码用便宜的草稿模型先猜出 k 个 token，再让目标模型一次性并行验证这 k+1 个位置。关键性质是输出分布与目标模型严格一致（拒绝采样保证），所以是无损加速。',
+          ks:['无损加速：拒绝采样保证分布严格一致','接受率决定收益，加速比近似 [(1−α^(K+1))/(1−α)]/(1+c)','大 batch 会失效：高并发下算力成为瓶颈'],
+          tags:['投机解码','草稿模型','无损']
+        }
+      ],
+      links:['arch','rag','agent']
+    },
+    {
+      id:'rag', num:'05', name:'检索增强', en:'RAG', color:'#34d399',
+      role:'记忆 · 把知识放在正确的位置',
+      sum:'RAG 不是长上下文的替代品，而是一套「把外部知识在正确时机以正确粒度塞进有限注意力预算」的工程系统。',
+      mets:[
+        ['Recall@K / MRR','检索侧的召回与排序，必须分开量才能归因'],
+        ['RRF','只用名次融合多路召回，免疫两路分数量纲不可比'],
+        ['中间最弱','长上下文存在 U 形位置效应，关键信息别埋在中间']
+      ],
+      cons:[
+        {
+          t:'切分策略', b:'块自足性优先于块等长',
+          d:'固定长度会从中间切断语义。生产默认是父子块：用小块（128–256 token）做向量索引保证检索精度，命中后返回父块作为上下文。两个配套动作常被忽略：给每块补上下文头缓解指代失锚；重叠在组装阶段按内容指纹去重。',
+          ks:['按结构切而非按长度切','小块检索大块投喂：兼顾精度与完整','补上下文头防失锚：标题、章节、日期一起编码'],
+          tags:['切块','父子块','上下文头']
+        },
+        {
+          t:'混合召回', b:'向量与关键词的盲区互补',
+          d:'向量擅长语义改写，但在精确词项上系统性失灵——错误码、型号、缩写经常找不回来。BM25 恰好相反。融合用 RRF 而不是加权求和：两路分数量纲不可比，归一化方式本身又会引入难以解释的超参。',
+          ks:['BM25 抓精确词项：错误码、型号、缩写','向量抓语义改写：口语化提问','RRF 只看名次：score = Σ 1/(k+rank)'],
+          tags:['BM25','RRF','混合检索']
+        },
+        {
+          t:'重排', b:'提升排序质量，但不改变召回上限',
+          d:'双编码器把查询与文档分开编码，速度但交互浅；交叉编码器把「查询 + 文档」拼在一起过一遍模型，精度高但无法预计算。关键是分清它买到的是什么：召回上限由召回阶段决定，候选集里没有的重排排不进来。',
+          ks:['双塔 vs 交叉编码器：前者快，后者精度高','只改排序不改召回：候选集决定上限','候选数决定延迟：翻倍则 GPU 需求翻倍'],
+          tags:['Rerank','交叉编码器','MRR']
+        },
+        {
+          t:'评估闭环', b:'把「检索错」和「生成错」分开量',
+          d:'四个指标构成事实参考集：忠实度、答案相关性、上下文精确率、上下文召回率。关键是成对读：忠实度接近 1.0 而召回率很低，意味着「在准确地总结不完整的信息」，比明显幻觉更危险。',
+          ks:['忠实度 vs 召回率：一个看生成，一个看检索','成对读指标：忠实高而召回低最危险','坏例回灌回归集：每条失败都要定位到环节'],
+          tags:['忠实度','Recall@K','回归集']
+        }
+      ],
+      links:['infer','agent']
+    },
+    {
+      id:'agent', num:'06', name:'智能体', en:'Agent', color:'#22d3ee',
+      role:'四肢 · 把推理接到外部世界',
+      sum:'Agent 不是更聪明的模型，而是一种把模型接上工具与状态、并允许它循环执行的控制结构。',
+      mets:[
+        ['4× / 15×','单智能体 / 多智能体相对普通对话的 token 消耗量级'],
+        ['6 步','单任务工具调用轮次的常见上限建议'],
+        ['0 次','越界写操作的验收目标，写操作应 100% 过闸']
+      ],
+      cons:[
+        {
+          t:'循环与退出', b:'必须有多个退出条件同时生效',
+          d:'本质循环是观察 → 规划 → 行动 → 观察。裸循环有三种典型死法：无限循环、无进展循环、不可中断。标准做法是三条一起上：步数上限 + 无进展检测（对「工具名 + 规范化参数」做哈希比对）+ 破坏性操作前的人工闸门。',
+          ks:['三条件并行：步数上限 + 无进展检测 + 人工闸门','哈希检测无进展：比对工具名 + 规范化参数','上限兜住成本：没有上限会稳定烧光预算'],
+          tags:['ReAct','步数上限','无进展']
+        },
+        {
+          t:'MCP 协议', b:'把工具接入从 N×M 压成 N+M',
+          d:'三种角色：宿主是承载界面的应用，为每个服务端创建一对一客户端，服务端持有工具与数据。2026-07-28 版最关键的变化是请求变成无状态自包含：不再有会话初始化握手，协议版本与客户端能力随每个请求的元数据传入。',
+          ks:['无状态自包含：会话不必粘在一台机器上','两种错误通道：协议错误不重试，执行错误要自纠','ttlMs 缓存清单：清单越大越值钱'],
+          tags:['MCP','无状态','错误语义']
+        },
+        {
+          t:'工具设计', b:'按任务设计粒度，把错误信息写成可执行指引',
+          d:'把后端十二个 REST 端点逐个暴露成十二个工具会撑爆模型的选择空间，调用准确率直接下降；正确做法是按用户意图聚类成任务级工具。错误回填必须包含「哪里错了、该怎么改」。',
+          ks:['任务级粒度：按意图聚类，别把端点逐个暴露','错误要可自纠：「参数格式错误」而不是「调用失败」','写操作靠闸门：读天然幂等，写必须靠业务键'],
+          tags:['工具粒度','错误回填','幂等']
+        },
+        {
+          t:'轨迹管理', b:'把噪声留在子上下文，只把结论带回主线',
+          d:'工具返回会持续往历史里塞内容，十几步之后窗口被填满。五类手段：历史裁剪、摘要压缩、工具结果浓缩、外部记忆、子智能体隔离。子智能体的价值不在并行更快，而在把大量试错过程关在子上下文里。',
+          ks:['摘要 + 外部句柄：原文进外部存储，上下文只留句柄','压缩前先落盘：有损压缩丢掉的细节必须可回查','子智能体隔离：价值在把试错关在子上下文'],
+          tags:['轨迹压缩','外部句柄','子智能体']
+        }
+      ],
+      links:['infer','rag']
+    },
+    {
+      id:'mm', num:'07', name:'多模态', en:'Multimodal', color:'#a78bfa',
+      role:'感官 · 让模型看得见听得见',
+      sum:'一切多模态最终都归结为一件事：把别的模态转成 token，塞进同一个注意力里。',
+      mets:[
+        ['⌈h/28⌉×⌈w/28⌉/4+2','常见视觉 token 换算口径，分辨率直接等于成本'],
+        ['1M','前沿模型的上下文已普遍进入百万级'],
+        ['1 FPS','长视频理解常用的降帧采样率']
+      ],
+      cons:[
+        {
+          t:'三件套结构', b:'编码器 → 投影层 → 语言模型',
+          d:'视觉编码器把图像切成 patch 抽成特征；投影层把视觉特征搬进语言模型的词嵌入空间，最简是两层 MLP；语言模型做全部推理与生成。关键约束是视觉 token 预算：1024×1024 按 16×16 切就有 4096 个 patch。',
+          ks:['patch → 特征向量：图像切成 14×14 或 16×16','投影到词嵌入空间：最简 MLP','分辨率 = 成本：1024×1024 就是 4096 个 patch'],
+          tags:['VLM','投影层','patch']
+        },
+        {
+          t:'原生多模态', b:'从预训练第一天起就共享同一套注意力',
+          d:'严格定义是：各模态先各自 token 化，然后从预训练第一天起就在同一个网络、同一套注意力、同一套参数里联合训练，不存在「先训视觉塔、再对齐、再拼接」的三段式阶段。原生不等于没有视觉编码器。',
+          ks:['联合预训练：从第一天起就在同一套注意力里','支持交错序列：图-文-图-音-文','不等于无编码器：前沿模型大多仍有'],
+          tags:['原生','联合训练','交错序列']
+        },
+        {
+          t:'视觉 token 预算', b:'图像先缩放到像素上限，再切块',
+          d:'常见口径是 image_tokens = ceil(h/28) × ceil(w/28) / 4 + 2，其中 28 是 patch 14 乘合并 2，除以 4 是 2×2 合并的压缩率。图会先等比缩放到像素上限以内，所以 token 数由分辨率线性决定、被上限截断。',
+          ks:['ceil(h/28)×ceil(w/28)/4：28 是 patch 14 乘合并 2','max_pixels 截断：token 数不是无限增长','分辨率换成本：下调像素上限省 token，小字先糊'],
+          tags:['视觉 token','max_pixels','分辨率']
+        },
+        {
+          t:'视频与语音', b:'一个多出时间维，一个把理解与合成解耦',
+          d:'视频多一个时间维，注意力从 2D 扩到 3D，算力随帧数近似二次增长。语音这条线已收敛到 Thinker-Talker：Thinker 只负责理解与决定说什么，Talker 只负责把它说成声音，两者用「文本 + 高层表示」桥接。',
+          ks:['时空联合注意力：算力随帧数近似二次增长','一致性与运动的两难：外推压住漂移但冻结运动','Thinker-Talker 解耦：理解与合成分开'],
+          tags:['视频','语音','Thinker-Talker']
+        }
+      ],
+      links:['arch','infer']
+    },
+    {
+      id:'eval', num:'08', name:'评测安全', en:'Eval & Safety', color:'#fb7185',
+      role:'神经与免疫 · 决定能否被信任',
+      sum:'评测让效果可比较，安全让风险可控，工程让成本可见。这三件事贯穿前面的每一个系统。',
+      mets:[
+        ['±9.8 pp','n=100、p=0.5 时 95% 置信区间的半宽'],
+        ['21.7%','缓存方案的盈亏平衡命中率量级'],
+        ['100%','写操作应经过人工确认的比例']
+      ],
+      cons:[
+        {
+          t:'指标口径', b:'任何数字都要能说出分母、样本量与测量方法',
+          d:'没有口径的「准确率 95%」等于没说。指标定义必须精确到能被别人复算：质量分 = 通过条数 ÷ 评估集总条数；Recall@K = 标注的支撑块出现在前 K 条结果中的比例。置信区间用 Wilson 而不是正态近似。',
+          ks:['分母写清楚：空答算不算？未命中算不算？','置信区间不可省：n=100 时半宽约 ±9.8 个百分点','配对检验更灵敏：同一批题用 McNemar'],
+          tags:['置信区间','McNemar','口径']
+        },
+        {
+          t:'LLM-as-Judge', b:'成本低，但有四类系统性偏差',
+          d:'已知偏差至少有四类：位置偏差、长度偏差、自我偏好、格式偏差。缓解手段：位置偏差用交换候选顺序；长度偏差在 prompt 里显式声明不要因长度给分；自我偏好用多个不同家族的裁判模型投票。最后一定要做人工校准。',
+          ks:['四类偏差：位置、长度、自我偏好、格式','交换顺序消除位置偏差：两次结论不一致记为平局','人工校准是前提：一致率不达标不能上线'],
+          tags:['模型裁判','偏差','校准']
+        },
+        {
+          t:'幻觉分层', b:'四类成因完全不同，不能用同一套方法治',
+          d:'第一类是事实性幻觉；第二类是忠实性幻觉，在 RAG 场景里指答案与上下文不一致，最危险因为看起来最有据；第三类是执行幻觉；第四类是自我一致性幻觉。降低手段按层排：输入层用 RAG 锚定、生成层先给引用、后处理层做引用校验、系统层高风险操作走规则。',
+          ks:['四类幻觉：事实性、忠实性、执行性、自一致性','忠实性最危险：答案与上下文不一致但看起来有据','必须建负样本集：专门测「上下文里没有答案」'],
+          tags:['幻觉','忠实度','负样本']
+        },
+        {
+          t:'提示注入', b:'直接注入在输入，间接注入藏在检索内容里',
+          d:'直接注入是用户自己的输入里夹带指令；间接注入是把指令藏在检索到的文档、网页、工具返回值里，用户完全不知情。在 Agent 场景下它会被放大：从「说错话」升级为「真做事」。核心认知是「指令与数据的边界不能交给模型自己判断」。',
+          ks:['间接注入更危险：用户完全不知情','Agent 场景会放大：从说错话到真做事','边界必须外置：不能交给模型自己判断'],
+          tags:['注入','Agent','护栏']
+        }
+      ],
+      links:['arch','train','align','infer','rag','agent','mm']
+    }
+  ];
+
+  var ORDER = ['arch','train','align','infer','rag','agent','mm','eval'];
+
+  var CROSS = [
+    ['KV Cache','每 token 的键值缓存。既是长上下文成本的第一来源，也是推理优化的主战场。',['arch','infer']],
+    ['显存预算','权重、KV Cache、优化器状态、激活值四者分配，决定单卡能做什么。',['arch','train','infer']],
+    ['前缀缓存','把稳定前缀放最前面并逐字节稳定，是成本优化里收益最高、风险最低的一步。',['infer','rag','agent']],
+    ['工具调用','模型输出结构化调用意图，由宿主执行并回填结果，是 Agent 的行动层。',['agent','mm']],
+    ['上下文长度','「窗口能放下多少」和「在该长度上可靠检索」是两件完全不同的事。',['arch','infer','rag']],
+    ['评测口径','任何数字都要能说出分母、样本量与测量方法，没有口径的数字等于没说。',['eval','rag','agent']],
+    ['loss spike','训练中的损失跳升。常见诱因是脏数据、硬件瞬时故障、数值精度不足。',['train','arch']],
+    ['多模态 token','图像与视频转成 token 后进入同一注意力，分辨率直接等于成本。',['mm','arch','infer']],
+    ['Router 调度','每层的调度员给专家打分并选 top-k 唤醒，是 MoE 稀疏激活的关键机制。',['arch','train','infer']],
+    ['SSE 流式输出','Server-Sent Events 逐 Token 推送，是现代对话产品「逐字上屏」的技术底座。',['infer','agent','rag']]
+  ];
+
+  function $(sel){ return document.querySelector(sel); }
+  function $$(sel){
+    var list = document.querySelectorAll(sel);
+    var arr = [];
+    for (var i = 0; i < list.length; i++) arr.push(list[i]);
+    return arr;
+  }
+  function byId(id){
+    for (var i = 0; i < SYS.length; i++) if (SYS[i].id === id) return SYS[i];
+    return null;
+  }
+  function hexA(hex, a){
+    var n = parseInt(hex.slice(1), 16);
+    var r = (n >> 16) & 255;
+    var g = (n >> 8) & 255;
+    var b = n & 255;
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+  }
+  function esc(s){
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  var activeId = 'arch';
+
+  function renderPanel(sys){
+    var panel = $('#panelDetail');
+    if (!panel) return;
+
+    var mets = '';
+    for (var i = 0; i < sys.mets.length; i++){
+      var m = sys.mets[i];
+      mets += '<div class="metric" style="color:' + sys.color + '">'
+            +   '<b style="color:' + sys.color + '">' + esc(m[0]) + '</b>'
+            +   '<span>' + esc(m[1]) + '</span>'
+            + '</div>';
+    }
+
+    var cons = '';
+    for (var i = 0; i < sys.cons.length; i++){
+      var c = sys.cons[i];
+      var keys = '';
+      for (var j = 0; j < c.ks.length; j++){
+        var kk = c.ks[j];
+        var idx = kk.indexOf('：');
+        var kLabel = idx > 0 ? kk.slice(0, idx) : kk;
+        var kDesc = idx > 0 ? kk.slice(idx + 1) : '';
+        keys += '<li style="color:' + sys.color + '">'
+              + '<b>' + esc(kLabel) + '</b>' + esc(kDesc)
+              + '</li>';
+      }
+      var tags = '';
+      for (var j = 0; j < c.tags.length; j++){
+        tags += '<span>' + esc(c.tags[j]) + '</span>';
+      }
+      cons += '<details class="concept" style="color:' + sys.color + '">'
+            +   '<summary>'
+            +     '<div class="concept-title">' + esc(c.t) + '</div>'
+            +     '<div class="concept-brief">' + esc(c.b) + '</div>'
+            +   '</summary>'
+            +   '<div class="concept-detail">'
+            +     '<p>' + esc(c.d) + '</p>'
+            +     '<ul class="cd-keys">' + keys + '</ul>'
+            +     '<div class="cd-tags">' + tags + '</div>'
+            +   '</div>'
+            + '</details>';
+    }
+
+    var chips = '';
+    for (var i = 0; i < sys.links.length; i++){
+      var t = byId(sys.links[i]);
+      if (!t) continue;
+      chips += '<button class="chip-jump" data-jump="' + t.id + '"'
+            +  ' style="border-color:' + hexA(t.color, .42) + ';color:' + t.color + '">'
+            +  t.num + ' ' + esc(t.name)
+            +  '</button>';
+    }
+
+    panel.innerHTML =
+        '<div class="p-role" style="color:' + sys.color + '">' + esc(sys.role) + '</div>'
+      + '<div class="p-title" style="color:' + sys.color + '">' + esc(sys.name) + '</div>'
+      + '<div class="p-en">' + esc(sys.en) + '</div>'
+      + '<p class="p-sum" style="border-color:' + sys.color + '">' + esc(sys.sum) + '</p>'
+      + '<div class="p-sec">关键数字</div>'
+      + '<div class="metrics">' + mets + '</div>'
+      + '<div class="p-sec">核心概念 · 点击展开</div>'
+      + '<div class="concepts">' + cons + '</div>'
+      + '<div class="p-sec">与之相连</div>'
+      + '<div class="chips">' + chips + '</div>';
+
+    var btns = panel.querySelectorAll('button[data-jump]');
+    for (var i = 0; i < btns.length; i++){
+      btns[i].addEventListener('click', function(){
+        activate(this.getAttribute('data-jump'));
+      });
+    }
+  }
+
+  function renderTree(sys){
+    var svg = $('#treeSvg');
+    if (!svg) return;
+
+    var H = 620;
+    var sysX = 110, sysY = H / 2;
+    var conceptX = 400;
+    var keyX = 740;
+
+    var n = sys.cons.length;
+    var topPad = 78;
+    var botPad = 78;
+    var usable = H - topPad - botPad;
+    var step = n > 1 ? usable / (n - 1) : 0;
+
+    var ys = [];
+    for (var i = 0; i < n; i++) ys.push(topPad + i * step);
+
+    var html = '';
+
+    for (var i = 0; i < n; i++){
+      var x1 = sysX + 92;
+      var x2 = conceptX - 92;
+      var cx1 = x1 + 60;
+      var cx2 = x2 - 60;
+      html += '<path d="M ' + x1 + ' ' + sysY + ' C ' + cx1 + ' ' + sysY
+            + ', ' + cx2 + ' ' + ys[i] + ', ' + x2 + ' ' + ys[i] + '"'
+            + ' fill="none" stroke="' + hexA(sys.color, .42) + '" stroke-width="1.8"/>';
+    }
+
+    for (var i = 0; i < n; i++){
+      var c = sys.cons[i];
+      var kn = c.ks.length;
+      var spread = 46;
+      var start = ys[i] - ((kn - 1) * spread) / 2;
+      for (var j = 0; j < kn; j++){
+        var ky = start + j * spread;
+        var kx1 = conceptX + 92;
+        var kx2 = keyX - 10;
+        var kcx = (kx1 + kx2) / 2;
+        html += '<path d="M ' + kx1 + ' ' + ys[i] + ' C ' + kcx + ' ' + ys[i]
+              + ', ' + kcx + ' ' + ky + ', ' + kx2 + ' ' + ky + '"'
+              + ' fill="none" stroke="' + hexA(sys.color, .26) + '" stroke-width="1.2"/>';
+      }
+    }
+
+    html += '<circle cx="' + sysX + '" cy="' + sysY + '" r="72"'
+          + ' fill="' + hexA(sys.color, .16) + '" stroke="' + sys.color + '" stroke-width="2"/>'
+          + '<circle cx="' + sysX + '" cy="' + sysY + '" r="62" fill="rgba(11,18,32,.9)"'
+          + ' stroke="' + hexA(sys.color, .4) + '" stroke-width="1"/>'
+          + '<text x="' + sysX + '" y="' + (sysY - 9) + '" text-anchor="middle"'
+          + ' dominant-baseline="central" font-size="14" font-weight="800"'
+          + ' fill="' + hexA(sys.color, .85) + '" letter-spacing="1">' + sys.num + '</text>'
+          + '<text x="' + sysX + '" y="' + (sysY + 14) + '" text-anchor="middle"'
+          + ' dominant-baseline="central" font-size="14" font-weight="750"'
+          + ' fill="#eaf2ff">' + esc(sys.name) + '</text>';
+
+    for (var i = 0; i < n; i++){
+      var c = sys.cons[i];
+      html += '<circle cx="' + conceptX + '" cy="' + ys[i] + '" r="84"'
+            + ' fill="rgba(11,18,32,.94)" stroke="' + sys.color + '" stroke-width="1.6"/>'
+            + '<text x="' + (conceptX - 68) + '" y="' + (ys[i] - 52) + '"'
+            + ' text-anchor="start" font-size="12" font-weight="800"'
+            + ' fill="' + hexA(sys.color, .5) + '">0' + (i + 1) + '</text>'
+            + '<text x="' + conceptX + '" y="' + ys[i] + '"'
+            + ' text-anchor="middle" dominant-baseline="central"'
+            + ' font-size="14" font-weight="750" fill="#eaf2ff">'
+            + esc(c.t) + '</text>';
+    }
+
+    for (var i = 0; i < n; i++){
+      var c = sys.cons[i];
+      var kn = c.ks.length;
+      var spread = 46;
+      var start = ys[i] - ((kn - 1) * spread) / 2;
+      for (var j = 0; j < kn; j++){
+        var ky = start + j * spread;
+        var kk = c.ks[j];
+        var idx = kk.indexOf('：');
+        var label = idx > 0 ? kk.slice(0, idx) : kk;
+        if (label.length > 12) label = label.slice(0, 11) + '…';
+        html += '<circle cx="' + keyX + '" cy="' + ky + '" r="4"'
+              + ' fill="' + hexA(sys.color, .7) + '"/>'
+              + '<text x="' + (keyX + 14) + '" y="' + ky + '"'
+              + ' text-anchor="start" dominant-baseline="central"'
+              + ' font-size="12" fill="#9fb0c9">' + esc(label) + '</text>';
+      }
+    }
+
+    svg.innerHTML = html;
+
+    var enEl = $('#treeEn');
+    if (enEl) enEl.textContent = sys.en;
+  }
+
+  function activate(id){
+    var sys = byId(id);
+    if (!sys) return;
+    activeId = id;
+
+    var nodes = $$('.node');
+    for (var i = 0; i < nodes.length; i++){
+      if (nodes[i].getAttribute('data-id') === id){
+        nodes[i].classList.add('active');
+      } else {
+        nodes[i].classList.remove('active');
+      }
+    }
+
+    var conns = $$('.conn');
+    for (var i = 0; i < conns.length; i++){
+      var on = conns[i].getAttribute('data-id') === id;
+      if (on){
+        conns[i].classList.add('lit');
+        conns[i].classList.remove('dim');
+        conns[i].setAttribute('stroke', sys.color);
+      } else {
+        conns[i].classList.remove('lit');
+        conns[i].classList.add('dim');
+      }
+    }
+
+    var idx = -1;
+    for (var i = 0; i < ORDER.length; i++) if (ORDER[i] === id) idx = i;
+    var nb = [
+      ORDER[(idx - 1 + ORDER.length) % ORDER.length],
+      ORDER[(idx + 1) % ORDER.length]
+    ];
+    var arcs = $$('.ring-arc');
+    for (var i = 0; i < arcs.length; i++){
+      var a = arcs[i].getAttribute('data-a');
+      var b = arcs[i].getAttribute('data-b');
+      var lit = false;
+      if (a === id && (nb[0] === b || nb[1] === b)) lit = true;
+      if (b === id && (nb[0] === a || nb[1] === a)) lit = true;
+      if (lit) arcs[i].classList.add('lit');
+      else arcs[i].classList.remove('lit');
+    }
+
+    renderPanel(sys);
+    renderTree(sys);
+  }
+
+  function renderCross(){
+    var wrap = $('#crossList');
+    if (!wrap) return;
+    var html = '';
+    for (var i = 0; i < CROSS.length; i++){
+      var c = CROSS[i];
+      var chips = '';
+      for (var j = 0; j < c[2].length; j++){
+        var s = byId(c[2][j]);
+        if (!s) continue;
+        chips += '<button data-jump="' + s.id + '"'
+              +  ' style="border-color:' + hexA(s.color, .5) + ';color:' + s.color + '">'
+              +  s.num + ' ' + esc(s.name)
+              +  '</button>';
+      }
+      html += '<div class="cross-item">'
+            +   '<h5>' + esc(c[0]) + '</h5>'
+            +   '<p>' + esc(c[1]) + '</p>'
+            +   '<div class="cross-chips">' + chips + '</div>'
+            + '</div>';
+    }
+    wrap.innerHTML = html;
+
+    var btns = wrap.querySelectorAll('button[data-jump]');
+    for (var i = 0; i < btns.length; i++){
+      btns[i].addEventListener('click', function(){
+        activate(this.getAttribute('data-jump'));
+        var stage = $('.stage');
+        if (stage && stage.scrollIntoView){
+          stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+  }
+
+  function fillStats(){
+    var concepts = 0, keys = 0;
+    for (var i = 0; i < SYS.length; i++){
+      concepts += SYS[i].cons.length;
+      for (var j = 0; j < SYS[i].cons.length; j++){
+        keys += SYS[i].cons[j].ks.length;
+      }
+    }
+    var s1 = $('#s1'), s2 = $('#s2'), s3 = $('#s3');
+    if (s1) s1.textContent = String(SYS.length);
+    if (s2) s2.textContent = String(concepts);
+    if (s3) s3.textContent = String(keys);
+  }
+
+  function bindNodes(){
+    var nodes = $$('.node');
+    for (var i = 0; i < nodes.length; i++){
+      (function(g){
+        g.addEventListener('click', function(){
+          activate(g.getAttribute('data-id'));
+        });
+        g.addEventListener('keydown', function(e){
+          if (e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            activate(g.getAttribute('data-id'));
+          }
+        });
+      })(nodes[i]);
+    }
+  }
+
+  try {
+    renderCross();
+    bindNodes();
+    fillStats();
+    activate('arch');
+  } catch (e) {
+    var panel = $('#panelDetail');
+    if (panel){
+      panel.innerHTML = '<div style="color:#fb7185;font-size:13px;'
+        + 'line-height:1.7;padding:10px">'
+        + '<b>渲染错误：</b>' + esc(e.message) + '<br>'
+        + '请把这条信息反馈给开发者。'
+        + '</div>';
+    }
+    if (window.console && console.error) console.error(e);
+  }
+})();
+
+/* ============================================================
+   PART 2 · 请求生命周期
+   ============================================================ */
+(function(){
+  'use strict';
+
+  var MAIN_STEPS = [
+    { name:'用户提问', short:'提问',
+      title:'① 用户提问 · 移动端 / Web',
+      desc:'用户在移动端或 Web 端输入问题，请求通过 HTTP / WebSocket 到达后端 API 网关，经过鉴权和路由分发进入业务处理链路。',
+      data:'客户端 → API 网关 → 鉴权 → 路由分发 → 会话管理',
+      keyPoint:'这是整个生命周期的起点。请求中通常携带会话 ID、用户标识和历史上下文引用。',
+      dur: 2200 },
+    { name:'意图与改写', short:'改写',
+      title:'② 意图与改写 · 消解指代、补全查询',
+      desc:'系统结合对话历史消解代词指代，补全省略的信息，把口语化、碎片化的问题改写成适合检索的独立查询。',
+      data:'多轮对话 → 指代消解 → 查询改写 → 独立 Query',
+      keyPoint:'没有这一步，多轮对话中的「它」「这个」「上面说的」会让检索完全失效。',
+      dur: 2200 },
+    { name:'检索召回', short:'召回',
+      title:'③ 检索召回 · BM25 + 向量混合',
+      desc:'同时使用关键词检索（BM25）和语义检索（向量），两路结果合并去重，提高召回率和覆盖度。',
+      data:'Query → BM25 索引 + 向量数据库 → 合并去重 → Top-K 候选',
+      keyPoint:'混合检索兼顾精确匹配和语义匹配，是当前 RAG 系统的主流选择。',
+      dur: 2600 },
+    { name:'重排与组装', short:'重排',
+      title:'④ 重排与组装 · 精排后按预算拼装',
+      desc:'用 Cross-Encoder 对候选文档精排打分，然后按上下文预算把最相关的文档拼进 Prompt，形成最终输入。',
+      data:'候选 → Rerank 模型打分 → 排序截断 → Context 拼装',
+      keyPoint:'重排解决「召回准不准」，组装解决「放不放得下」。两者共同决定最终效果。',
+      dur: 2400 },
+    { name:'模型推理', short:'推理',
+      title:'⑤ 模型推理 · Prefill + Decode',
+      desc:'模型接收完整 Prompt，Prefill 阶段并行计算所有输入 Token 建立 KV Cache，Decode 阶段逐 Token 生成输出。内部依次经过分词、向量化、注意力计算与推理决策。',
+      data:'Prompt → Prefill（并行）→ KV Cache → Decode（逐 Token）',
+      keyPoint:'Prefill 决定首 Token 延迟，Decode 决定生成速度。两者是推理优化的核心指标。',
+      hasSub: true, dur: 0 },
+    { name:'工具调用', short:'工具',
+      title:'⑥ 工具调用 · 按需循环执行',
+      desc:'如果模型判断需要外部工具（搜索、计算、API 调用），会返回工具调用请求，系统执行后把结果返回给模型继续推理，循环直到任务完成。',
+      data:'模型 → Tool Call → 执行 → 结果回传 → 继续推理 → 循环',
+      keyPoint:'这是 Agent 能力的核心机制。一个复杂任务可能需要多轮工具调用才能完成。',
+      dur: 2800 },
+    { name:'流式输出', short:'输出',
+      title:'⑦ 流式输出 · SSE 逐字上屏',
+      desc:'模型每生成一个 Token 就立即通过 SSE 推送给客户端，用户看到文字逐字出现，大幅降低感知延迟。',
+      data:'Token → SSE 推送 → 客户端拼接 → 逐字渲染上屏',
+      keyPoint:'流式输出不改变总生成时间，但显著改善用户体验，是现代对话产品的标配。生产系统的输出侧通常还要过一层安全护栏（敏感内容过滤 / PII 脱敏）再推给用户。',
+      dur: 0 },
+    { name:'观测与归因', short:'观测',
+      title:'⑧ 观测与归因 · trace / 成本 / 评测',
+      desc:'整个链路的每一步都被 Trace 记录，包括耗时、Token 消耗、检索命中情况、工具调用结果，用于问题归因、成本核算和持续优化。',
+      data:'Trace ID → 各阶段耗时 → Token 成本 → 评测指标 → 数据飞轮',
+      keyPoint:'没有可观测性，就无法定位问题、无法衡量优化效果、无法形成数据闭环。',
+      dur: 2600 }
+  ];
+
+  var SUB_STEPS = [
+    { name:'分词', title:'⑤ · 分词 Tokenize',
+      desc:'文本先被切分成 Token。Token 可以是一个字、一个词或一个子词，模型真正处理的是 Token 编号序列。',
+      data:'「如何系统学习大模型？」→ 5 个 Token → [2184, 5621, 17892, 934, 1280]',
+      keyPoint:'分词是模型理解文本的入口。分词策略直接影响词表大小、序列长度与稀有词处理能力。' },
+    { name:'向量', title:'⑤ · 向量表示 Embedding',
+      desc:'每个 Token 被映射为一组连续向量。向量中编码了语义信息，语义相近的词在向量空间中距离更近。',
+      data:'Token ID → Embedding 向量；典型维度：768 / 1024 / 1280 / 2048 / 4096',
+      keyPoint:'Embedding 把离散的文字变成可计算的连续空间，这是模型进行语义计算的基础。' },
+    { name:'注意力', title:'⑤ · 注意力计算 Attention',
+      desc:'模型计算当前词与上下文中每个词的关联强度，形成注意力矩阵，判断哪些信息对当前词更重要。',
+      data:'注意力矩阵 Shape：[heads, seq_len, seq_len]，记录词与词之间的依赖关系',
+      keyPoint:'自注意力让模型具备上下文理解能力，是 Transformer 区别于传统序列模型的核心。' },
+    { name:'推理决策', title:'⑤ · 推理决策 + 输出概率',
+      desc:'多层 Transformer 反复组合语义信息，形成对问题意图和答案结构的判断，最后映射为词表概率分布。',
+      data:'深层表示 → LM Head → Softmax → 下一个 Token 的概率分布',
+      keyPoint:'推理不是某一个模块，而是多层表示逐步变换后的综合结果。' }
+  ];
+
+  var QUERY = '如何系统学习大模型？';
+  var TOKENS = ['如何','系统','学习','大模型','？'];
+  var TOKEN_IDS = [2184, 5621, 17892, 934, 1280];
+
+  var ANSWERS = [
+    '学习大模型建议按四步推进：先打牢 Python、线性代数、概率统计与机器学习基础；再吃透 Transformer、注意力机制与预训练原理；然后动手复现小模型、跑通 LoRA 微调；最后结合 RAG 与 Agent 完成一个真实项目。顺序比速度重要，动手比阅读重要。',
+    '推荐路线：数学与编程基础 → PyTorch 实战 → 读懂 Transformer 源码 → 预训练与微调实验 → 搭建 RAG 系统 → 尝试 Agent 编排。每一步都产出一个可演示的小成果，比只看教程有效得多。',
+    '可以这样学：先把基础打牢，再精读论文与源码，接着跑通微调实验，然后构建一套属于自己的 RAG 系统，最后尝试用 Agent 把工具串起来解决实际问题。'
+  ];
+
+  var state = { mainStep: 0, subStep: 0, playing: false, finished: false, speed: 1 };
+  var seqToken = 0;
+  var typeToken = 0;
+  var typingPromise = null;
+
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+  function $(id){ return document.getElementById(id); }
+
+  function buildIdle(el){
+    el.innerHTML = '<div class="idle-hint">'
+      + '<div class="idle-icon">⚡</div>'
+      + '<div class="idle-title">点击「自动演示」或「下一步」开始</div>'
+      + '<div class="idle-sub">观察一次请求如何穿过整个生命体</div>'
+      + '</div>';
+  }
+
+  function buildUserQuery(el){
+    el.innerHTML = '<div class="viz">'
+      + '<div class="viz-label">请求入口</div>'
+      + '<div class="client-flow">'
+      +   '<div class="client-box" style="animation-delay:0ms"><div class="cb-icon">📱</div><div class="cb-name">移动端</div></div>'
+      +   '<div class="client-box" style="animation-delay:120ms"><div class="cb-icon">💻</div><div class="cb-name">Web 端</div></div>'
+      +   '<div class="flow-arrow" style="animation-delay:280ms">→</div>'
+      +   '<div class="client-box" style="animation-delay:400ms;background:rgba(107,140,255,.08);border-color:rgba(107,140,255,.35)"><div class="cb-icon">🌐</div><div class="cb-name">API 网关</div></div>'
+      + '</div>'
+      + '<div class="viz-flowline" style="margin-top:22px"><span>HTTP / WebSocket</span></div>'
+      + '<div class="rewrite-box" style="animation-delay:600ms;max-width:400px;margin:0 auto;text-align:center">'
+      +   '<div class="rb-label" style="text-align:center">User Query</div>'
+      +   '<div class="rb-text">如何系统学习大模型？</div>'
+      + '</div>'
+      + '<div class="viz-note">请求携带会话 ID、用户标识与历史上下文，进入后端处理链路</div>'
+      + '</div>';
+  }
+
+  function buildRewrite(el){
+    el.innerHTML = '<div class="viz">'
+      + '<div class="viz-label">意图理解与查询改写</div>'
+      + '<div class="rewrite-box" style="animation-delay:0ms">'
+      +   '<div class="rb-label">原始对话（含指代）</div>'
+      +   '<div class="rb-text">「<span style="color:var(--pink)">它</span>的学习路线是什么？」</div>'
+      + '</div>'
+      + '<div class="rewrite-arrow" style="animation-delay:400ms">↓ 指代消解 + 补全 ↓</div>'
+      + '<div class="rewrite-box" style="animation-delay:600ms;background:rgba(94,231,255,.06);border-color:rgba(94,231,255,.32)">'
+      +   '<div class="rb-label">改写后的独立 Query</div>'
+      +   '<div class="rb-text" style="color:#d9f7ff">「<span style="color:var(--cyan)">大模型</span>的系统学习路线是什么？」</div>'
+      + '</div>'
+      + '<div class="viz-note">消解指代、补全省略信息，把口语化问题改写为适合检索的独立查询</div>'
+      + '</div>';
+  }
+
+  function buildRetrievalRecall(el){
+    el.innerHTML = '<div class="viz">'
+      + '<div class="viz-label">双路检索 · 混合召回</div>'
+      + '<div class="retrieval-split">'
+      +   '<div class="retrieval-branch bm25" style="animation-delay:0ms"><div class="rbt">🔍 BM25</div><div class="rbs">关键词精确匹配</div></div>'
+      +   '<div class="flow-arrow" style="animation-delay:200ms">+</div>'
+      +   '<div class="retrieval-branch vec" style="animation-delay:400ms"><div class="rbt">🧬 向量检索</div><div class="rbs">语义相似度匹配</div></div>'
+      + '</div>'
+      + '<div class="rewrite-arrow" style="animation-delay:700ms">↓ 合并去重 ↓</div>'
+      + '<div style="text-align:center;animation:popIn .45s var(--pop) .9s both"><span class="merge-node" style="display:inline-grid">✓</span></div>'
+      + '<div class="viz-note">两路结果互补：BM25 抓住精确关键词，向量检索抓住语义近似，共同提高召回率</div>'
+      + '</div>';
+  }
+
+  function buildRerank(el){
+    var items = [
+      { name:'大模型学习路线与阶段划分', score:0.94, hot:true },
+      { name:'Transformer 与注意力机制', score:0.87, hot:true },
+      { name:'LoRA 微调实践指南', score:0.72, hot:false },
+      { name:'RAG 系统工程实战', score:0.65, hot:false },
+      { name:'无关文档 · 产品发布会', score:0.21, hot:false }
+    ];
+    var html = '<div class="viz"><div class="viz-label">Rerank 精排 + 上下文组装</div><div class="rerank-list">';
+    for (var i = 0; i < items.length; i++){
+      var it = items[i];
+      html += '<div class="rerank-item ' + (it.hot ? 'hot' : '') + '" style="animation-delay:' + (i*140) + 'ms">'
+            +   '<span class="ri-score">' + it.score.toFixed(2) + '</span>'
+            +   '<div class="ri-bar"><i style="width:' + (it.score*100) + '%;animation-delay:' + (i*140+200) + 'ms"></i></div>'
+            +   '<span class="ri-name">' + it.name + '</span>'
+            + '</div>';
+    }
+    html += '</div><div class="viz-note">精排后按上下文预算截断，最相关的文档被拼进 Prompt</div></div>';
+    el.innerHTML = html;
+  }
+
+  function buildInferenceContainer(el){
+    var track = '';
+    for (var i = 0; i < SUB_STEPS.length; i++){
+      track += '<div class="subnode" data-sub="' + (i+1) + '">'
+            +   '<span class="subdot">' + (i+1) + '</span>'
+            +   '<span class="sublabel">' + SUB_STEPS[i].name + '</span>'
+            + '</div>';
+    }
+    el.innerHTML = '<div class="substep-wrap" id="substepWrap">'
+      + '<div class="substep-track" id="substepTrack">' + track + '</div>'
+      + '<div id="substepCanvas"></div>'
+      + '</div>';
+  }
+
+  function buildSubTokenize(el){
+    var chars = QUERY.split('');
+    var html = '<div class="viz"><div class="viz-label">原始文本 → Token 序列</div>'
+      + '<div class="char-row" style="margin-bottom:14px">';
+    for (var i = 0; i < chars.length; i++){
+      html += '<span class="char" style="animation-delay:' + (i*60) + 'ms">' + chars[i] + '</span>';
+    }
+    html += '</div><div class="token-row">';
+    for (var i = 0; i < TOKENS.length; i++){
+      html += '<div class="token-chip" style="animation-delay:' + (400 + i*120) + 'ms">'
+            +   '<span class="tk-text">' + TOKENS[i] + '</span>'
+            +   '<span class="tk-id">#' + TOKEN_IDS[i] + '</span>'
+            + '</div>';
+    }
+    html += '</div><div class="viz-note">模型看到的不是文字，而是一串 Token 编号</div></div>';
+    el.innerHTML = html;
+  }
+
+  function buildSubEmbedding(el){
+    var html = '<div class="viz"><div class="viz-label">Token → Embedding 向量（示意）</div><div class="embed-list">';
+    for (var i = 0; i < TOKENS.length; i++){
+      var bars = '';
+      for (var j = 0; j < 12; j++){
+        var h = 20 + Math.round(Math.abs(Math.sin((i*1.7+1)*(j*0.83+1))) * 74);
+        bars += '<span class="vec-bar" style="height:' + h + '%;animation-delay:' + (i*100 + j*30) + 'ms"></span>';
+      }
+      html += '<div class="embed-item" style="animation-delay:' + (i*100) + 'ms">'
+            +   '<span class="embed-token">' + TOKENS[i] + '</span>'
+            +   '<div class="embed-vec">' + bars + '</div>'
+            + '</div>';
+    }
+    html += '</div><div class="viz-note">语义相近的 Token 在向量空间中距离更近</div></div>';
+    el.innerHTML = html;
+  }
+
+  function buildSubAttention(el){
+    var n = TOKENS.length;
+    var cells = '';
+    for (var i = 0; i < n; i++){
+      for (var j = 0; j < n; j++){
+        var raw = Math.abs(Math.cos(i * 1.15 + j * 0.78) * Math.sin(i * 0.62 + 1.1));
+        var v = (j <= i) ? (0.22 + raw * 0.74) : (0.06 + raw * 0.1);
+        cells += '<span class="att-cell" style="--v:' + v.toFixed(2) + ';animation-delay:' + ((i * n + j) * 14) + 'ms"></span>';
+      }
+    }
+    var labels = '';
+    for (var i = 0; i < TOKENS.length; i++){
+      labels += '<span>' + TOKENS[i] + '</span>';
+    }
+    el.innerHTML = '<div class="viz">'
+      + '<div class="viz-label">自注意力权重矩阵 · 行 = Query，列 = Key</div>'
+      + '<div class="att-col-labels" style="grid-template-columns:repeat(' + n + ',1fr)">' + labels + '</div>'
+      + '<div class="att-grid" style="grid-template-columns:repeat(' + n + ',1fr)">' + cells + '</div>'
+      + '<div class="viz-note">越亮的格子表示该位置的上下文对当前词越重要</div>'
+      + '</div>';
+  }
+
+  function buildSubReasoning(el){
+    var layers = [
+      { idx:'L12', desc:'输出表示 · 任务意图 / 答案结构' },
+      { idx:'L10', desc:'语义组合 · 概念关系 / 逻辑推理' },
+      { idx:'L08', desc:'上下文聚合 · 指代消解 / 长程依赖' },
+      { idx:'L05', desc:'句法结构 · 短语边界 / 语法角色' },
+      { idx:'L01', desc:'词嵌入 · 字面语义 / 位置信息' }
+    ];
+    var html = '<div class="viz"><div class="viz-label">多层 Transformer 逐层抽象</div><div class="layer-stack">';
+    for (var i = 0; i < layers.length; i++){
+      html += '<div class="lstack-item" style="animation-delay:' + (i*100) + 'ms">'
+            +   '<span class="lstack-idx">' + layers[i].idx + '</span>'
+            +   '<span class="lstack-desc">' + layers[i].desc + '</span>'
+            +   '<span class="lstack-beam" style="animation-delay:' + (600 + i*140) + 'ms"></span>'
+            + '</div>';
+    }
+    html += '</div><div class="viz-note">同一个 Token 的表示被反复重构：从「字面」逐步抽象为「任务含义」</div></div>';
+    el.innerHTML = html;
+  }
+
+  function buildToolCall(el){
+    el.innerHTML = '<div class="viz">'
+      + '<div class="viz-label">Agent 工具调用循环</div>'
+      + '<div class="tool-loop">'
+      +   '<div class="tool-step model" style="animation-delay:0ms">🧠 模型判断需要外部工具</div>'
+      +   '<div class="tool-loop-arrow" style="animation-delay:250ms">↓</div>'
+      +   '<div class="tool-step call" style="animation-delay:400ms">⚡ Tool Call: search_docs("大模型学习路线")</div>'
+      +   '<div class="tool-loop-arrow" style="animation-delay:650ms">↓</div>'
+      +   '<div class="tool-step exec" style="animation-delay:800ms">⚙️ 执行工具 · 返回检索结果</div>'
+      +   '<div class="tool-loop-arrow" style="animation-delay:1050ms">↓</div>'
+      +   '<div class="tool-step result" style="animation-delay:1200ms">📋 结果回传模型 · 继续推理</div>'
+      +   '<div class="tool-loop-back" style="animation-delay:1450ms">⟲ 循环直到任务完成</div>'
+      + '</div>'
+      + '<div class="viz-note">一个复杂任务可能需要多轮工具调用，Agent 会自主决定何时调用、调用什么、何时停止</div>'
+      + '</div>';
+  }
+
+  function buildStreaming(el){
+    el.innerHTML = '<div class="viz">'
+      + '<div class="viz-label">SSE 流式输出</div>'
+      + '<div class="stream-window">'
+      +   '<div class="stream-head"><span class="stream-dot"></span><span>SSE Stream · 逐 Token 推送</span></div>'
+      +   '<div class="stream-body" id="streamBody"><span class="stream-caret"></span></div>'
+      + '</div>'
+      + '<div class="viz-note">每生成一个 Token 就立即推送，用户看到文字逐字出现，感知延迟大幅降低</div>'
+      + '</div>';
+  }
+
+  function buildObservability(el){
+    var stages = [
+      { name:'意图改写', pct:6, ms:'12ms', color:'#5ee7ff' },
+      { name:'检索召回', pct:14, ms:'28ms', color:'#6b8cff' },
+      { name:'重排组装', pct:10, ms:'20ms', color:'#b07bff' },
+      { name:'Prefill', pct:22, ms:'45ms', color:'#ff7ad1' },
+      { name:'Decode', pct:38, ms:'78ms', color:'#7cffb2' },
+      { name:'工具调用', pct:7, ms:'15ms', color:'#ffd166' },
+      { name:'流式推送', pct:3, ms:'6ms', color:'#5ee7ff' }
+    ];
+    var html = '<div class="viz"><div class="viz-label">Trace 链路耗时分布</div><div class="trace-timeline">';
+    for (var i = 0; i < stages.length; i++){
+      var s = stages[i];
+      html += '<div class="trace-bar" style="animation-delay:' + (i*90) + 'ms">'
+            +   '<span class="trace-name">' + s.name + '</span>'
+            +   '<div class="trace-track">'
+            +     '<div class="trace-fill" style="left:0;width:' + s.pct + '%;background:' + s.color + ';opacity:.75;animation-delay:' + (i*90+200) + 'ms"></div>'
+            +   '</div>'
+            +   '<span class="trace-ms">' + s.ms + '</span>'
+            + '</div>';
+    }
+    html += '</div><div class="trace-summary">'
+      +   '<div class="trace-stat" style="animation-delay:800ms"><div class="ts-val">204ms</div><div class="ts-label">总耗时</div></div>'
+      +   '<div class="trace-stat" style="animation-delay:900ms"><div class="ts-val">1,847</div><div class="ts-label">TOKEN 消耗</div></div>'
+      +   '<div class="trace-stat" style="animation-delay:1000ms"><div class="ts-val">¥0.0037</div><div class="ts-label">单次成本</div></div>'
+      +   '<div class="trace-stat" style="animation-delay:1100ms"><div class="ts-val">4.8/5</div><div class="ts-label">质量评分</div></div>'
+      + '</div>'
+      + '<div class="viz-note">每一步都被 Trace 记录，用于问题归因、成本核算和持续优化</div>'
+      + '</div>';
+    el.innerHTML = html;
+  }
+
+  var MAIN_BUILDERS = {
+    1: buildUserQuery, 2: buildRewrite, 3: buildRetrievalRecall, 4: buildRerank,
+    5: buildInferenceContainer, 6: buildToolCall, 7: buildStreaming, 8: buildObservability
+  };
+  var SUB_BUILDERS = { 1: buildSubTokenize, 2: buildSubEmbedding, 3: buildSubAttention, 4: buildSubReasoning };
+
+  function renderStage(n){
+    var canvas = $('stageCanvas');
+    var badge = $('stageBadge');
+    var nameEl = $('stageName');
+    canvas.innerHTML = '';
+    var builder = MAIN_BUILDERS[n];
+    if (builder){
+      builder(canvas);
+      badge.textContent = 'STEP ' + String(n).padStart(2,'0') + ' / 08';
+      nameEl.textContent = MAIN_STEPS[n-1].name;
+      if (n === 5) renderSubStep(1);
+    } else {
+      buildIdle(canvas);
+      badge.textContent = 'STANDBY';
+      nameEl.textContent = '等待开始';
+    }
+  }
+
+  function renderSubStep(subN){
+    var track = $('substepTrack');
+    var canvas = $('substepCanvas');
+    if (!track || !canvas) return;
+    var nodes = track.querySelectorAll('.subnode');
+    for (var i = 0; i < nodes.length; i++){
+      var s = Number(nodes[i].dataset.sub);
+      nodes[i].classList.toggle('done', s < subN);
+      nodes[i].classList.toggle('active', s === subN);
+    }
+    canvas.innerHTML = '';
+    var builder = SUB_BUILDERS[subN];
+    if (builder) builder(canvas);
+  }
+
+  function renderProgress(){
+    var nodes = document.querySelectorAll('.pnode');
+    for (var i = 0; i < nodes.length; i++){
+      var s = Number(nodes[i].dataset.step);
+      nodes[i].classList.toggle('done', s < state.mainStep);
+      nodes[i].classList.toggle('active', s === state.mainStep);
+    }
+  }
+
+  function renderKnowledge(){
+    if (state.mainStep === 5 && state.subStep > 0){
+      var sub = SUB_STEPS[state.subStep - 1];
+      $('stageTitle').textContent = sub.title;
+      $('stageDesc').textContent  = sub.desc;
+      $('stageData').textContent  = sub.data;
+      $('stageKey').textContent   = sub.keyPoint;
+      return;
+    }
+    var s = state.mainStep > 0 ? MAIN_STEPS[state.mainStep - 1] : null;
+    $('stageTitle').textContent = s ? s.title : '等待开始推理';
+    $('stageDesc').textContent  = s ? s.desc  : '点击「自动演示」，查看每个阶段的运行原理。';
+    $('stageData').textContent  = s ? s.data  : '用户提问 → 意图改写 → 检索召回 → 重排组装 → 模型推理 → 工具调用 → 流式输出 → 观测归因';
+    $('stageKey').textContent   = s ? s.keyPoint : '理解一次真实请求，是如何穿过整个系统生命体的。';
+  }
+
+  function renderIO(n){
+    var out = $('modelOutput');
+    if (n !== 7){
+      out.textContent = n === 0 ? '等待模型生成…' : (n === 8 ? out.textContent : '模型推理中…');
+    }
+  }
+
+  function updateControls(){
+    var btn = $('btnPlay');
+    if (state.playing){
+      btn.textContent = '⏸ 暂停';
+    } else if (state.finished){
+      btn.textContent = '⟲ 重新演示';
+    } else if (state.mainStep === 0){
+      btn.textContent = '▶ 自动演示';
+    } else {
+      btn.textContent = '▶ 继续';
+    }
+    $('btnPrev').disabled = state.mainStep <= 0;
+    $('btnNext').disabled = state.mainStep >= 8;
+  }
+
+  async function typeText(my){
+    var panel = $('modelOutput');
+    var answer = pick(ANSWERS);
+    var streamBody = $('streamBody');
+    if (streamBody){
+      streamBody.innerHTML = '';
+      var caret = document.createElement('span');
+      caret.className = 'stream-caret';
+      streamBody.appendChild(caret);
+    }
+    panel.textContent = '';
+    for (var i = 0; i < answer.length; i++){
+      if (my !== typeToken) return;
+      panel.textContent += answer[i];
+      if (streamBody){
+        var c = streamBody.querySelector('.stream-caret');
+        if (c) c.insertAdjacentText('beforebegin', answer[i]);
+        else streamBody.textContent += answer[i];
+      }
+      await sleep(Math.max(10, 28 / state.speed));
+    }
+  }
+
+  async function playSubSteps(my){
+    for (var i = 1; i <= 4; i++){
+      if (my !== seqToken) return;
+      state.subStep = i;
+      renderSubStep(i);
+      renderKnowledge();
+      await sleep(1700 / state.speed);
+      if (my !== seqToken) return;
+    }
+    state.subStep = 4;
+    renderSubStep(4);
+  }
+
+  async function setMainStep(n){
+    n = Math.max(0, Math.min(8, n));
+    state.mainStep = n;
+    state.subStep = 0;
+    renderProgress();
+    renderStage(n);
+    renderKnowledge();
+    renderIO(n);
+    updateControls();
+    if (n === 5){
+      var my = seqToken;
+      await playSubSteps(my);
+    } else if (n === 7){
+      var myType = ++typeToken;
+      typingPromise = typeText(myType);
+      await typingPromise;
+    }
+  }
+
+  async function runSequence(fromStep){
+    var my = ++seqToken;
+    state.playing = true;
+    state.finished = false;
+    updateControls();
+
+    for (var s = fromStep; s <= 8; s++){
+      if (my !== seqToken) return;
+      state.mainStep = s;
+      state.subStep = 0;
+      renderProgress();
+      renderStage(s);
+      renderKnowledge();
+      renderIO(s);
+      updateControls();
+
+      if (s === 5){
+        await playSubSteps(my);
+        if (my !== seqToken) return;
+        await sleep(400 / state.speed);
+      } else if (s === 7){
+        var myType = ++typeToken;
+        typingPromise = typeText(myType);
+        await typingPromise;
+        if (my !== seqToken) return;
+        await sleep(500 / state.speed);
+      } else {
+        await sleep(MAIN_STEPS[s-1].dur / state.speed);
+      }
+      if (my !== seqToken) return;
+    }
+
+    if (my !== seqToken) return;
+    state.playing = false;
+    state.finished = true;
+    updateControls();
+  }
+
+  function pause(){
+    seqToken++;
+    typeToken++;
+    state.playing = false;
+    updateControls();
+  }
+
+  function reset(){
+    seqToken++;
+    typeToken++;
+    state.mainStep = 0;
+    state.subStep = 0;
+    state.playing = false;
+    state.finished = false;
+    renderProgress();
+    renderStage(0);
+    renderKnowledge();
+    $('modelOutput').textContent = '等待模型生成…';
+    updateControls();
+  }
+
+  $('btnPlay').addEventListener('click', async function(){
+    if (state.playing){ pause(); return; }
+    if (state.finished){ reset(); runSequence(1); return; }
+    runSequence(state.mainStep === 0 ? 1 : state.mainStep);
+  });
+
+  $('btnNext').addEventListener('click', async function(){
+    if (state.mainStep >= 8) return;
+    pause();
+    await setMainStep(state.mainStep + 1);
+  });
+
+  $('btnPrev').addEventListener('click', async function(){
+    if (state.mainStep <= 0) return;
+    pause();
+    await setMainStep(state.mainStep - 1);
+  });
+
+  $('btnReset').addEventListener('click', reset);
+
+  document.querySelectorAll('.pnode').forEach(function(node){
+    node.addEventListener('click', async function(){
+      pause();
+      await setMainStep(Number(node.dataset.step));
+    });
+  });
+
+  document.querySelectorAll('.spd').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.spd').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.speed = parseFloat(btn.dataset.spd);
+    });
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.code === 'Space' && document.activeElement && document.activeElement.closest('#inference')){
+      e.preventDefault();
+      $('btnPlay').click();
+    }
+  });
+
+  renderStage(0);
+  renderKnowledge();
+  updateControls();
+})();
+
+/* ============================================================
+   PART 2.5 · 模型内部：向量 × 层数 × 专家 × 调度员 × 输出
+   ============================================================ */
+(function(){
+  'use strict';
+
+  var EXPERTS = ['代码','数学','文案','常识','逻辑','语言','工具','安全'];
+
+  var LAYERS = [
+    { tag:'L01', desc:'字面 · 词法',  hot:[5,3], scores:[0.91, 0.74] },
+    { tag:'L02', desc:'语法 · 结构',  hot:[5,4], scores:[0.93, 0.71] },
+    { tag:'L03', desc:'短语 · 搭配',  hot:[5,0], scores:[0.88, 0.69] },
+    { tag:'L04', desc:'语义 · 实体',  hot:[0,3], scores:[0.96, 0.73] },
+    { tag:'L05', desc:'指代 · 关系',  hot:[0,4], scores:[0.94, 0.76] },
+    { tag:'L06', desc:'任务 · 意图',  hot:[0,6], scores:[0.97, 0.78] },
+    { tag:'L07', desc:'规划 · 结构',  hot:[0,6], scores:[0.95, 0.81] },
+    { tag:'L08', desc:'抽象 · 输出',  hot:[0,5], scores:[0.92, 0.72] }
+  ];
+
+  var CASE_TEXT = '写一段 FastAPI 的接口代码';
+  var CASE_TOKENS = ['写','一段','Fast','API','的','接口','代码'];
+  var CASE_IDS    = [9182, 4471, 12087, 3391, 1103, 8823, 5521];
+
+  /* 阶段：0 待机 · 1 输入 · 2 分词 · 3 嵌入 · 4-11 第1~8层 · 12 解码 · 13 传输与输出 */
+  var TOTAL_PHASES = 13;
+
+  function layerDesc(i){
+    var D = [
+      '最底层先处理字面信息：词形、标点、最基础的搭配。此时向量里还只有「这几个字大概是什么意思」。',
+      '开始组装语法结构：谁是主语、谁是宾语、短语边界在哪里。向量开始带上结构信息。',
+      '短语之间开始互相搭配，常见的固定组合被识别出来，向量的语义密度继续提高。',
+      '识别实体与概念：「FastAPI」「接口」「代码」被标记成不同类别的实体。',
+      '处理指代与关系：谁修饰谁、前后文如何呼应，长距离依赖开始被拉通。',
+      '任务意图浮现：这一层已经能判断出「用户要的是写代码」而不是「解释代码」。',
+      '开始规划输出结构：先写导入、再写路由、再写返回体，顺序在向量里被编码。',
+      '最抽象的一层：直接面向输出，决定下一个 Token 该是什么。'
+    ];
+    return D[i] || '';
+  }
+
+  function layerKey(i){
+    var K = [
+      '越靠下越「字面」，越靠上越「抽象」。向量在同一层里被重新计算一次，携带的信息就更精炼一层。',
+      '层与层之间不是复制，而是「重写」——同一份向量进来，出去时数值全变了，但语义更接近答案。',
+      '注意力机制在每一层都是整层共享的；只有前馈（FFN）部分才拆成专家。这是 MoE 的关键细节。',
+      '每层的调度员是独立训练的：同一份向量，在不同层会被分给完全不同的专家组合。',
+      '专家不是独立的小模型，只是那一层 FFN 的一个片段。它们共享同一套注意力和同一个词表。',
+      'MoE 的核心收益：总参数量决定「知识的容量」，激活专家数决定「每次推理的成本」。',
+      '路由塌缩是 MoE 训练里最常见的失败模式：少数专家垄断绝大多数 Token，其余专家等于白养。',
+      '层数决定思考的轮次，专家数决定每轮能叫醒多少领域知识。调度员决定「叫得对不对」。'
+    ];
+    return K[i] || '';
+  }
+
+  var IDLE_INFO = {
+    badge:'STANDBY', name:'等待开始',
+    title:'等待开始 · 点击自动演示',
+    desc:'即将演示：案例问题「写一段 FastAPI 的接口代码」如何变成向量，被一层层调度员挑选的专家接力加工，最后解码并通过 SSE 输出。',
+    data:'文字 → 分词 → 向量 → 逐层加工（调度员挑专家）→ 解码 → SSE 输出',
+    keyPoint:'向量是唯一被反复修改的载体；层数是加工轮次；调度员每层重新挑专家；最终通过 SSE 逐 Token 推送给用户。',
+    vec:'v0 · 未生成',
+    exps:'—'
+  };
+
+  function phaseInfo(i){
+    if (i <= 0) return IDLE_INFO;
+
+    if (i === 1) return {
+      badge:'INPUT', name:'输入文字',
+      title:'① 输入文字 · 用户提问',
+      desc:'用户输入的是一段自然语言。模型不认识文字，第一步必须把它翻译成数字。',
+      data:'「' + CASE_TEXT + '」',
+      keyPoint:'文字 → 数字是必经之路。所有后续计算都发生在数字空间里。',
+      vec:'v0 · 尚未生成',
+      exps:'—'
+    };
+
+    if (i === 2) return {
+      badge:'TOKENIZE', name:'分词 Tokenize',
+      title:'② 分词 Tokenize · 切成最小单位',
+      desc:'文本被切成若干 Token（子词）。每个 Token 在词表里对应一个整数编号。',
+      data: CASE_TOKENS.join(' / ') + '  →  [' + CASE_IDS.join(', ') + ']',
+      keyPoint:'Token 不是字也不是词，而是统计出来的高频片段。它是模型能处理的最小单位。',
+      vec:'v0 · 等待嵌入',
+      exps:'—'
+    };
+
+    if (i === 3) return {
+      badge:'EMBEDDING', name:'向量嵌入',
+      title:'③ 向量嵌入 · 生成「数字简历」',
+      desc:'每个 Token 被映射成一串连续的数字向量。向量里的每个维度代表一个抽象特征。',
+      data:'7 个 Token ID → Embedding 矩阵 [7 × 1024]',
+      keyPoint:'向量就是模型的「母语」。此后每一层做的所有事，都是在改这串数字。',
+      vec:'v1 · 初始嵌入',
+      exps:'—'
+    };
+
+    if (i >= 4 && i <= 11){
+      var li = i - 4;
+      var L = LAYERS[li];
+      var names = L.hot.map(function(h){ return EXPERTS[h]; }).join(' · ');
+      var detail = L.hot.map(function(h, k){
+        return EXPERTS[h] + ' ' + L.scores[k].toFixed(2);
+      }).join(' · ');
+      return {
+        badge:'LAYER ' + L.tag,
+        name:L.tag + ' ' + L.desc,
+        title:'第 ' + (li + 1) + ' 层 · ' + L.desc,
+        desc:layerDesc(li),
+        data:'调度员打分 → 唤醒 ' + L.hot.length + ' 个专家：' + detail
+             + '；其余 ' + (EXPERTS.length - L.hot.length) + ' 个休眠不计算',
+        keyPoint:layerKey(li),
+        vec:'v' + (li + 2) + ' · 第 ' + (li + 1) + ' 层加工后',
+        exps:names
+      };
+    }
+
+    if (i === 12) return {
+      badge:'DECODE', name:'输出层 · 解码',
+      title:'⑫ 输出层 · 向量翻译回文字',
+      desc:'最后一层输出的向量送入输出层（LM Head），映射成词表上的概率分布，逐个采样出下一个 Token。每生成一个 Token，就立刻被送往传输层。',
+      data:'最终向量 → LM Head → Softmax → 概率分布 → 采样 → 下一个 Token',
+      keyPoint:'向量被改了 8 轮（真实模型几十轮）。文字进、文字出，中间全是数字在流动，每层都由调度员挑最对口的专家。',
+      vec:'v10 · 最终表示',
+      exps:'8 层 × 2 = 16 次专家调用'
+    };
+
+    return {
+      badge:'TRANSPORT',
+      name:'传输与输出',
+      title:'⑬ 传输与输出 · 从模型到用户',
+      desc:'模型生成的是 Token 流，需要一种「边生成边推送」的传输方案送到客户端。业界主流是 SSE（Server-Sent Events）—— 基于 HTTP，无需额外协议，第一个 Token 立刻可见。',
+      data:'LM Head 输出 → SSE 逐 Token 推送 → 客户端拼接渲染 → 完整回答',
+      keyPoint:'SSE 把感知延迟从「等全部生成完」降到「第一个 Token 立刻可见」。这就是现代对话产品「逐字上屏」的技术底座。',
+      vec:'v10 · 完整表示',
+      exps:'输出：14 行 FastAPI 代码'
+    };
+  }
+
+  var mState = { phase: 0, playing: false, speed: 1 };
+  var mToken = 0;
+
+  function $(id){ return document.getElementById(id); }
+  function mSleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+  /* ---------- 构建 DOM ---------- */
+
+  function buildBuilding(){
+    var el = $('mBuilding');
+    if (!el) return;
+    var html = '';
+    for (var i = 0; i < LAYERS.length; i++){
+      var L = LAYERS[i];
+      var exps = '';
+      for (var j = 0; j < EXPERTS.length; j++){
+        var isHot = L.hot.indexOf(j) > -1;
+        var pos = L.hot.indexOf(j);
+        var sc = isHot ? L.scores[pos] : 0;
+        exps += '<span class="exp" data-e="' + j + '">'
+              +   EXPERTS[j]
+              +   '<span class="exp-score">' + sc.toFixed(2) + '</span>'
+              + '</span>';
+      }
+      html += '<div class="floor" data-l="' + i + '">'
+            +   '<span class="fl-idx">' + L.tag + '</span>'
+            +   '<span class="fl-desc">' + L.desc + '</span>'
+            +   '<span class="fl-router"><span class="rt-ring"></span><span class="rt-icon">🎯</span></span>'
+            +   '<span class="fl-experts">' + exps + '</span>'
+            + '</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function buildVectorBars(){
+    var el = $('vecBars');
+    if (!el) return;
+    var html = '';
+    for (var i = 0; i < 18; i++) html += '<span class="vbar"></span>';
+    el.innerHTML = html;
+  }
+
+  function buildPipeTokens(){
+    var el = $('pipeTokens');
+    if (!el) return;
+    var html = '';
+    for (var i = 0; i < CASE_TOKENS.length; i++){
+      html += '<span class="ps-token" data-t="' + i + '">'
+            +  CASE_TOKENS[i]
+            + '</span>';
+    }
+    el.innerHTML = html;
+  }
+
+  function buildPipeVecs(){
+    var el = $('pipeVecs');
+    if (!el) return;
+    var html = '';
+    for (var i = 0; i < CASE_TOKENS.length; i++){
+      var bars = '';
+      for (var j = 0; j < 7; j++){
+        bars += '<span class="ps-vec-bar"></span>';
+      }
+      html += '<div class="ps-vec-row" data-v="' + i + '">'
+            +   '<span class="ps-vec-tok">' + CASE_TOKENS[i] + '</span>'
+            +   '<span class="ps-vec-bars">' + bars + '</span>'
+            + '</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function buildRouterList(){
+    var el = $('routerList');
+    if (!el) return;
+    var html = '';
+    for (var i = 0; i < EXPERTS.length; i++){
+      html += '<div class="router-row" data-e="' + i + '">'
+            +   '<span class="rr-name">' + EXPERTS[i] + '</span>'
+            +   '<span class="rr-bar"><span class="rr-fill"></span></span>'
+            +   '<span class="rr-score">—</span>'
+            + '</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  /* ---------- 渲染 ---------- */
+
+  function vecHeight(i, step){
+    var base = 0.32 + 0.6 * Math.abs(Math.sin(i * 1.87 + 2.1));
+    var wob  = 0.2 * Math.sin(step * 0.85 + i * 1.13);
+    var h = base + wob;
+    if (h < 0.1) h = 0.1;
+    if (h > 1) h = 1;
+    return h;
+  }
+
+  function paintFloors(phase){
+    var floors = document.querySelectorAll('#mBuilding .floor');
+    var layerIdx = (phase >= 4 && phase <= 11) ? phase - 4 : -1;
+    var allDone = phase >= 12;
+
+    for (var i = 0; i < floors.length; i++){
+      var f = floors[i];
+      f.classList.toggle('on', !allDone && i === layerIdx);
+      f.classList.toggle('done', allDone || (layerIdx > -1 && i < layerIdx));
+      var exps = f.querySelectorAll('.exp');
+      for (var j = 0; j < exps.length; j++) exps[j].classList.remove('hot');
+    }
+  }
+
+  function paintExperts(phase){
+    if (phase < 4 || phase > 11) return;
+    var li = phase - 4;
+    var f = document.querySelector('#mBuilding .floor[data-l="' + li + '"]');
+    if (!f) return;
+    var hot = LAYERS[li].hot;
+    for (var k = 0; k < hot.length; k++){
+      var e = f.querySelector('.exp[data-e="' + hot[k] + '"]');
+      if (e) e.classList.add('hot');
+    }
+  }
+
+  function paintVector(phase){
+    var bars = document.querySelectorAll('#vecBars .vbar');
+    for (var i = 0; i < bars.length; i++){
+      if (phase < 3){
+        bars[i].style.height = '6%';
+        bars[i].style.opacity = '.35';
+      } else {
+        bars[i].style.opacity = '1';
+        bars[i].style.height = (vecHeight(i, phase - 3) * 100).toFixed(1) + '%';
+      }
+    }
+  }
+
+  function paintPipeline(phase){
+    var steps = document.querySelectorAll('.pipe-step');
+    var arrows = document.querySelectorAll('.pipe-arrow');
+    var order = ['input','tokenize','embed'];
+
+    for (var i = 0; i < steps.length; i++){
+      var key = steps[i].getAttribute('data-pipe');
+      var idx = order.indexOf(key) + 1;
+      var on = (phase === idx);
+      var done = (phase > idx);
+      steps[i].classList.toggle('on', on);
+      steps[i].classList.toggle('done', done);
+    }
+    for (var i = 0; i < arrows.length; i++){
+      var a = Number(arrows[i].getAttribute('data-pipe-arrow'));
+      arrows[i].classList.toggle('on', phase > a);
+    }
+
+    var tokens = document.querySelectorAll('#pipeTokens .ps-token');
+    for (var i = 0; i < tokens.length; i++){
+      tokens[i].classList.toggle('show', phase >= 2);
+    }
+
+    var vecRows = document.querySelectorAll('#pipeVecs .ps-vec-row');
+    for (var i = 0; i < vecRows.length; i++){
+      vecRows[i].classList.toggle('show', phase >= 3);
+      var bars = vecRows[i].querySelectorAll('.ps-vec-bar');
+      for (var j = 0; j < bars.length; j++){
+        if (phase >= 3){
+          var h = 25 + Math.round(Math.abs(Math.sin((i*1.7+1)*(j*0.83+1.4))) * 70);
+          bars[j].style.height = h + '%';
+        } else {
+          bars[j].style.height = '0%';
+        }
+      }
+    }
+  }
+
+  function paintRouter(phase){
+    var card = $('routerCard');
+    var layerEl = $('routerLayer');
+    var stageEl = $('routerStage');
+    var footEl = $('routerFoot');
+    var rows = document.querySelectorAll('#routerList .router-row');
+    if (!card) return;
+
+    var active = (phase >= 4 && phase <= 11);
+    card.classList.toggle('active', active);
+
+    if (!active){
+      if (layerEl) layerEl.textContent = (phase >= 12 ? 'DONE' : 'STANDBY');
+      if (stageEl){
+        if (phase < 3){
+          stageEl.innerHTML = '等待向量到达。调度员只在每层内部工作，负责把当前向量<strong>分给最对口的专家</strong>。';
+        } else if (phase === 3){
+          stageEl.innerHTML = '向量已生成。接下来每进入一层，调度员都会<strong>重新扫一遍向量并打分</strong>。';
+        } else {
+          stageEl.innerHTML = '整栋楼加工完成。回顾一下：<strong>每层的调度员都独立做过一次选择</strong>。';
+        }
+      }
+      if (footEl){
+        if (phase >= 12){
+          footEl.innerHTML = '8 层 × 每层 2 个专家 = <b>16 次专家调用</b>。其余 48 个专家本轮全部休眠 —— 这就是稀疏激活的收益。';
+        } else {
+          footEl.innerHTML = '未激活任何专家。<b>其余专家本轮休眠，不参与计算、不消耗算力</b> —— 这就是 MoE 稀疏激活的核心。';
+        }
+      }
+      for (var i = 0; i < rows.length; i++){
+        rows[i].classList.remove('pick');
+        var fill = rows[i].querySelector('.rr-fill');
+        var sc = rows[i].querySelector('.rr-score');
+        if (fill) fill.style.width = '0%';
+        if (sc) sc.textContent = '—';
+      }
+      return;
+    }
+
+    var li = phase - 4;
+    var L = LAYERS[li];
+    if (layerEl) layerEl.textContent = 'LAYER ' + L.tag;
+    if (stageEl){
+      stageEl.innerHTML = '向量到达第 <b>' + (li + 1) + '</b> 层。调度员扫过当前向量，'
+                        + '给 <b>' + EXPERTS.length + '</b> 个专家打分，'
+                        + '只唤醒分数最高的 <b>top-2</b>。';
+    }
+    if (footEl){
+      var picked = L.hot.map(function(h){ return EXPERTS[h]; }).join(' 与 ');
+      footEl.innerHTML = '本轮唤醒：<b>' + picked + '</b>。其余 '
+                       + (EXPERTS.length - L.hot.length)
+                       + ' 个专家休眠 —— 这就是「总参数大、激活参数小」的由来。';
+    }
+
+    for (var i = 0; i < rows.length; i++){
+      var idx = Number(rows[i].getAttribute('data-e'));
+      var pos = L.hot.indexOf(idx);
+      var pick = pos > -1;
+      rows[i].classList.toggle('pick', pick);
+      var fill = rows[i].querySelector('.rr-fill');
+      var sc = rows[i].querySelector('.rr-score');
+      var score;
+      if (pick){
+        score = L.scores[pos];
+      } else {
+        score = Math.max(0.18, L.scores[L.scores.length - 1] - 0.08
+                - (idx % 5) * 0.045);
+      }
+      if (fill) fill.style.width = (score * 100).toFixed(0) + '%';
+      if (sc) sc.textContent = score.toFixed(2);
+    }
+  }
+
+  /* ---------- 输出与传输（阶段 12-13） ---------- */
+
+  var FASTAPI_CODE_HTML =
+      '<span class="c"># 由模型逐 Token 生成，通过 SSE 推送</span>\n' +
+      '<span class="k">from</span> fastapi <span class="k">import</span> FastAPI\n' +
+      '<span class="k">from</span> pydantic <span class="k">import</span> BaseModel\n' +
+      '\n' +
+      'app = FastAPI()\n' +
+      '\n' +
+      '<span class="k">class</span> <span class="f">Item</span>(BaseModel):\n' +
+      '    name: <span class="s">str</span>\n' +
+      '    price: <span class="s">float</span>\n' +
+      '\n' +
+      '<span class="n">@app.get</span>(<span class="s">"/items/{item_id}"</span>)\n' +
+      '<span class="k">def</span> <span class="f">read_item</span>(item_id: <span class="s">int</span>):\n' +
+      '    <span class="k">return</span> {<span class="s">"item_id"</span>: item_id}\n' +
+      '\n' +
+      '<span class="n">@app.post</span>(<span class="s">"/items/"</span>)\n' +
+      '<span class="k">def</span> <span class="f">create_item</span>(item: Item):\n' +
+      '    <span class="k">return</span> {<span class="s">"item"</span>: item, <span class="s">"status"</span>: <span class="s">"created"</span>}';
+
+  function paintOutput(phase){
+    var zone = $('outputZone');
+    if (!zone) return;
+    var show = phase >= 12;
+    zone.classList.toggle('show', show);
+    if (!show) return;
+
+    var badge = $('ozBadge');
+    var title = $('ozTitle');
+    var tech = $('ozTech');
+    var techList = $('ozTechList');
+    var outputEl = $('ozOutput');
+
+    if (phase === 12){
+      if (badge) badge.textContent = 'DECODE';
+      if (title) title.textContent = '正在解码 Token';
+      if (tech) tech.textContent = 'Token → 文本';
+      if (techList){
+        techList.innerHTML =
+            '<div class="oz-item"><b>LM Head</b><span>把最后一层的向量投影到词表维度，得到每个 Token 的 logits。</span></div>'
+          + '<div class="oz-item"><b>Softmax + 采样</b><span>logits 归一化成概率分布，按 temperature / top-p 采样出下一个 Token。</span></div>'
+          + '<div class="oz-item"><b>自回归循环</b><span>新 Token 追加回输入，重复上述过程，直到遇到结束符或达到长度上限。</span></div>';
+      }
+      if (outputEl){
+        outputEl.innerHTML = '<div class="oz-typing">from fastapi import FastAPI<span class="oz-caret"></span></div>';
+      }
+      return;
+    }
+
+    /* phase >= 13 */
+    if (badge) badge.textContent = 'TRANSPORT';
+    if (title) title.textContent = '传输与输出 · 从模型到用户';
+    if (tech) tech.textContent = 'SSE · Server-Sent Events';
+
+    if (techList){
+      techList.innerHTML =
+          '<div class="oz-item"><b>SSE（首选）</b><span>Server-Sent Events，基于 HTTP 的单向流。每生成一个 Token 就推送一帧，浏览器用 EventSource 接收，实现「逐字上屏」。</span></div>'
+        + '<div class="oz-item"><b>WebSocket</b><span>双向通信，适合 Agent 场景下需要中途发指令、打断生成、或多轮交互的场景。</span></div>'
+        + '<div class="oz-item"><b>HTTP Chunked</b><span>底层的分块传输，无需额外协议，兼容性最好，但缺少事件语义，需要自行切分。</span></div>'
+        + '<div class="oz-item"><b>数据帧格式</b><span>常用 JSON Lines：<code>{"token": "...", "index": N}</code>，末尾用 <code>[DONE]</code> 结束。</span></div>';
+    }
+
+    if (outputEl){
+      outputEl.innerHTML = '<pre class="oz-code">' + FASTAPI_CODE_HTML + '</pre>';
+    }
+  }
+
+  function updateMControls(){
+    var p = mState.phase;
+    var prev = $('mBtnPrev'), next = $('mBtnNext'), play = $('mBtnPlay');
+    if (prev) prev.disabled = p <= 0;
+    if (next) next.disabled = p >= TOTAL_PHASES;
+    if (!play) return;
+    if (mState.playing) play.textContent = '⏸ 暂停';
+    else if (p >= TOTAL_PHASES) play.textContent = '⟲ 重新演示';
+    else if (p === 0) play.textContent = '▶ 自动演示';
+    else play.textContent = '▶ 继续';
+  }
+
+  function renderM(phase){
+    phase = Math.max(0, Math.min(TOTAL_PHASES, phase));
+    mState.phase = phase;
+
+    var info = phaseInfo(phase);
+
+    var badge = $('mBadge');
+    var nameEl = $('mStageName');
+    if (badge) badge.textContent = info.badge;
+    if (nameEl) nameEl.textContent = info.name;
+
+    var t = $('mStageTitle'), d = $('mStageDesc'), dt = $('mStageData'), k = $('mStageKey');
+    if (t) t.textContent = info.title;
+    if (d) d.textContent = info.desc;
+    if (dt) dt.textContent = info.data;
+    if (k) k.textContent = info.keyPoint;
+
+    var cp = $('mCurPhase'), ce = $('mCurExpert'), cv = $('mCurVec');
+    if (cp) cp.textContent = info.name;
+    if (ce) ce.textContent = info.exps;
+    if (cv) cv.textContent = info.vec;
+
+    paintPipeline(phase);
+    paintFloors(phase);
+    paintVector(phase);
+    paintRouter(phase);
+    paintOutput(phase);
+
+    if (phase >= 4 && phase <= 11){
+      setTimeout(function(){
+        if (mState.phase === phase) paintExperts(phase);
+      }, 220 / mState.speed);
+    }
+
+    updateMControls();
+  }
+
+  async function mRun(from){
+    var my = ++mToken;
+    mState.playing = true;
+    updateMControls();
+
+    for (var p = from; p <= TOTAL_PHASES; p++){
+      if (my !== mToken) return;
+      renderM(p);
+      var wait;
+      if (p >= 4 && p <= 11) wait = 1500;
+      else if (p === 12) wait = 2100;
+      else if (p === 13) wait = 3200;
+      else wait = 1700;
+      if (p === 0) wait = 0;
+      await mSleep(wait / mState.speed);
+      if (my !== mToken) return;
+    }
+
+    if (my !== mToken) return;
+    mState.playing = false;
+    updateMControls();
+  }
+
+  function mPause(){
+    mToken++;
+    mState.playing = false;
+    updateMControls();
+  }
+
+  function mReset(){
+    mToken++;
+    mState.playing = false;
+    renderM(0);
+  }
+
+  function bindM(){
+    var play = $('mBtnPlay'), next = $('mBtnNext'), prev = $('mBtnPrev'), reset = $('mBtnReset');
+    if (play) play.addEventListener('click', function(){
+      if (mState.playing){ mPause(); return; }
+      if (mState.phase >= TOTAL_PHASES){ mReset(); mRun(1); return; }
+      mRun(mState.phase === 0 ? 1 : mState.phase);
+    });
+    if (next) next.addEventListener('click', function(){
+      if (mState.phase >= TOTAL_PHASES) return;
+      mPause();
+      renderM(mState.phase + 1);
+    });
+    if (prev) prev.addEventListener('click', function(){
+      if (mState.phase <= 0) return;
+      mPause();
+      renderM(mState.phase - 1);
+    });
+    if (reset) reset.addEventListener('click', function(){ mPause(); mReset(); });
+
+    document.querySelectorAll('.mspd').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        document.querySelectorAll('.mspd').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        mState.speed = parseFloat(btn.dataset.mspd) || 1;
+      });
+    });
+
+    document.addEventListener('keydown', function(e){
+      if (e.code === 'Space' && document.activeElement && document.activeElement.closest('#internals')){
+        e.preventDefault();
+        if (play) play.click();
+      }
+    });
+  }
+
+  try {
+    buildBuilding();
+    buildVectorBars();
+    buildPipeTokens();
+    buildPipeVecs();
+    buildRouterList();
+    bindM();
+    renderM(0);
+  } catch (err) {
+    if (window.console && console.error) console.error(err);
+  }
+})();
+
+/* ============================================================
+   PART 3 · Application Tabs
+   ============================================================ */
+(function(){
+  'use strict';
+  var tabs = document.querySelectorAll('.app-tab');
+  var panels = document.querySelectorAll('.app-panel');
+  for (var i = 0; i < tabs.length; i++){
+    (function(tab){
+      tab.addEventListener('click', function(){
+        for (var j = 0; j < tabs.length; j++){
+          tabs[j].classList.remove('active');
+          tabs[j].setAttribute('aria-selected','false');
+        }
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected','true');
+        for (var j = 0; j < panels.length; j++) panels[j].classList.remove('active');
+        var target = document.getElementById('tab-' + tab.dataset.tab);
+        if (target) target.classList.add('active');
+      });
+    })(tabs[i]);
+  }
+})();
+</script>
+</body>
+</html>

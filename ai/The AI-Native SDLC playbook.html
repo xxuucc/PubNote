@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Native SDLC Playbook 深度解读与落地指南</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231e3a5f'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='serif' font-weight='bold'>A</text></svg>">
+    <link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+    <style>
+        :root {
+            --color-primary: #1e3a5f;
+            --color-primary-light: #2c5282;
+            --color-accent: #c05621;
+            --color-accent-light: #dd6b20;
+            --color-bg: #fafaf7;
+            --color-surface: #ffffff;
+            --color-border: #e2e8f0;
+            --color-text: #1a202c;
+            --color-text-secondary: #4a5568;
+            --color-text-muted: #718096;
+            --color-code-bg: #f1f5f9;
+            --color-highlight: #fef3c7;
+            --color-success: #276749;
+            --color-warning: #975a16;
+            --color-danger: #9b2c2c;
+            --max-width: 860px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.85;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+            font-size: 16px;
+        }
+
+        /* ===== 顶部导航 ===== */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--color-border);
+            z-index: 100;
+            padding: 0 24px;
+        }
+
+        .top-nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+
+        .nav-brand {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--color-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+        }
+
+        .nav-link {
+            padding: 6px 12px;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover {
+            background: var(--color-code-bg);
+            color: var(--color-primary);
+        }
+
+        .nav-link.active {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        /* ===== Hero 区域 ===== */
+        .hero {
+            padding: 120px 24px 60px;
+            background: linear-gradient(180deg, var(--color-primary) 0%, #2c5282 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 36px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .hero .subtitle {
+            font-size: 18px;
+            opacity: 0.85;
+            max-width: 600px;
+            margin: 0 auto 24px;
+            line-height: 1.6;
+        }
+
+        .hero .meta {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .hero .meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ===== 主体布局 ===== */
+        .main-container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* ===== 章节折叠 ===== */
+        .chapter {
+            margin-bottom: 24px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .chapter:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .chapter-header {
+            padding: 24px 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            user-select: none;
+            transition: background 0.15s ease;
+        }
+
+        .chapter-header:hover {
+            background: #f7fafc;
+        }
+
+        .chapter-number {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--color-primary);
+            opacity: 0.25;
+            min-width: 48px;
+        }
+
+        .chapter-title {
+            flex: 1;
+        }
+
+        .chapter-title h2 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-text);
+            line-height: 1.4;
+        }
+
+        .chapter-title .chapter-desc {
+            font-size: 14px;
+            color: var(--color-text-muted);
+            margin-top: 4px;
+        }
+
+        .chapter-toggle {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .chapter.open .chapter-toggle {
+            transform: rotate(180deg);
+        }
+
+        .chapter-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .chapter.open .chapter-content {
+            max-height: 10000px;
+        }
+
+        .chapter-inner {
+            padding: 0 28px 28px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        /* ===== 小节折叠 ===== */
+        .section {
+            margin-top: 24px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f7fafc;
+            user-select: none;
+            transition: background 0.15s ease;
+        }
+
+        .section-header:hover {
+            background: #edf2f7;
+        }
+
+        .section-header h3 {
+            flex: 1;
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .section-toggle {
+            color: var(--color-text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .section.open .section-toggle {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease;
+        }
+
+        .section.open .section-content {
+            max-height: 8000px;
+        }
+
+        .section-inner {
+            padding: 20px 24px;
+        }
+
+        /* ===== 内容样式 ===== */
+        .section-inner h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin: 20px 0 10px;
+            padding-left: 12px;
+            border-left: 3px solid var(--color-accent);
+        }
+
+        .section-inner h4:first-child {
+            margin-top: 0;
+        }
+
+        .section-inner p {
+            margin-bottom: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .section-inner ul, .section-inner ol {
+            margin: 10px 0 14px;
+            padding-left: 24px;
+            color: var(--color-text-secondary);
+        }
+
+        .section-inner li {
+            margin-bottom: 6px;
+        }
+
+        .section-inner strong {
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        /* 高亮框 */
+        .callout {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border-left: 4px solid;
+        }
+
+        .callout-primary {
+            background: #ebf8ff;
+            border-color: var(--color-primary-light);
+            color: #2a4365;
+        }
+
+        .callout-warning {
+            background: #fffaf0;
+            border-color: var(--color-accent);
+            color: #7b341e;
+        }
+
+        .callout-success {
+            background: #f0fff4;
+            border-color: var(--color-success);
+            color: #22543d;
+        }
+
+        .callout-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        /* 代码块 */
+        pre {
+            background: var(--color-code-bg);
+            padding: 16px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.65;
+            margin: 12px 0;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            background: var(--color-code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--color-accent);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--color-text);
+        }
+
+        /* 表格 */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            min-width: 500px;
+            border-collapse: collapse;
+            font-size: 14px;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid var(--color-border);
+            padding: 10px 14px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+
+        th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        td {
+            color: var(--color-text-secondary);
+        }
+
+        /* 标签 */
+        .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+
+        .tag-primary {
+            background: #ebf8ff;
+            color: var(--color-primary-light);
+        }
+
+        .tag-accent {
+            background: #fffaf0;
+            color: var(--color-accent);
+        }
+
+        .tag-success {
+            background: #f0fff4;
+            color: var(--color-success);
+        }
+
+        .tag-warning {
+            background: #fffaf0;
+            color: var(--color-warning);
+        }
+
+        /* 时间轴 */
+        .timeline {
+            display: grid;
+            grid-template-columns: 100px 2px 1fr;
+            gap: 0;
+            margin: 20px 0;
+        }
+
+        .timeline-time {
+            text-align: right;
+            padding-right: 16px;
+            font-size: 13px;
+            color: var(--color-text-muted);
+            font-weight: 500;
+            padding-top: 2px;
+        }
+
+        .timeline-axis {
+            position: relative;
+            background: var(--color-border);
+        }
+
+        .timeline-dot {
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            border: 2px solid var(--color-surface);
+        }
+
+        .timeline-content {
+            padding-left: 20px;
+            padding-bottom: 24px;
+        }
+
+        .timeline-content h5 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 4px;
+        }
+
+        .timeline-content p {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin: 0;
+        }
+
+        /* 卡片组 */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .card {
+            padding: 20px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: var(--color-surface);
+        }
+
+        .card h5 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin: 0;
+        }
+
+        /* 回到顶部 */
+        .back-to-top {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 99;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        .back-to-top:hover {
+            background: var(--color-primary-light);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 26px;
+            }
+            .hero .subtitle {
+                font-size: 15px;
+            }
+            .chapter-header {
+                padding: 18px 20px;
+            }
+            .chapter-number {
+                font-size: 22px;
+                min-width: 36px;
+            }
+            .chapter-title h2 {
+                font-size: 18px;
+            }
+            .chapter-inner {
+                padding: 0 20px 20px;
+            }
+            .section-inner {
+                padding: 16px 18px;
+            }
+            .nav-links {
+                display: none;
+            }
+            .timeline {
+                grid-template-columns: 80px 2px 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="top-nav-inner">
+            <div class="nav-brand">AI-Native SDLC Playbook</div>
+            <div class="nav-links">
+                <a class="nav-link" href="#ch1">背景与范式</a>
+                <a class="nav-link" href="#ch2">六大阶段</a>
+                <a class="nav-link" href="#ch3">支撑体系</a>
+                <a class="nav-link" href="#ch4">落地指南</a>
+                <a class="nav-link" href="#ch5">案例演练</a>
+                <a class="nav-link" href="#ch6">度量治理</a>
+                <a class="nav-link" href="#ch7">误区避坑</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero">
+        <h1>The AI-Native SDLC Playbook<br>深度解读与落地指南</h1>
+        <p class="subtitle">从"用AI加速旧流程"到"以AI为执行主体重构研发全链路"——一份面向工程团队的完整转型手册</p>
+        <div class="meta">
+            <span>基于 Anthropic 官方发布</span>
+            <span>2026年8月版</span>
+            <span>全文约 2.8 万字</span>
+        </div>
+    </header>
+
+    <!-- ===== 第一章 ===== -->
+    <div class="chapter open" id="ch1">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+            <div class="chapter-number">01</div>
+            <div class="chapter-title">
+                <h2>核心背景与范式重构</h2>
+                <div class="chapter-desc">理解为什么传统SDLC正在失效，以及AI原生范式的本质是什么</div>
+            </div>
+            <div class="chapter-toggle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+            </div>
+        </div>
+        <div class="chapter-content">
+            <div class="chapter-inner">
+
+                <div class="section open">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>1.1 发布背景与核心命题</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>2026年8月，Anthropic正式发布《The AI-Native SDLC Playbook》，这是行业首份系统性定义"AI原生软件开发生命周期"的官方指南。其作者Louis Claxton在开篇就直指当前行业的核心矛盾：</p>
+
+                            <div class="callout callout-primary">
+                                <div class="callout-title">核心命题</div>
+                                AI代码助手已经让"写代码"的效率提升了5到10倍，但传统SDLC流程依然建立在"人是核心产能"的基础上——评审、交接、对齐、文档、审批这些"人速环节"，正在成为新的研发瓶颈。
+                            </div>
+
+                            <p>这份手册的关键洞察在于：它不是又一份"如何用AI写代码"的教程，而是一份关于<strong>流程重构</strong>的方法论。它区分了两种完全不同的路径：</p>
+
+                            <ul>
+                                <li><strong>AI增强SDLC（AI-Augmented）</strong>：把AI当作插件嵌入原有流程，用AI加速每个环节的"人做事"速度。本质是"旧流程+新工具"，流程骨架不变。</li>
+                                <li><strong>AI原生SDLC（AI-Native）</strong>：从底层重构研发流程，将AI作为全链路的执行主体，人类退居到决策、判断和规则制定的核心位置。流程骨架本身就是为AI设计的。</li>
+                            </ul>
+
+                            <p>大多数团队目前停留在第一种路径——用Copilot写代码、用AI生成测试用例，但需求评审、技术方案评审、代码评审、上线审批等流程依然完全按人工节奏运转。结果就是：代码写得更快了，但产品从想法到上线的总周期并没有显著缩短，因为瓶颈已经从"编码"转移到了"协作流程"。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>1.2 传统SDLC的瓶颈本质分析</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>传统SDLC（无论是瀑布还是敏捷）的本质是<strong>"交接型流程"</strong>——每个阶段依赖人的输入和输出，信息在层层传递中不断损耗。我们可以把一个典型功能的研发流程拆解成以下环节，并分析每个环节的时间消耗：</p>
+
+                            <div class="table-wrapper">
+                                <table>
+                                    <colgroup>
+                                        <col style="width:18%"><col style="width:22%"><col style="width:30%"><col style="width:30%">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>阶段</th>
+                                            <th>典型耗时占比</th>
+                                            <th>核心瓶颈</th>
+                                            <th>信息损耗来源</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>需求规划</strong></td>
+                                            <td>20%~30%</td>
+                                            <td>多轮对齐会议、PRD撰写与评审</td>
+                                            <td>业务→产品→研发的三层转述</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>设计架构</strong></td>
+                                            <td>15%~20%</td>
+                                            <td>需求/UI/架构分属不同团队，反复对齐</td>
+                                            <td>设计规范不统一，边界争议</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>编码开发</strong></td>
+                                            <td>30%~40%</td>
+                                            <td>理解上下文、查规范、踩重复的坑</td>
+                                            <td>团队知识分散在个人脑中</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>测试验收</strong></td>
+                                            <td>15%~25%</td>
+                                            <td>后置门禁，问题发现晚，修复成本指数上升</td>
+                                            <td>测试用例与需求脱节</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>部署上线</strong></td>
+                                            <td>10%~15%</td>
+                                            <td>人工评审效率低，标准不统一，合规靠事后审计</td>
+                                            <td>评审者注意力有限，标准漂移</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>运维迭代</strong></td>
+                                            <td>持续</td>
+                                            <td>告警靠人处理，问题排查慢，修复流程割裂</td>
+                                            <td>监控数据与研发流程不连通</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <p>关键洞察：<strong>编码环节的效率提升，只会让其他环节的瓶颈更加突出</strong>。当一个工程师用AI把编码时间从5天压缩到1天时，他剩下的4天依然花在等需求澄清、等设计评审、等代码评审、等测试验收上——流程总周期并没有缩短。</p>
+
+                            <p>这就是为什么很多团队引入AI编码工具后，"开发速度提升了"但"交付周期没变化"——他们只优化了流程中已经不是瓶颈的那一环。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>1.3 AI原生SDLC的三大底层转变</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>AI原生SDLC不是对传统流程的小修小补，而是三个底层范式的同时转变：</p>
+
+                            <h4>转变一：流程驱动力——从"人的会议/工单"到"产物的版本更新"</h4>
+                            <p>传统流程中，一个功能从需求到上线，是靠人在各个环节之间"推"的——产品写PRD发给研发、研发做完提测、测试做完提上线。每个环节的交接都是一次人工动作，而人的时间是流程中最稀缺的资源。</p>
+                            <p>AI原生流程中，驱动力变成了<strong>标准化产物的版本更新</strong>。每个阶段结束时，产出一个版本化的机器可读文档（intent.md → spec.md → plan.md → code → test report），这个文档合并到主干后，自动触发下一阶段的工作。人只需要在关键门禁节点做"通过/不通过"的判断，而不需要在每个环节之间做"搬运工"。</p>
+
+                            <h4>转变二：人类角色——从"执行者"到"决策者+规则制定者"</h4>
+                            <p>在AI原生SDLC中，人的价值不再体现在"写了多少代码"，而体现在三个层面：</p>
+                            <ul>
+                                <li><strong>定规则</strong>：把团队的编码规范、架构原则、安全要求、合规标准，固化为AI可执行的Skills和Hooks。</li>
+                                <li><strong>做判断</strong>：在关键门禁节点判断方向是否正确、风险是否可接受、产品意图是否准确。</li>
+                                <li><strong>管闭环</strong>：确保从需求到运维的完整闭环持续运转，发现流程中的堵点并优化。</li>
+                            </ul>
+
+                            <h4>转变三：治理方式——从"事后评审审计"到"实时门禁嵌入"</h4>
+                            <p>传统治理是"事后型"的——代码写完了才有人评审、上线前才做安全扫描、出了事故才复盘。这种治理方式的问题是：问题发现得越晚，修复成本越高。</p>
+                            <p>AI原生治理是"实时型"的——规范和合规要求不是写在文档里等人去遵守，而是直接嵌入AI的执行流程中。AI写代码时就自动遵守编码规范、自动检查安全漏洞、自动确保测试覆盖。治理不是流程的终点，而是流程的一部分。</p>
+
+                            <div class="callout callout-warning">
+                                <div class="callout-title">关键认知</div>
+                                整条产物链（intent.md → spec.md → plan.md → code → test → PR记录 → 运维记录）同时就是天然的审计追踪链——你不需要额外写文档来证明"我们做了什么"，版本控制本身就是完整的审计记录。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 第二章 ===== -->
+    <div class="chapter" id="ch2">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+            <div class="chapter-number">02</div>
+            <div class="chapter-title">
+                <h2>六大阶段深度拆解</h2>
+                <div class="chapter-desc">每个阶段的输入契约、核心动作、输出产物、门禁规则与度量指标</div>
+            </div>
+            <div class="chapter-toggle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+            </div>
+        </div>
+        <div class="chapter-content">
+            <div class="chapter-inner">
+
+                <!-- 2.1 Plan -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>2.1 规划阶段（Plan）：从需求对齐到意图固化</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>核心变化</h4>
+                            <p>替代传统的需求收集、工单创建、PRD撰写和多轮评审会议。需求提出者直接与AI对话，通过头脑风暴快速把模糊的想法固化为可执行的、结构化的意图文档。</p>
+
+                            <h4>输入契约</h4>
+                            <ul>
+                                <li>原始业务痛点、用户反馈、生产告警、业务目标、路线图约束</li>
+                                <li>公司产品战略、优先级框架、技术债务清单</li>
+                                <li>历史同类需求的intent文档（作为参考）</li>
+                            </ul>
+
+                            <h4>核心动作</h4>
+                            <ol>
+                                <li><strong>对话式需求挖掘</strong>：需求提出者与Claude进行头脑风暴，AI自动提问以澄清边界、识别约束、标记风险、提炼成功指标。</li>
+                                <li><strong>结构化意图生成</strong>：AI把对话内容整理为标准化的intent.md，包含问题定义、业务目标、成功指标、影响范围、约束条件、待澄清问题、干系人。</li>
+                                <li><strong>边界校验</strong>：AI自动检查该需求是否与现有路线图冲突、是否超出团队职责范围、是否存在重复需求。</li>
+                            </ol>
+
+                            <h4>输出产物：intent.md</h4>
+                            <pre><code># Intent: 用户中心新增手机号登录能力
+
+## 问题定义
+当前仅支持邮箱登录，移动端用户注册转化率低于大盘15%。
+核心用户反馈："注册步骤太多，不想填邮箱"。
+
+## 业务目标
+- 移动端注册转化率提升10%以上
+- 登录成功率不低于现有邮箱登录水平（99.5%）
+- 短信发送成本控制在单用户0.05元以内
+
+## 成功指标（上线后30天）
+- 手机号登录占总登录量≥30%
+- 注册漏斗转化率提升≥10%
+- 因登录失败导致的流失率≤0.5%
+
+## 影响范围
+- 涉及：用户中心后端服务、H5/APP登录页、注册流程
+- 不涉及：权限体系、会员系统、支付账号
+- 依赖：现有短信服务商、用户数据安全合规要求
+
+## 约束条件
+- 必须完全兼容现有邮箱账号体系，同一手机号不能重复注册
+- 符合《个人信息保护法》数据安全要求
+- 整体上线周期不超过2周
+- 不能影响现有邮箱登录的可用性（SLA 99.9%）
+
+## 待澄清问题
+- 是否需要支持运营商一键登录（优先级待定）
+- 现有短信服务商的到达率是否满足要求
+- 国际手机号是否在本期范围内
+
+## 干系人
+- 产品：张三（负责人）
+- 后端：李四
+- 前端：王五
+- 测试：赵六
+- 安全：钱七（合规审查）</code></pre>
+
+                            <h4>门禁规则</h4>
+                            <ul>
+                                <li>产品负责人审核确认intent.md的方向和边界</li>
+                                <li>技术负责人确认技术可行性和工作量评估</li>
+                                <li>合并到主干后，自动触发设计阶段</li>
+                            </ul>
+
+                            <h4>度量指标</h4>
+                            <ul>
+                                <li>需求从想法到可执行intent的时间（传统：2~4周，目标：数小时）</li>
+                                <li>intent阶段需求变更率（衡量需求澄清质量）</li>
+                                <li>需求信息失真率（通过开发阶段的需求确认次数衡量）</li>
+                            </ul>
+
+                            <div class="callout callout-success">
+                                <div class="callout-title">价值</div>
+                                需求从"想法"到"可执行"的时间从数周缩短到数小时，信息失真率降低80%以上。产品经理从"写需求文档"转变为"定目标、控边界、审意图"。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2.2 Design -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>2.2 设计阶段（Design）：规范前置的一体化设计</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>核心变化</h4>
+                            <p>打破传统需求、UI设计、架构设计的团队边界。AI读取通过审核的intent.md后，结合组织级规范（编码为Skills），一次性输出需求规格+架构设计+交互方案。政策和规范在设计阶段就前置应用，而不是等到开发后期评审才发现问题。</p>
+
+                            <h4>输入契约</h4>
+                            <ul>
+                                <li>通过审核的intent.md</li>
+                                <li>组织级Skills库：UX设计规范、API设计规范、安全规范、合规要求、组件库</li>
+                                <li>现有系统架构文档、技术栈约束</li>
+                            </ul>
+
+                            <h4>核心动作</h4>
+                            <ol>
+                                <li><strong>功能规格生成</strong>：AI基于intent.md，结合Skills中的规范，生成详细的功能规格说明，包含接口定义、数据模型、交互流程、异常处理方案。</li>
+                                <li><strong>风险自动标记</strong>：AI自动识别设计中的风险点——安全风险、性能风险、兼容性风险、合规风险，并给出缓解方案。</li>
+                                <li><strong>设计评审准备</strong>：AI生成设计文档的同时，自动生成评审checklist，方便人工评审时逐项确认。</li>
+                            </ol>
+
+                            <h4>输出产物：spec.md</h4>
+                            <p>spec.md是一体化设计规格书，通常包含：</p>
+                            <ul>
+                                <li><strong>功能规格</strong>：详细的功能描述、用户故事、验收标准</li>
+                                <li><strong>接口设计</strong>：API定义、请求/响应格式、错误码</li>
+                                <li><strong>数据模型</strong>：数据库表结构、字段定义、关系</li>
+                                <li><strong>交互流程</strong>：用户操作流程、页面状态流转</li>
+                                <li><strong>异常处理</strong>：错误场景、降级策略、用户提示</li>
+                                <li><strong>风险清单</strong>：自动标记的风险点及缓解方案</li>
+                            </ul>
+
+                            <h4>门禁规则</h4>
+                            <ul>
+                                <li>产品负责人确认功能规格和交互流程</li>
+                                <li>技术负责人确认架构设计和技术选型</li>
+                                <li>安全负责人确认安全合规相关设计</li>
+                            </ul>
+
+                            <div class="callout callout-primary">
+                                <div class="callout-title">关键机制：Skills 技能体系</div>
+                                Skills是组织级规范的载体，是AI设计和开发的"硬性约束"。它们是版本化的、全局生效的，避免了每个团队各自为政、规范漂移的问题。常见的Skills包括：UX设计规范、API设计规范、安全规范、合规规范、性能标准、可访问性要求等。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2.3 Build -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>2.3 开发阶段（Build）：知识沉淀为先的AI编程</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>核心变化</h4>
+                            <p>从"人写代码、AI辅助"转变为"AI写代码、人做方案评审"。团队的隐性知识被沉淀为标准化的项目知识库文件（CLAUDE.md），AI每次开发都会自动读取，避免重复踩坑。</p>
+
+                            <h4>输入契约</h4>
+                            <ul>
+                                <li>通过审核的spec.md</li>
+                                <li>项目级CLAUDE.md知识库</li>
+                                <li>代码库上下文（现有代码结构、依赖、约定）</li>
+                                <li>组织级Skills和Hooks</li>
+                            </ul>
+
+                            <h4>核心动作</h4>
+                            <ol>
+                                <li><strong>实现方案生成（计划模式）</strong>：AI读取spec.md后，先生成实现方案——列出需要改动的文件清单、开发顺序、每个文件的修改要点、验证方式。工程师评审这个方案，确认方向正确后再执行。</li>
+                                <li><strong>代码自动编写</strong>：方案确认后，AI自动编写代码、单元测试、更新文档。整个过程中，Hooks实时拦截不合规的代码。</li>
+                                <li><strong>并行工作流</strong>：一个工程师可以同时驱动多个AI会话（子代理），并行处理多个独立的任务——比如前端一个会话、后端一个会话、测试一个会话，工程师只需要做协调和评审。</li>
+                            </ol>
+
+                            <h4>核心支撑：CLAUDE.md 项目知识库</h4>
+                            <p>每个项目根目录的CLAUDE.md是AI的"团队记忆"，包含所有上下文约定。它是版本控制的、持续更新的——团队遇到的新问题、新踩坑、新规范，都会沉淀到这个文件中。</p>
+
+                            <pre><code># 项目知识库 - 用户中心服务
+
+## 技术栈
+- 后端：Node.js 18 + Express + PostgreSQL 14
+- 前端：React 18 + TypeScript + Tailwind CSS
+- 测试：Jest（单元） + Playwright（E2E）
+- 部署：Docker + Kubernetes + GitHub Actions
+
+## 架构约定
+- 接口遵循RESTful规范，URL用复数名词
+- 错误码统一前缀 UC-，格式 UC-XXXX
+- 数据库迁移使用Prisma Migrate，禁止手动改表
+- 所有外部调用必须有超时和重试机制（最多3次，指数退避）
+
+## 开发规范
+- 提交前必须执行 `npm run lint && npm test`
+- 新增接口必须覆盖单元测试，覆盖率不低于80%
+- 敏感字段（手机号、邮箱）必须加密存储，日志中脱敏
+- 禁止硬编码任何环境变量或密钥
+
+## 常见踩坑记录
+- 手机号正则必须支持国际号段（+开头，最长15位）
+- 短信发送必须加频率限制（同一手机号每分钟1次，每天10次）
+- 旧用户绑定手机号时需要校验身份（输入密码+验证码）
+- 用户注销后数据要保留30天（合规要求），不是立即删除
+- 时区统一用UTC存储，展示层转换为用户时区
+
+## 团队约定
+- PR标题格式：[模块] 简要描述
+- 复杂逻辑必须写注释说明"为什么这么做"，而不是"做了什么"
+- 每周五下午做一次CLAUDE.md更新会</code></pre>
+
+                            <h4>核心支撑：Hooks 钩子机制</h4>
+                            <p>Hooks是开发阶段的"实时护栏"，在AI执行代码操作时自动触发，不需要人工干预。常见的Hooks包括：</p>
+                            <ul>
+                                <li><strong>Pre-commit Hook</strong>：禁止修改已冻结的核心代码路径；自动执行代码格式化；拦截硬编码的密钥和凭证</li>
+                                <li><strong>Post-write Hook</strong>：新写的代码自动跑lint和类型检查；新增接口自动生成测试用例模板</li>
+                                <li><strong>Validation Hook</strong>：强制要求新增代码必须包含测试用例；代码覆盖率低于阈值时阻止提交</li>
+                            </ul>
+
+                            <h4>角色变化</h4>
+                            <p>工程师的工作重心从"逐行写代码"转变为：</p>
+                            <ul>
+                                <li><strong>架构设计</strong>：设计系统的整体架构和技术选型</li>
+                                <li><strong>方案评审</strong>：评审AI生成的实现方案，判断方向是否正确</li>
+                                <li><strong>质量把关</strong>：审查关键代码，控制技术债务</li>
+                                <li><strong>知识沉淀</strong>：持续更新CLAUDE.md和Skills，提升团队整体的AI输出质量</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2.4 Test -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>2.4 测试阶段（Test）：持续自检的验证闭环</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>核心变化</h4>
+                            <p>测试从"阶段后置门禁"转变为"贯穿开发全程的持续验证"。AI在提交前自行迭代验证、修复问题，形成自检闭环。人类测试工程师只需要处理复杂场景和最终确认。</p>
+
+                            <h4>核心动作</h4>
+                            <ol>
+                                <li><strong>AI自动验证</strong>：给AI配置验证能力（测试命令、构建检查、UI截图对比），AI写完代码后自动运行验证，发现问题自动修复，再重新验证——形成"写→测→修"的闭环，直到全部通过。</li>
+                                <li><strong>分层测试</strong>：单元测试由AI在开发过程中同步完成；集成测试和E2E测试在功能完成后由AI生成并执行。</li>
+                                <li><strong>UI视觉验证</strong>：前端项目自动截图对比，校验视觉还原度，发现样式偏差自动调整。</li>
+                            </ol>
+
+                            <h4>进阶能力：AI配置的回归测试（Evals）</h4>
+                            <p>这是一个常被忽略但极其重要的能力：<strong>AI本身的配置也是需要回归测试的</strong>。</p>
+                            <p>当你更新CLAUDE.md、调整Skills、修改Hooks时，AI的输出质量可能会变好，也可能会变坏。如果没有自动化的评估机制，你根本不知道一次配置调整是提升了质量还是引入了退化。</p>
+                            <p>解决方案是：建立一个评估套件（Evals），包含一批典型的开发任务样例，以及对应的期望输出标准。每当AI配置变更时，自动运行这套评估，对比输出质量是否达标。这相当于"AI配置的单元测试"。</p>
+
+                            <div class="callout callout-warning">
+                                <div class="callout-title">常见误区</div>
+                                很多团队只关注"AI写代码对不对"，却忽略了"AI的配置会不会越调越差"。没有Evals机制的AI流程优化，本质上是盲人摸象——你改了一个规则，可能提升了这个场景的质量，却破坏了另一个场景。
+                            </div>
+
+                            <h4>度量指标</h4>
+                            <ul>
+                                <li>AI自检通过率（第一次运行测试就通过的比例）</li>
+                                <li>线上缺陷密度（每千行代码的bug数）</li>
+                                <li>测试左移效果（问题在开发阶段被发现的比例）</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2.5 Deploy -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>2.5 部署阶段（Deploy）：分级评审的治理门禁</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>核心变化</h4>
+                            <p>从"人工全量评审"转变为"AI分级评审+人类关键决策"。治理规则嵌入流水线实时生效，最终发布权保留在人类手中。</p>
+
+                            <h4>分级评审标准</h4>
+                            <div class="table-wrapper">
+                                <table>
+                                    <colgroup>
+                                        <col style="width:15%"><col style="width:35%"><col style="width:50%">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>风险等级</th>
+                                            <th>典型场景</th>
+                                            <th>评审与审批方式</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="tag tag-danger">P0 极高</span></td>
+                                            <td>核心交易逻辑、数据模型变更、安全相关代码、支付链路</td>
+                                            <td>AI初评 + 资深工程师人工逐行评审 + 技术负责人审批</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="tag tag-warning">P1 中高</span></td>
+                                            <td>普通业务功能、非核心接口、新增页面</td>
+                                            <td>AI全量评审 + 普通工程师人工确认关键逻辑</td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="tag tag-success">P2 低危</span></td>
+                                            <td>文案修改、样式调整、非核心逻辑优化、文档更新</td>
+                                            <td>AI全量评审自动通过，定期抽样复核</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h4>核心动作</h4>
+                            <ol>
+                                <li><strong>AI自动PR评审</strong>：AI读取PR的代码变更，按规范检查代码质量、安全漏洞、规范符合性、性能风险，分级标注问题。</li>
+                                <li><strong>流水线智能处理</strong>：CI/CD流水线中集成非交互式Claude——构建失败时自动排查原因、分析日志、给出修复建议；文档需要更新时自动修改文档。</li>
+                                <li><strong>发布门禁</strong>：用Hooks实现审批门禁——生产部署必须有授权才能执行，否则自动拦截。</li>
+                            </ol>
+
+                            <div class="callout callout-primary">
+                                <div class="callout-title">治理原则</div>
+                                AI可以执行到生产门禁之前的所有环节，但最终发布权必须掌握在人类手中。所有AI评审意见和人类决策全程留痕，自动生成审计记录——这条记录同时也是后续复盘和流程优化的数据来源。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2.6 Maintain -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>2.6 运维阶段（Maintain）：自动闭环的生产迭代</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>核心变化</h4>
+                            <p>从"人工告警处理"转变为"AI自动诊断+闭环迭代"。生产问题自动反向触发研发流程，形成从监控到修复的完整闭环。</p>
+
+                            <h4>闭环流程示例</h4>
+                            <div class="timeline">
+                                <div class="timeline-time">T+0</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>监控告警触发</h5>
+                                    <p>监控系统检测到"登录接口错误率超过5%"，触发告警</p>
+                                </div>
+                            </div>
+                            <div class="timeline">
+                                <div class="timeline-time">T+2min</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>AI自动诊断</h5>
+                                    <p>AI自动拉取日志、链路追踪数据，定位根因：短信服务超时未降级，导致登录接口阻塞</p>
+                                </div>
+                            </div>
+                            <div class="timeline">
+                                <div class="timeline-time">T+5min</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>生成修复意图</h5>
+                                    <p>AI生成intent.md：为短信服务增加超时降级机制，故障时自动切换到备用短信通道</p>
+                                </div>
+                            </div>
+                            <div class="timeline">
+                                <div class="timeline-time">T+30min</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>人工确认</h5>
+                                    <p>运维负责人确认诊断结果和修复方案，批准进入开发</p>
+                                </div>
+                            </div>
+                            <div class="timeline">
+                                <div class="timeline-time">T+2h</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>自动修复上线</h5>
+                                    <p>AI完成代码编写、测试、PR提交，工程师评审后合并，自动部署上线，告警关闭</p>
+                                </div>
+                            </div>
+
+                            <h4>核心能力</h4>
+                            <ul>
+                                <li><strong>自动告警诊断</strong>：监控指标异常时，AI自动拉取相关数据进行根因分析</li>
+                                <li><strong>工单智能分流</strong>：Chatbot（如Claude Tag）作为一线响应，处理常见工单和用户问题，复杂问题自动升级给人工</li>
+                                <li><strong>定时安全扫描</strong>：自动代码安全扫描，发现漏洞自动生成修复PR，走正常评审流程</li>
+                                <li><strong>知识库自动更新</strong>：每次事故复盘后，AI自动把经验教训沉淀到CLAUDE.md和知识库中</li>
+                            </ul>
+
+                            <div class="callout callout-success">
+                                <div class="callout-title">价值</div>
+                                平均故障响应时间缩短80%，常见问题无需人工介入。运维工程师从"值班盯盘、排查问题"转变为"建设监控体系、设计应急预案、处理重大故障"。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 第三章 ===== -->
+    <div class="chapter" id="ch3">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+            <div class="chapter-number">03</div>
+            <div class="chapter-title">
+                <h2>核心支撑体系深度配置指南</h2>
+                <div class="chapter-desc">CLAUDE.md、Skills、Hooks、Evals四大支柱的完整配置方法论</div>
+            </div>
+            <div class="chapter-toggle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+            </div>
+        </div>
+        <div class="chapter-content">
+            <div class="chapter-inner">
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>3.1 CLAUDE.md：项目级知识库的构建方法</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>CLAUDE.md是AI原生SDLC中最基础也最重要的基础设施。它不是一个静态的配置文件，而是一个<strong>持续进化的团队知识资产</strong>。写好CLAUDE.md，AI的输出质量就提升了一半。</p>
+
+                            <h4>CLAUDE.md应该包含什么</h4>
+                            <div class="table-wrapper">
+                                <table>
+                                    <colgroup>
+                                        <col style="width:25%"><col style="width:35%"><col style="width:40%">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>模块</th>
+                                            <th>内容</th>
+                                            <th>为什么重要</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>技术栈</strong></td>
+                                            <td>语言、框架、数据库、部署方式、CI/CD工具</td>
+                                            <td>确保AI用正确的技术栈写代码，而不是生成通用示例</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>架构约定</strong></td>
+                                            <td>分层规则、接口规范、错误码格式、命名约定</td>
+                                            <td>确保AI生成的代码风格与现有代码库一致</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>开发命令</strong></td>
+                                            <td>构建命令、测试命令、lint命令、启动命令</td>
+                                            <td>让AI能够自动验证自己的代码，形成自检闭环</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>业务领域知识</strong></td>
+                                            <td>核心业务概念、数据模型、业务规则</td>
+                                            <td>避免AI写出"看起来对但业务上错"的代码</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>踩坑记录</strong></td>
+                                            <td>历史上遇到过的坑、特殊处理、为什么这么做</td>
+                                            <td>避免AI重复踩同样的坑，节省调试时间</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>团队约定</strong></td>
+                                            <td>PR规范、代码评审标准、沟通方式</td>
+                                            <td>确保AI的工作方式符合团队习惯</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h4>编写原则</h4>
+                            <ol>
+                                <li><strong>具体优于笼统</strong>：不要写"代码要规范"，要写"变量命名用camelCase，常量用UPPER_SNAKE_CASE"</li>
+                                <li><strong>带原因的规则优于规则本身</strong>：不要只写"手机号要脱敏"，要写"手机号要在日志中脱敏，因为合规要求，见PIPL第XX条"</li>
+                                <li><strong>持续更新</strong>：每次踩坑、每次发现AI犯的新错误，都要追加到CLAUDE.md中</li>
+                                <li><strong>版本控制</strong>：CLAUDE.md本身要纳入Git管理，修改要有PR和评审</li>
+                            </ol>
+
+                            <div class="callout callout-warning">
+                                <div class="callout-title">反模式</div>
+                                不要把所有规范都塞进CLAUDE.md——如果它超过200行，AI就会开始忽略后面的内容。把通用规范放到Skills中，CLAUDE.md只放项目特有的、最重要的约定。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>3.2 Skills：组织级规范的版本化管理</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>Skills是跨项目、跨团队的通用规范。如果说CLAUDE.md是"这个项目的知识"，那Skills就是"整个公司/团队的通用规则"。</p>
+
+                            <h4>常见的Skills类型</h4>
+                            <div class="card-grid">
+                                <div class="card">
+                                    <h5>设计规范类</h5>
+                                    <p>品牌视觉、组件库使用规范、交互设计原则、可访问性标准</p>
+                                </div>
+                                <div class="card">
+                                    <h5>API规范类</h5>
+                                    <p>RESTful设计规范、错误码标准、版本管理策略、鉴权要求</p>
+                                </div>
+                                <div class="card">
+                                    <h5>安全合规类</h5>
+                                    <p>数据加密要求、漏洞防护标准、隐私保护规则、审计日志要求</p>
+                                </div>
+                                <div class="card">
+                                    <h5>性能标准类</h5>
+                                    <p>接口响应时间要求、前端性能指标、数据库查询优化原则</p>
+                                </div>
+                            </div>
+
+                            <h4>Skills的版本化管理</h4>
+                            <ul>
+                                <li>每个Skill是一个独立的Markdown文件，有明确的版本号</li>
+                                <li>Skills的变更需要走评审流程，不能随意修改</li>
+                                <li>项目可以选择使用哪些Skills，以及使用哪个版本</li>
+                                <li>当Skills更新时，所有引用它的项目都会自动应用新版本</li>
+                            </ul>
+
+                            <h4>从规范文档到Skill的转化</h4>
+                            <p>大多数公司已经有大量的设计规范、开发规范文档，但这些文档是写给人看的，AI读了效果不好。转化为Skill的关键是：</p>
+                            <ol>
+                                <li><strong>结构化</strong>：把大段描述拆成可执行的规则条目</li>
+                                <li><strong>可判定</strong>：每条规则都应该是"满足/不满足"可以明确判断的</li>
+                                <li><strong>带示例</strong>：每条规则配一个正反示例，AI更容易理解</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>3.3 Hooks：实时护栏的设计原则</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>Hooks是确定性的、实时执行的护栏。与Skills（AI"应该遵守"的规范）不同，Hooks是AI"必须遵守"的——因为它们是在代码层面强制执行的，不通过就没法继续。</p>
+
+                            <h4>Hooks的设计原则</h4>
+                            <ul>
+                                <li><strong>只做确定性的检查</strong>：Hooks适合做"可以明确判断对错"的事情——比如"有没有硬编码密钥"、"测试通过率是否100%"。不适合做需要主观判断的事情。</li>
+                                <li><strong>快速失败</strong>：Hooks应该在几秒内完成检查并给出结果，不能拖慢开发流程。</li>
+                                <li><strong>可自动修复</strong>：对于可以自动修复的问题（比如代码格式），Hooks应该自动修复而不是报错让人工处理。</li>
+                                <li><strong>最小权限</strong>：Hooks只做拦截和检查，不应该直接修改代码（自动修复的场景除外）。</li>
+                            </ul>
+
+                            <h4>常见Hooks清单</h4>
+                            <div class="table-wrapper">
+                                <table>
+                                    <colgroup>
+                                        <col style="width:20%"><col style="width:30%"><col style="width:50%">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>触发时机</th>
+                                            <th>Hooks名称</th>
+                                            <th>作用</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td rowspan="3">写代码前</td>
+                                            <td>路径保护Hook</td>
+                                            <td>禁止AI修改标记为"冻结"的核心代码路径</td>
+                                        </tr>
+                                        <tr>
+                                            <td>权限校验Hook</td>
+                                            <td>检查当前任务是否有权限修改目标文件</td>
+                                        </tr>
+                                        <tr>
+                                            <td>上下文加载Hook</td>
+                                            <td>自动加载CLAUDE.md和相关Skills到上下文中</td>
+                                        </tr>
+                                        <tr>
+                                            <td rowspan="3">写代码后</td>
+                                            <td>代码格式化Hook</td>
+                                            <td>自动执行Prettier/ESLint格式化</td>
+                                        </tr>
+                                        <tr>
+                                            <td>敏感信息拦截Hook</td>
+                                            <td>扫描代码中是否有硬编码的密钥、token</td>
+                                        </tr>
+                                        <tr>
+                                            <td>类型检查Hook</td>
+                                            <td>自动运行TypeScript类型检查</td>
+                                        </tr>
+                                        <tr>
+                                            <td rowspan="2">提交前</td>
+                                            <td>测试运行Hook</td>
+                                            <td>自动运行单元测试，不通过则阻止提交</td>
+                                        </tr>
+                                        <tr>
+                                            <td>覆盖率检查Hook</td>
+                                            <td>新增代码测试覆盖率必须达到阈值</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>3.4 Evals：AI输出质量的回归测试</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>Evals（评估套件）是AI原生SDLC中最容易被忽略、但长期来看价值最大的基础设施。它解决的问题是：<strong>当你调整CLAUDE.md、修改Skills、升级模型版本时，你怎么知道AI的输出质量是变好了还是变差了？</strong></p>
+
+                            <h4>Evals的构成</h4>
+                            <ol>
+                                <li><strong>任务样例集</strong>：收集一批典型的开发任务——比如"给用户表新增一个字段"、"写一个登录接口的单元测试"、"修复这个bug"。这些样例应该覆盖项目的常见场景。</li>
+                                <li><strong>期望输出标准</strong>：每个任务对应的期望输出——可以是完整的正确代码，也可以是评分标准（比如"必须包含错误处理"、"必须符合API规范"）。</li>
+                                <li><strong>自动评分器</strong>：自动对比AI输出与期望标准，给出分数。评分可以是：
+                                    <ul>
+                                        <li>规则式评分：代码是否通过lint、测试是否通过、规范是否满足</li>
+                                        <li>模型式评分：用另一个AI模型来评判输出质量</li>
+                                        <li>人工评分：关键样例由人工定期评分</li>
+                                    </ul>
+                                </li>
+                            </ol>
+
+                            <h4>什么时候运行Evals</h4>
+                            <ul>
+                                <li>每次修改CLAUDE.md后</li>
+                                <li>每次更新Skills版本后</li>
+                                <li>每次升级AI模型版本后</li>
+                                <li>每周定期运行一次，监控质量趋势</li>
+                            </ul>
+
+                            <div class="callout callout-primary">
+                                <div class="callout-title">为什么Evals如此重要</div>
+                                没有Evals的AI流程优化，本质上是"凭感觉调参"——你改了一个规则，可能提升了这个场景的质量，却破坏了另一个场景。有了Evals，你才能像做软件工程一样做AI流程优化：每次变更都有量化的质量基线，每次调整都有可追溯的影响评估。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 第四章 ===== -->
+    <div class="chapter" id="ch4">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+            <div class="chapter-number">04</div>
+            <div class="chapter-title">
+                <h2>项目落地实施指南</h2>
+                <div class="chapter-desc">分阶段实施路线图、不同团队规模的适配方案、度量体系与变更管理</div>
+            </div>
+            <div class="chapter-toggle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+            </div>
+        </div>
+        <div class="chapter-content">
+            <div class="chapter-inner">
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>4.1 五步实施路线图</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>不建议一步到位全量切换。以下是经过验证的渐进式实施路径，每个阶段验证效果后再进入下一步：</p>
+
+                            <div class="timeline">
+                                <div class="timeline-time">第1周</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>第一步：基线盘点与痛点识别</h5>
+                                    <p>梳理现有研发流程、各阶段耗时数据、质量数据、核心痛点。整理现有开发规范、架构约定、常见踩坑经验。选择1~2个低风险、迭代快的项目作为试点。</p>
+                                    <p><span class="tag tag-primary">产出</span> 流程基线报告、试点项目清单、痛点优先级排序</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline">
+                                <div class="timeline-time">第2~3周</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>第二步：最小闭环搭建</h5>
+                                    <p>定义intent.md、spec.md标准模板。编写试点项目的CLAUDE.md知识库。跑通"意图→设计→开发"的最小闭环，验证效率和质量提升效果。</p>
+                                    <p><span class="tag tag-primary">产出</span> 标准模板、CLAUDE.md v1.0、最小闭环验证报告</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline">
+                                <div class="timeline-time">第4~6周</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>第三步：知识沉淀与规范固化</h5>
+                                    <p>将团队通用规范沉淀为组织级Skills。配置基础Hooks规则（代码规范、敏感信息拦截）。建立AI评审标准和分级审批机制。开始构建Evals评估套件的初版。</p>
+                                    <p><span class="tag tag-primary">产出</span> Skills库v1.0、Hooks规则集、分级评审标准、Evals v0.1</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline">
+                                <div class="timeline-time">第7~9周</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>第四步：测试与部署环节接入</h5>
+                                    <p>CI流水线集成AI测试能力。PR流程接入AI自动评审。完善分级审批门禁，落地治理规则。Evals套件迭代到v1.0，开始正式用于质量监控。</p>
+                                    <p><span class="tag tag-primary">产出</span> AI测试流水线、AI PR评审、治理门禁体系、Evals v1.0</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline">
+                                <div class="timeline-time">第10周起</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>第五步：运维闭环与全量推广</h5>
+                                    <p>接入监控告警，实现自动诊断和问题回流。总结试点经验，推广到更多团队。持续优化Skills、Hooks和流程规则。建立月度流程效率复盘机制。</p>
+                                    <p><span class="tag tag-primary">产出</span> 运维闭环、全量推广计划、持续优化机制</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>4.2 不同规模团队的适配方案</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <div class="table-wrapper">
+                                <table>
+                                    <colgroup>
+                                        <col style="width:18%"><col style="width:20%"><col style="width:40%"><col style="width:22%">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>团队规模</th>
+                                            <th>核心目标</th>
+                                            <th>落地重点</th>
+                                            <th>治理强度</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>小型团队</strong><br>≤10人</td>
+                                            <td>提效为主，快速交付</td>
+                                            <td>CLAUDE.md知识库 + AI代码辅助。轻量流程，减少不必要的门禁。产品经理直接和AI对话出intent。工程师直接用AI写代码，减少流程开销。</td>
+                                            <td>低，人工把控为主</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>中型团队</strong><br>10~50人</td>
+                                            <td>效率+质量平衡</td>
+                                            <td>标准六阶段流程 + 分级评审 + 统一规范。建立Skills库和Hooks规则。启动Evals评估套件。保障多项目协同和规范一致性。</td>
+                                            <td>中，关键环节门禁</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>大型团队</strong><br>≥50人</td>
+                                            <td>规范治理 + 规模化提效</td>
+                                            <td>企业级Skills仓库 + 全链路审计 + 严格分级治理。跨部门规范统一。完整的Evals质量体系。全流程可追溯，满足合规要求。</td>
+                                            <td>高，全流程可追溯</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>4.3 变更管理与团队认知对齐</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>技术流程的变革，最大的阻力往往不是技术，而是人的认知和习惯。以下是确保转型成功的关键措施：</p>
+
+                            <h4>角色定位的转变沟通</h4>
+                            <ul>
+                                <li><strong>产品经理</strong>：从"写需求文档"到"定目标、控边界、审意图"——价值不是降低了，而是提升了（从执行者变成了决策者）</li>
+                                <li><strong>工程师</strong>：从"写代码"到"做架构、审方案、管质量"——技术深度和系统思维变得更重要，而不是被替代</li>
+                                <li><strong>测试工程师</strong>：从"写用例、执行测试"到"设计测试策略、建设自动化能力、验证复杂场景"——从重复劳动中解放出来</li>
+                            </ul>
+
+                            <h4>渐进式推进策略</h4>
+                            <ol>
+                                <li><strong>先试点后推广</strong>：不要一开始就全公司推。选一个拥抱变化的团队做试点，用实际效果说话。</li>
+                                <li><strong>双轨运行期</strong>：新流程和旧流程并行运行一段时间，让大家有适应期，而不是一刀切。</li>
+                                <li><strong>量化收益展示</strong>：每个阶段都收集数据——交付周期缩短了多少、缺陷率下降了多少、工程师满意度如何。用数据推动认知转变。</li>
+                            </ol>
+
+                            <div class="callout callout-warning">
+                                <div class="callout-title">常见阻力</div>
+                                最大的阻力来自"被替代焦虑"——工程师担心AI写代码比自己快，自己会失业。应对方式：明确沟通"AI是提升你的杠杆，不是替代你的工具"——一个工程师+AI的产出顶过去三个人，你的价值在于驾驭AI的能力，而不是写代码的速度。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 第五章 ===== -->
+    <div class="chapter" id="ch5">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+            <div class="chapter-number">05</div>
+            <div class="chapter-title">
+                <h2>完整案例演练：从0到1全流程</h2>
+                <div class="chapter-desc">以"用户中心新增手机号登录"为例，走通AI原生SDLC完整闭环</div>
+            </div>
+            <div class="chapter-toggle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+            </div>
+        </div>
+        <div class="chapter-content">
+            <div class="chapter-inner">
+
+                <div class="section open">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>5.1 案例背景与起点</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>我们以一个中型电商团队的"用户中心新增手机号登录"功能为例，完整走一遍AI原生SDLC的六个阶段。这个团队已经完成了前三步的基础设施搭建：有CLAUDE.md v1.0、基础Skills库和Hooks规则、最小闭环已经验证过。</p>
+
+                            <div class="table-wrapper">
+                                <table>
+                                    <colgroup>
+                                        <col style="width:30%"><col style="width:70%">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>项目背景</th>
+                                            <th>详情</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>团队规模</td>
+                                            <td>12人产品技术团队（产品2、后端4、前端3、测试2、运维1）</td>
+                                        </tr>
+                                        <tr>
+                                            <td>技术栈</td>
+                                            <td>Node.js + React + PostgreSQL + AWS + GitHub Actions</td>
+                                        </tr>
+                                        <tr>
+                                            <td>现有能力</td>
+                                            <td>邮箱密码登录、第三方登录（微信/支付宝）</td>
+                                        </tr>
+                                        <tr>
+                                            <td>业务痛点</td>
+                                            <td>移动端注册转化率低，用户反馈注册步骤多</td>
+                                        </tr>
+                                        <tr>
+                                            <td>目标上线时间</td>
+                                            <td>2周内</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>5.2 阶段一：规划（Plan）—— 0.5天完成</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>实际执行过程</h4>
+                            <ol>
+                                <li><strong>Day 1 上午</strong>：产品经理打开Claude，输入业务痛点："移动端注册转化率低，用户反馈邮箱注册步骤太多，想加手机号登录"。</li>
+                                <li><strong>对话式挖掘</strong>：Claude主动提问澄清——目标转化率提升多少？是否需要支持国际号？短信服务商选哪家？现有用户数据如何兼容？</li>
+                                <li><strong>生成intent.md</strong>：对话15分钟后，Claude自动生成完整的intent.md文档（见2.1节的模板示例）。</li>
+                                <li><strong>审核确认</strong>：产品经理和技术负责人一起看intent.md，调整了几个细节（比如国际号本期不做），确认后合并到主干。</li>
+                            </ol>
+
+                            <div class="callout callout-primary">
+                                <div class="callout-title">对比传统流程</div>
+                                传统流程下，这个阶段需要：产品调研→写PRD→评审会→修改→再评审，通常需要1~2周。AI原生流程：0.5天完成。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>5.3 阶段二：设计（Design）—— 1天完成</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>实际执行过程</h4>
+                            <ol>
+                                <li><strong>Day 1 下午</strong>：Claude读取intent.md，自动结合组织级Skills（API设计规范、安全规范、UX设计规范），生成spec.md。</li>
+                                <li><strong>spec.md包含内容</strong>：
+                                    <ul>
+                                        <li>3个API接口定义：发送验证码、验证码登录、绑定手机号</li>
+                                        <li>2张数据库表变更：user表增加phone字段、sms_code表新建</li>
+                                        <li>完整的交互流程：登录页→输入手机号→输入验证码→登录成功</li>
+                                        <li>异常处理方案：验证码错误、发送频率限制、手机号已注册</li>
+                                        <li>自动标记的风险点：短信轰炸防护、数据加密、合规要求</li>
+                                    </ul>
+                                </li>
+                                <li><strong>评审</strong>：产品+技术+安全三方一起看spec.md，花1小时讨论确认。</li>
+                            </ol>
+
+                            <div class="callout callout-primary">
+                                <div class="callout-title">关键价值</div>
+                                设计规范前置应用——AI自动遵守了"手机号必须加密存储"、"接口必须有频率限制"这些安全规范，不需要安全工程师事后审查才发现问题。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>5.4 阶段三：开发（Build）—— 2天完成</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>实际执行过程</h4>
+                            <ol>
+                                <li><strong>Day 2 上午</strong>：工程师让Claude读取spec.md和项目CLAUDE.md，先生成实现方案（计划模式）。</li>
+                                <li><strong>方案评审</strong>：方案列出了需要改动的8个文件、开发顺序、每个文件的修改要点。工程师花30分钟评审，确认方向正确。</li>
+                                <li><strong>并行开发</strong>：
+                                    <ul>
+                                        <li>后端会话：自动编写3个API接口的代码 + 单元测试</li>
+                                        <li>前端会话：自动编写登录页手机号输入组件 + 验证码倒计时逻辑</li>
+                                        <li>数据库迁移会话：自动生成Prisma migration脚本</li>
+                                    </ul>
+                                </li>
+                                <li><strong>实时护栏</strong>：Hooks自动拦截了几处问题——一个地方硬编码了测试用的手机号（被敏感信息拦截Hook拦截）、一个接口忘了加频率限制（被API规范Hook提醒）。</li>
+                            </ol>
+
+                            <div class="callout callout-primary">
+                                <div class="callout-title">工程师的实际工作</div>
+                                2天时间里，工程师实际只做了：方案评审（0.5天）、关键逻辑审查（0.5天）、协调并行会话（0.5天）、最终代码把关（0.5天）。写代码的工作全部由AI完成。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>5.5 阶段四：测试（Test）—— 0.5天完成</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>实际执行过程</h4>
+                            <ol>
+                                <li><strong>AI自检</strong>：Claude自动运行单元测试——第一次跑发现2个边界用例失败（手机号带空格的情况），自动修复后重新跑，全部通过。</li>
+                                <li><strong>集成测试</strong>：AI自动生成E2E测试脚本（Playwright），模拟完整的用户登录流程——输入手机号→收到验证码→输入验证码→登录成功。</li>
+                                <li><strong>人工确认</strong>：测试工程师花半天时间做探索性测试——覆盖一些AI没考虑到的边缘场景（比如手机号格式错误、网络超时、并发登录）。</li>
+                            </ol>
+
+                            <div class="callout callout-success">
+                                <div class="callout-title">测试左移效果</div>
+                                80%的问题在开发阶段就被AI自检发现并修复了，测试工程师只需要处理复杂场景。传统流程下测试阶段通常需要2~3天，这里只花了0.5天。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>5.6 阶段五：部署（Deploy）—— 0.5天完成</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>实际执行过程</h4>
+                            <ol>
+                                <li><strong>AI自动PR评审</strong>：Claude读取PR的代码变更，检查代码质量、安全漏洞、规范符合性，给出评审意见——整体质量不错，标记了2个小建议。</li>
+                                <li><strong>分级判定</strong>：根据变更范围（新增登录方式，不涉及核心交易），AI判定为P1级风险，需要普通工程师人工确认。</li>
+                                <li><strong>人工确认</strong>：资深工程师花1小时审查关键逻辑（特别是安全相关的代码），确认后合并。</li>
+                                <li><strong>自动部署</strong>：CI/CD流水线自动部署到预发环境，验证通过后人工确认生产发布。</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>5.7 阶段六：运维（Maintain）—— 持续运转</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>上线后运转</h4>
+                            <ul>
+                                <li><strong>监控看板</strong>：自动监控登录成功率、短信到达率、验证码错误率等指标。</li>
+                                <li><strong>异常自动诊断</strong>：如果某天短信到达率下降，AI自动拉取日志分析——发现是短信服务商限流，自动生成intent.md建议增加备用通道。</li>
+                                <li><strong>知识库沉淀</strong>：每次遇到问题（比如"某个号段的用户收不到验证码"），都会自动沉淀到CLAUDE.md的踩坑记录中。</li>
+                            </ul>
+
+                            <div class="callout callout-success">
+                                <div class="callout-title">全流程对比</div>
+                                传统流程预计需要10~14天完成这个功能。AI原生SDLC从规划到上线只花了4.5天，效率提升约2.5倍，且质量不低于人工开发。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 第六章 ===== -->
+    <div class="chapter" id="ch6">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+            <div class="chapter-number">06</div>
+            <div class="chapter-title">
+                <h2>度量体系与持续优化</h2>
+                <div class="chapter-desc">用数据衡量转型效果，建立持续改进的闭环机制</div>
+            </div>
+            <div class="chapter-toggle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+            </div>
+        </div>
+        <div class="chapter-content">
+            <div class="chapter-inner">
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>6.1 三层度量指标体系</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>衡量AI原生SDLC转型效果，不能只看"写代码快了多少"——那只是最表层的指标。需要建立三层度量体系：</p>
+
+                            <h4>第一层：效率指标（衡量流程提速）</h4>
+                            <ul>
+                                <li><strong>需求交付周期</strong>：从需求提出到上线的总时间（这是最重要的北极星指标）</li>
+                                <li><strong>各阶段耗时分布</strong>：规划、设计、开发、测试、部署各占多少时间</li>
+                                <li><strong>非编码时间占比</strong>：会议、评审、对齐等非编码工作占总时间的比例</li>
+                                <li><strong>团队吞吐量</strong>：单位时间内交付的功能数或故事点</li>
+                            </ul>
+
+                            <h4>第二层：质量指标（确保提效不降质）</h4>
+                            <ul>
+                                <li><strong>线上缺陷密度</strong>：每千行代码的bug数，或每万次功能使用的bug数</li>
+                                <li><strong>AI评审缺陷检出率</strong>：AI评审发现的问题中，有多少是真问题</li>
+                                <li><strong>代码一次评审通过率</strong>：第一次提交评审就通过的比例</li>
+                                <li><strong>测试左移率</strong>：问题在开发阶段被发现的比例（越高越好）</li>
+                            </ul>
+
+                            <h4>第三层：治理指标（确保风险可控）</h4>
+                            <ul>
+                                <li><strong>代码规范合规率</strong>：代码满足组织规范的比例</li>
+                                <li><strong>交付产物完整度</strong>：intent、spec、代码、测试文档的完整率</li>
+                                <li><strong>全流程审计可追溯率</strong>：每个功能都能从代码回溯到原始需求的比例</li>
+                                <li><strong>Evals质量基线</strong>：AI输出质量的量化评分趋势</li>
+                            </ul>
+
+                            <div class="callout callout-warning">
+                                <div class="callout-title">度量陷阱</div>
+                                不要只看"AI写了多少代码"——那很容易变成刷指标。真正重要的是"从需求到上线的总周期缩短了多少"和"线上质量有没有下降"。前者是效率收益，后者是质量底线。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>6.2 持续优化机制</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <p>AI原生SDLC不是一个"搭好就完事"的流程，而是一个需要持续优化的系统。建议建立以下节奏：</p>
+
+                            <div class="timeline">
+                                <div class="timeline-time">每周</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>Evals质量周报</h5>
+                                    <p>运行评估套件，看本周AI输出质量有没有波动。如果质量下降，排查是CLAUDE.md改了、Skills更新了、还是模型升级导致的。</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline">
+                                <div class="timeline-time">每两周</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>CLAUDE.md更新会</h5>
+                                    <p>团队一起回顾这两周遇到的新坑、AI犯的新错误、发现的新约定，追加到CLAUDE.md中。持续积累团队知识资产。</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline">
+                                <div class="timeline-time">每月</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>流程效率复盘</h5>
+                                    <p>看本月的度量指标——交付周期、缺陷率、吞吐量。分析哪里还有堵点，哪个环节还可以进一步优化。</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline">
+                                <div class="timeline-time">每季度</div>
+                                <div class="timeline-axis"><div class="timeline-dot"></div></div>
+                                <div class="timeline-content">
+                                    <h5>Skills体系升级</h5>
+                                    <p>梳理哪些规范需要更新、哪些新规范需要沉淀为Skills、哪些旧Skills已经过时。确保组织级规范体系持续进化。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 第七章 ===== -->
+    <div class="chapter" id="ch7">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+            <div class="chapter-number">07</div>
+            <div class="chapter-title">
+                <h2>常见误区与风险避坑</h2>
+                <div class="chapter-desc">转型过程中最容易踩的坑，以及如何避开它们</div>
+            </div>
+            <div class="chapter-toggle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+            </div>
+        </div>
+        <div class="chapter-content">
+            <div class="chapter-inner">
+
+                <div class="section open">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>7.1 五大常见误区</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <h4>误区一：把AI当插件嵌入旧流程</h4>
+                            <p><strong>表现</strong>：用AI写代码、用AI生成文档，但需求评审、技术方案评审、代码评审等流程依然完全按人工节奏运转。</p>
+                            <p><strong>结果</strong>：代码写得更快了，但产品从想法到上线的总周期并没有缩短——因为瓶颈已经从编码转移到了协作流程。</p>
+                            <p><strong>正确做法</strong>：必须重构流程，以产物驱动（intent.md → spec.md → code）替代人工交接。让每个阶段的产物自动触发下一阶段，而不是靠人在中间搬运。</p>
+
+                            <h4>误区二：跳过产物标准化</h4>
+                            <p><strong>表现</strong>：直接让AI写代码，不做intent.md、spec.md这些结构化产物。</p>
+                            <p><strong>结果</strong>：AI的上下文不一致，输出质量波动大。不同的人、不同的时间，让AI做同一个需求，出来的结果可能完全不同。</p>
+                            <p><strong>正确做法</strong>：intent、spec等产物必须有统一模板。标准化的产物不是"额外的文档负担"，而是AI流程的"输入契约"——有了标准化的输入，AI才能给出稳定的输出。</p>
+
+                            <h4>误区三：所有评审都丢给AI</h4>
+                            <p><strong>表现</strong>：AI写代码、AI做评审、AI决定能不能上线，人类完全放手。</p>
+                            <p><strong>结果</strong>：核心决策风险失控。AI可以做初筛和执行，但意图判断、风险评估、最终决策权必须保留在人类手中。</p>
+                            <p><strong>正确做法</strong>：建立分级评审机制——低风险变更AI自动通过，高风险变更必须人工评审。AI是"执行层"，人类是"决策层"。</p>
+
+                            <h4>误区四：忽视知识沉淀</h4>
+                            <p><strong>表现</strong>：直接用AI写代码，不花时间写CLAUDE.md、不沉淀Skills。</p>
+                            <p><strong>结果</strong>：AI反复踩同样的坑，输出质量上不去。团队的隐性知识（"我们这个项目为什么这么做"）没有被利用起来。</p>
+                            <p><strong>正确做法</strong>：CLAUDE.md和Skills是AI输出质量的基础。团队遇到的每一个坑、每一个特殊约定，都要沉淀下来。这不是额外工作，而是提升AI效率的投资。</p>
+
+                            <h4>误区五：一步到位全量上线</h4>
+                            <p><strong>表现</strong>：公司层面强推AI原生SDLC，所有团队同时切换到新流程。</p>
+                            <p><strong>结果</strong>：团队抵触情绪大，流程问题集中爆发，转型失败。</p>
+                            <p><strong>正确做法</strong>：从低风险项目试点开始，用实际效果说话。跑通最小闭环、验证收益后，再逐步推广。渐进式转型的成功率远高于革命式转型。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>7.2 关键风险与应对</h3>
+                        <div class="section-toggle">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-inner">
+                            <div class="table-wrapper">
+                                <table>
+                                    <colgroup>
+                                        <col style="width:25%"><col style="width:35%"><col style="width:40%">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>风险</th>
+                                            <th>表现</th>
+                                            <th>应对措施</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>质量退化风险</strong></td>
+                                            <td>AI写的代码看起来对，但有隐蔽的bug或安全漏洞</td>
+                                            <td>建立Evals评估体系；关键代码必须人工评审；Hooks强制测试覆盖率；测试左移</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>技术债务积累</strong></td>
+                                            <td>AI快速产出代码，但架构混乱、技术债快速积累</td>
+                                            <td>架构规范前置到Skills中；定期技术债复盘；架构层面的变更必须人工评审</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>团队能力退化</strong></td>
+                                            <td>工程师不再写代码，基础能力下降，出了问题不会排查</td>
+                                            <td>明确角色定位转变（从编码者到架构师）；保留核心代码的人工参与；定期技术分享和复盘</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>合规与安全风险</strong></td>
+                                            <td>AI生成的代码可能违反数据合规要求，或引入安全漏洞</td>
+                                            <td>安全规范嵌入Skills和Hooks；敏感操作必须人工审批；全流程审计可追溯</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>供应商依赖风险</strong></td>
+                                            <td>深度绑定某个AI模型供应商，模型涨价或停服时流程停摆</td>
+                                            <td>Skills和Hooks设计要尽量模型无关；保留人工兜底能力；关键流程有降级方案</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 总结 ===== -->
+    <div class="chapter" id="ch8">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+            <div class="chapter-number">08</div>
+            <div class="chapter-title">
+                <h2>总结：转型的核心心法</h2>
+                <div class="chapter-desc">把握本质，避免陷入工具细节</div>
+            </div>
+            <div class="chapter-toggle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L3 6h10z"/></svg>
+            </div>
+        </div>
+        <div class="chapter-content">
+            <div class="chapter-inner">
+                <div class="section-inner">
+                    <p>AI原生SDLC不是对传统研发流程的小修小补，而是一次底层范式的重构。它的本质是把研发流程从"以人为核心的协作流程"，升级为"以AI为执行主体、人类为决策核心的自动化流程"。</p>
+
+                    <div class="callout callout-primary">
+                        <div class="callout-title">转型的核心不是引入AI工具，而是建立"产物驱动"的流程思维</div>
+                        每个阶段输出标准化的、机器可读的产物，产物通过门禁就自动流转，人类只在关键节点做判断。这不是"用AI加速旧流程"，而是"为AI设计新流程"。
+                    </div>
+
+                    <p>对于大多数团队来说，当下最可行的路径是：</p>
+                    <ol>
+                        <li><strong>先从知识库搭建和开发环节提效切入</strong>——写好CLAUDE.md，让AI写代码的质量先上一个台阶。</li>
+                        <li><strong>逐步向前后延伸</strong>——往前加intent/spec的结构化需求，往后加AI评审和测试自动化。</li>
+                        <li><strong>最终实现全链路的AI原生闭环</strong>——从需求到运维，每个环节都有AI参与，人类只做关键决策。</li>
+                    </ol>
+
+                    <p>越早完成流程重构，就能越早释放AI带来的生产力红利。但也要记住：<strong>工具和流程都只是手段，真正重要的是团队的工程能力和质量意识</strong>——AI可以放大你的能力，也可以放大你的混乱。先把内功练好，再引入AI杠杆，才能事半功倍。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </main>
+
+    <!-- 回到顶部 -->
+    <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+    </button>
+
+    <script>
+        // 章节折叠
+        function toggleChapter(header) {
+            const chapter = header.parentElement;
+            chapter.classList.toggle('open');
+        }
+
+        // 小节折叠
+        function toggleSection(header) {
+            const section = header.parentElement;
+            section.classList.toggle('open');
+        }
+
+        // 回到顶部按钮显示/隐藏
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 600) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+
+        // 导航高亮
+        const navLinks = document.querySelectorAll('.nav-link');
+        const chapters = document.querySelectorAll('.chapter');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            chapters.forEach(chapter => {
+                const chapterTop = chapter.offsetTop - 100;
+                if (window.scrollY >= chapterTop) {
+                    current = chapter.id;
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // 导航点击平滑滚动
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    // 先展开目标章节
+                    targetElement.classList.add('open');
+                    setTimeout(() => {
+                        const top = targetElement.offsetTop - 80;
+                        window.scrollTo({ top: top, behavior: 'smooth' });
+                    }, 100);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
