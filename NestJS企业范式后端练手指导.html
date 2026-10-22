@@ -108,6 +108,40 @@ ul.checks li::before{content:"";position:absolute;left:0;top:11px;width:16px;hei
   section.chapter{padding-top:32px;padding-bottom:32px}
 }
 @media (max-width:400px){nav.toc ol{grid-template-columns:1fr}}
+
+/* SECTION: block-mark 信息块选中态（模块4·区域点击标记） */
+.block-sel{position:relative;scroll-margin-top:24px}
+.block-sel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--accent);opacity:0;transition:opacity 150ms ease;pointer-events:none}
+.block-sel::after{content:"";position:absolute;left:0;top:0;right:0;bottom:0;
+  background:var(--accent-bg);opacity:0;transition:opacity 150ms ease;pointer-events:none;z-index:-1}
+.block-sel.is-marked::before{opacity:1}
+.block-sel.is-marked::after{opacity:.35}
+@media (prefers-reduced-motion:reduce){
+  .block-sel::before,.block-sel::after{transition:none}
+}
+
+/* SECTION: float-actions 右侧悬浮功能区（模块4·硬规则 2） */
+.float-actions{position:fixed;right:16px;top:50%;transform:translateY(-50%);display:flex;
+  flex-direction:column;gap:8px;opacity:0;pointer-events:none;transition:opacity 150ms;z-index:1000}
+.float-actions.visible{opacity:1;pointer-events:auto}
+.float-actions button{width:44px;height:44px;border:1px solid var(--rule);background:var(--paper);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;color:var(--ink);
+  font-family:"JetBrains Mono","SF Mono",monospace;font-size:1rem;line-height:1}
+.float-actions button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.float-actions button:disabled{color:var(--ink-muted);cursor:not-allowed}
+.float-actions .fa-save{font-size:.8125rem}
+.mark-status{margin:0;width:44px;font-family:"JetBrains Mono","SF Mono",monospace;font-size:.625rem;
+  line-height:1.35;color:var(--ink-muted);text-align:center;word-break:break-all}
+@media (max-width:768px){
+  .float-actions{top:auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));right:50%;
+    transform:translateX(50%);flex-direction:row;align-items:center}
+  .mark-status{display:none}
+}
+@media print{
+  .float-actions{display:none!important}
+  .block-sel.is-marked::before,.block-sel.is-marked::after{opacity:0}
+}
 @media print{
   body{color:#000;background:#fff}
   .tablist,nav.toc{display:none}
@@ -1748,6 +1782,17 @@ NODE_OPTIONS=--require @opentelemetry/auto-instrumentations-node/register</code>
   <p class="masthead-meta">NestJS + TypeScript 企业级后端从入门到上线指南 · 技术时点 2026-10 · 瑞士网格排版 · 单文件自包含，零外部依赖</p>
 </footer>
 
+<!-- SECTION: doc-mark-state 定位参数存放处（保存进文档内部，下次打开回显） -->
+<script type="application/json" id="docMarkState">{"i":null,"label":null,"savedAt":null}</script>
+
+<!-- SECTION: float-actions 悬浮功能区 -->
+<div class="float-actions" id="floatActions" role="group" aria-label="阅读位置标记操作">
+  <button type="button" id="faJump" title="跳转到已标记区域" aria-label="跳转到已标记区域" disabled>↑</button>
+  <button type="button" id="faClear" title="取消标记" aria-label="取消标记" disabled>×</button>
+  <button type="button" class="fa-save" id="faSave" title="把标记保存进文档内部，下次打开自动回显" aria-label="把标记保存进文档内部">存</button>
+  <p class="mark-status" id="markStatus" role="status" aria-live="polite"></p>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -1803,6 +1848,297 @@ NODE_OPTIONS=--require @opentelemetry/auto-instrumentations-node/register</code>
       s.setAttribute('aria-expanded', d.open ? 'true' : 'false');
     });
   });
+
+  /* SECTION: block-mark 区域点击标记 + 悬浮功能区 + 定位持久化 */
+  (function(){
+    var SKIP = '.sec-num,.tablist,h1,h2,p.lede,script,style';
+    var INTERACTIVE = 'a,button,summary,input,select,textarea,label,[role="tab"],[data-stepper] li';
+    var boxes = document.querySelectorAll('.grid,.tabpanel-grid');
+    var blocks = [];
+
+    Array.prototype.forEach.call(boxes, function(box){
+      Array.prototype.forEach.call(box.children, function(el){
+        if (el.nodeType !== 1) { return; }
+        if (el.matches(SKIP)) { return; }
+        if (!el.textContent || !el.textContent.replace(/\s+/g, '')) { return; }
+        blocks.push(el);
+      });
+    });
+
+    /* 统一按文档顺序编号，保证定位参数在文档结构不变时始终指向同一块 */
+    blocks.sort(function(a, b){
+      var pos = a.compareDocumentPosition(b);
+      if (pos & Node.DOCUMENT_POSITION_FOLLOWING) { return -1; }
+      if (pos & Node.DOCUMENT_POSITION_PRECEDING) { return 1; }
+      return 0;
+    });
+
+    function labelOf(el){
+      var chapter = el.closest('section.chapter');
+      var num = chapter ? chapter.querySelector('.sec-num') : null;
+      var head = chapter ? chapter.querySelector('h2') : null;
+      var inner = el.querySelector('h3,h4,figcaption,th,strong,b');
+      var text = ((inner || el).textContent || '').replace(/\s+/g, ' ').trim();
+      if (text.length > 22) { text = text.slice(0, 22) + '…'; }
+      var pre = '';
+      if (num) { pre = num.textContent.replace(/\s+/g, ' ').trim() + ' '; }
+      else if (head) { pre = head.textContent.replace(/\s+/g, ' ').trim() + ' '; }
+      return (pre + text).trim() || '内容块';
+    }
+
+    Array.prototype.forEach.call(blocks, function(el, i){
+      el.classList.add('block-sel');
+      el.setAttribute('data-block-index', String(i));
+      el.setAttribute('data-block-label', labelOf(el));
+    });
+
+    var panel = document.getElementById('floatActions');
+    var jumpBtn = document.getElementById('faJump');
+    var clearBtn = document.getElementById('faClear');
+    var saveBtn = document.getElementById('faSave');
+    var statusEl = document.getElementById('markStatus');
+    var stateNode = document.getElementById('docMarkState');
+    if (!panel || !stateNode || !blocks.length) { return; }
+
+    var LS_KEY = 'swiss-mark:' + (document.title || 'doc');
+    var current = null;
+    var fileHandle = null;
+    var statusTimer = null;
+
+    function reduceMotion(){
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+    function setStatus(msg){
+      statusEl.textContent = msg;
+      if (statusTimer) { clearTimeout(statusTimer); }
+      statusTimer = setTimeout(function(){ statusEl.textContent = ''; }, 2600);
+    }
+
+    /* --- 状态读写 --- */
+    function stateObject(){
+      var now = new Date();
+      function pad(n){ return n < 10 ? '0' + n : String(n); }
+      return {
+        i: current ? current.index : null,
+        label: current ? current.label : null,
+        savedAt: current ? (now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate())
+          + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes())) : null
+      };
+    }
+    function writeStateIntoDoc(){
+      stateNode.textContent = JSON.stringify(stateObject());
+    }
+    function readState(source){
+      try {
+        var st = JSON.parse(source);
+        if (!st || typeof st.i !== 'number' || !blocks[st.i]) { return null; }
+        var el = blocks[st.i];
+        /* 文档内容变动导致块序号错位时，用标签校验后放弃回显 */
+        if (st.label && el.getAttribute('data-block-label') !== st.label) { return null; }
+        return { el: el, index: st.i, label: el.getAttribute('data-block-label') };
+      } catch (err) { return null; }
+    }
+    function saveLocal(){
+      try { localStorage.setItem(LS_KEY, stateNode.textContent); } catch (err) { /* file:// 或隐私模式下忽略 */ }
+    }
+    function readLocal(){
+      try { return localStorage.getItem(LS_KEY); } catch (err) { return null; }
+    }
+
+    /* --- 选中 / 取消（同一时刻仅一个区域选中） --- */
+    function mark(el){
+      if (current && current.el === el) { return; }
+      if (current) {
+        current.el.classList.remove('is-marked');
+        current.el.removeAttribute('aria-pressed');
+      }
+      el.classList.add('is-marked');
+      el.setAttribute('aria-pressed', 'true');
+      current = { el: el, index: Number(el.getAttribute('data-block-index')), label: el.getAttribute('data-block-label') };
+      panel.classList.add('visible');
+      jumpBtn.disabled = false;
+      clearBtn.disabled = false;
+      persist();
+    }
+    function clearMark(silent){
+      if (!current) { return; }
+      current.el.classList.remove('is-marked');
+      current.el.removeAttribute('aria-pressed');
+      current = null;
+      panel.classList.remove('visible');
+      jumpBtn.disabled = true;
+      clearBtn.disabled = true;
+      if (!silent) { persist(); }
+    }
+    function persist(){
+      writeStateIntoDoc();
+      saveLocal();
+      autoWriteFile();
+    }
+
+    /* --- 跳转 --- */
+    function jumpTo(){
+      if (!current) { return; }
+      var el = current.el;
+      var tp = el.closest('.tabpanel');
+      if (tp && tp.hidden) {
+        var tab = document.querySelector('[aria-controls="' + tp.id + '"]');
+        if (tab) { tab.click(); }
+      }
+      var d = el.closest('details');
+      if (d && !d.open) { d.open = true; }
+      el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+      setStatus('已定位');
+    }
+
+    /* --- 写回文档内部（File System Access API，不支持时降级为下载副本） --- */
+    function openDb(){
+      return new Promise(function(resolve, reject){
+        var req = indexedDB.open('swiss-doc-mark', 1);
+        req.onupgradeneeded = function(){
+          if (!req.result.objectStoreNames.contains('kv')) { req.result.createObjectStore('kv'); }
+        };
+        req.onsuccess = function(){ resolve(req.result); };
+        req.onerror = function(){ reject(req.error); };
+      });
+    }
+    function idbGetHandle(){
+      return openDb().then(function(db){
+        return new Promise(function(resolve){
+          var req = db.transaction('kv', 'readonly').objectStore('kv').get('handle');
+          req.onsuccess = function(){ resolve(req.result || null); };
+          req.onerror = function(){ resolve(null); };
+        });
+      }).catch(function(){ return null; });
+    }
+    function idbSetHandle(h){
+      return openDb().then(function(db){
+        return new Promise(function(resolve){
+          var tx = db.transaction('kv', 'readwrite');
+          tx.objectStore('kv').put(h, 'handle');
+          tx.oncomplete = resolve;
+          tx.onerror = resolve;
+        });
+      }).catch(function(){ /* 忽略 */ });
+    }
+    function serializeDoc(){
+      /* 克隆后复位交互残留，保证写回的文件除定位参数外与交付版一致 */
+      var clone = document.documentElement.cloneNode(true);
+      Array.prototype.forEach.call(clone.querySelectorAll('.is-marked'), function(el){
+        el.classList.remove('is-marked');
+        el.removeAttribute('aria-pressed');
+      });
+      var p = clone.querySelector('.float-actions');
+      if (p) { p.classList.remove('visible'); }
+      var st = clone.querySelector('#markStatus');
+      if (st) { st.textContent = ''; }
+      Array.prototype.forEach.call(clone.querySelectorAll('details[open]'), function(d){
+        d.removeAttribute('open');
+      });
+      Array.prototype.forEach.call(clone.querySelectorAll('[aria-current]'), function(el){
+        el.removeAttribute('aria-current');
+      });
+      Array.prototype.forEach.call(clone.querySelectorAll('[role="tablist"]'), function(tl){
+        var tabs = Array.prototype.slice.call(tl.querySelectorAll('[role="tab"]'));
+        tabs.forEach(function(t, i){
+          var on = (i === 0);
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          t.setAttribute('tabindex', on ? '0' : '-1');
+          var target = clone.querySelector('#' + t.getAttribute('aria-controls'));
+          if (target) {
+            if (on) { target.removeAttribute('hidden'); } else { target.setAttribute('hidden', ''); }
+          }
+        });
+      });
+      return '<!DOCTYPE html>\n' + clone.outerHTML;
+    }
+    function downloadCopy(){
+      var blob = new Blob([serializeDoc()], { type: 'text/html;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (document.title || '文档').replace(/[\\/:*?"<>|]/g, '-') + '.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+      setStatus('已下载副本');
+    }
+    function acquireHandle(){
+      if (fileHandle) { return Promise.resolve(fileHandle); }
+      return idbGetHandle().then(function(h){
+        if (!h) { return null; }
+        fileHandle = h;
+        return h.queryPermission({ mode: 'readwrite' }).then(function(perm){
+          if (perm === 'granted') { return h; }
+          return h.requestPermission({ mode: 'readwrite' }).then(function(p2){
+            return p2 === 'granted' ? h : null;
+          });
+        });
+      }).then(function(h){
+        if (h) { return h; }
+        fileHandle = null;
+        if (typeof window.showSaveFilePicker !== 'function') { return null; }
+        return window.showSaveFilePicker({
+          suggestedName: (document.title || '文档').replace(/[\\/:*?"<>|]/g, '-') + '.html',
+          types: [{ description: 'HTML 文档', accept: { 'text/html': ['.html'] } }]
+        }).then(function(nh){
+          fileHandle = nh;
+          return idbSetHandle(nh).then(function(){ return nh; });
+        });
+      });
+    }
+    function writeFile(silent){
+      return acquireHandle().then(function(h){
+        if (!h) { return false; }
+        return h.createWritable().then(function(w){
+          return w.write(serializeDoc()).then(function(){ return w.close(); }).then(function(){ return true; });
+        });
+      }).catch(function(err){
+        if (err && err.name === 'AbortError') { return false; }
+        return false;
+      }).then(function(ok){
+        if (ok && !silent) { setStatus('已存入文档'); }
+        return ok;
+      });
+    }
+    function autoWriteFile(){
+      if (!fileHandle) { return; }
+      fileHandle.queryPermission({ mode: 'readwrite' }).then(function(perm){
+        if (perm === 'granted') { writeFile(true); }
+      }).catch(function(){ /* 忽略 */ });
+    }
+    saveBtn.addEventListener('click', function(){
+      if (!current) { setStatus('尚无标记'); return; }
+      writeStateIntoDoc();
+      if (typeof window.showSaveFilePicker !== 'function' && !fileHandle) { downloadCopy(); return; }
+      writeFile(false).then(function(ok){
+        if (!ok) { downloadCopy(); }
+      });
+    });
+
+    /* --- 只识别点击：交互元素与划词选择不触发 --- */
+    document.addEventListener('click', function(e){
+      var t = e.target;
+      if (!t || t.nodeType !== 1) { return; }
+      if (panel.contains(t)) { return; }
+      if (t.closest(INTERACTIVE)) { return; }
+      var sel = window.getSelection ? String(window.getSelection()) : '';
+      if (sel.replace(/\s+/g, '')) { return; }
+      var blk = t.closest('.block-sel');
+      if (!blk) { return; }
+      mark(blk);
+    });
+    jumpBtn.addEventListener('click', jumpTo);
+    clearBtn.addEventListener('click', function(){ clearMark(false); setStatus('已取消'); });
+
+    /* --- 打开时回显：优先文档内部参数，其次本机浏览器缓存 --- */
+    var restored = readState(stateNode.textContent) || readState(readLocal());
+    if (restored) {
+      current = null;
+      mark(restored.el);
+      setStatus('已回显标记');
+    }
+  })();
 })();
 </script>
 </body>
