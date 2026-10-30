@@ -1,0 +1,2220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Python 转型开发全体系学习文档 V2 · 双轨制 · 工程实战版 — 交互式知识页面">
+<title>Python 转型开发全体系学习文档 V2</title>
+<style>
+/* ============ 设计令牌（瑞士网格 · 4 色体系） ============ */
+:root{
+  --paper:#ffffff; --ink:#111111; --ink-muted:#6b6b6b;
+  --accent:#0047AB; --accent-bg:#f0f4f8; --rule:#e5e5e5; --radius:0;
+  --space-xs:4px; --space-sm:8px; --space-md:12px; --space-lg:16px; --space-xl:24px; --space-2xl:32px;
+  --font-sans:"Inter","Helvetica Neue","PingFang SC","Noto Sans SC",sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:var(--paper)}
+h1{font-size:clamp(2.074rem,4vw,3.052rem);font-weight:700;letter-spacing:-.02em;line-height:1.15;margin:0 0 var(--space-sm)}
+h2{font-size:clamp(1.728rem,3vw,2.441rem);font-weight:600;line-height:1.2;margin:var(--space-xl) 0 var(--space-sm)}
+h3{font-size:1.44rem;font-weight:600;line-height:1.35;margin:var(--space-md) 0 var(--space-xs)}
+p{font-size:1rem;line-height:1.6;max-width:72ch;margin:0 0 var(--space-sm)}
+figcaption{font-size:.875rem;color:var(--ink-muted);margin-bottom:var(--space-xs)}
+a{color:var(--ink);text-decoration-color:var(--accent);text-underline-offset:3px}
+a:hover{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+.skip{position:absolute;left:-9999px;top:0;background:var(--accent);color:var(--paper);padding:var(--space-sm) var(--space-md);z-index:2000;text-decoration:none}
+.skip:focus{left:var(--space-sm);top:var(--space-sm)}
+.container{max-width:1200px;margin:0 auto;padding:var(--space-2xl) var(--space-xl)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--space-lg)}
+.cell-full{grid-column:span 12}.cell-half{grid-column:span 6}.cell-third{grid-column:span 4}
+main>section+section{margin-top:var(--space-2xl);border-top:2px solid var(--ink);padding-top:var(--space-md)}
+main>section>h2{margin-top:0}
+section{scroll-margin-top:var(--space-xl)}
+.sec-num{font-family:var(--font-mono);color:var(--accent);font-weight:700;margin-right:var(--space-sm)}
+.lede{font-size:1.0625rem}
+.doc-meta{font-family:var(--font-mono);font-size:.8125rem;color:var(--ink-muted);margin:0 0 var(--space-sm)}
+/* ============ 头部与导航 ============ */
+.site-header .grid{align-items:end}
+.header-main{grid-column:span 8}
+.header-aside{grid-column:span 4;border-left:2px solid var(--ink);padding-left:var(--space-lg)}
+.track-list{list-style:none;margin:0;padding:0;font-size:.875rem}
+.track-list li{padding:var(--space-xs) 0;border-bottom:1px solid var(--rule)}
+.track-list li:last-child{border-bottom:none}
+.track-list b{font-family:var(--font-mono);color:var(--accent);margin-right:var(--space-xs)}
+.toc{padding-top:var(--space-lg);padding-bottom:var(--space-lg);border-bottom:1px solid var(--rule)}
+.toc-list{list-style:none;display:flex;flex-wrap:wrap;gap:var(--space-xs) var(--space-md);margin:0;padding:0}
+.toc-list a{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:var(--space-xs) var(--space-sm);font-size:.875rem;text-decoration:none;border:1px solid transparent}
+.toc-list a:hover{border-color:var(--accent);color:var(--accent)}
+.toc-list b{font-family:var(--font-mono);color:var(--accent);font-weight:600}
+/* ============ 知识卡 ============ */
+.knowledge-card{grid-column:span 12;padding:var(--space-lg) var(--space-xl);border:1px solid var(--rule);background:var(--paper)}
+.knowledge-card>h3{margin-top:0}
+.l2-support{margin:var(--space-sm) 0 0;padding-left:var(--space-xl)}
+.l2-support li{margin-bottom:var(--space-xs);font-size:.9375rem}
+details{margin-top:var(--space-sm);border-top:1px solid var(--rule)}
+details summary{padding:var(--space-xs) 0;min-height:44px;display:flex;align-items:center;cursor:pointer;font-size:.875rem;color:var(--accent);list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'+';font-family:var(--font-mono);font-weight:700;margin-right:var(--space-sm)}
+details[open] summary::before{content:'−'}
+details[open] summary{color:var(--ink)}
+details>*:not(summary){margin-top:var(--space-xs)}
+.exercise-list{margin:var(--space-xs) 0 0;padding-left:var(--space-xl);font-size:.9375rem}
+.exercise-list li{margin-bottom:var(--space-xs)}
+/* ============ 代码与表格 ============ */
+pre{margin:var(--space-xs) 0 0;padding:var(--space-md);border:1px solid var(--rule);overflow-x:auto;font-family:var(--font-mono);font-size:.8125rem;line-height:1.55;background:var(--paper)}
+code,kbd{font-family:var(--font-mono)}
+:not(pre)>code{background:var(--accent-bg);padding:1px 5px;font-size:.875em}
+.file-name{font-family:var(--font-mono);font-size:.75rem;color:var(--ink-muted);margin:var(--space-md) 0 0}
+.table-wrap{overflow-x:auto;margin-top:var(--space-xs)}
+table{width:100%;border-collapse:collapse;font-size:.875rem;line-height:1.5}
+th,td{text-align:left;padding:var(--space-xs) var(--space-sm);border-bottom:1px solid var(--rule);vertical-align:top}
+thead th{border-bottom:2px solid var(--ink);font-weight:600;font-size:.8125rem}
+tbody tr:hover{background:var(--accent-bg)}
+.col-py{background:var(--accent-bg);font-weight:500}
+figure{margin:0;padding:var(--space-lg) var(--space-xl);border:1px solid var(--rule);background:var(--paper)}
+figure>figcaption:first-child{margin-top:0}
+/* ============ Tabs / Steps / QA / 清单 / 术语 / 提示块 ============ */
+.tablist{display:flex;flex-wrap:wrap;gap:var(--space-sm);border-bottom:1px solid var(--rule);margin:var(--space-sm) 0 0}
+[role="tab"]{appearance:none;background:none;border:none;border-bottom:2px solid transparent;padding:var(--space-xs) var(--space-sm);min-height:44px;font:inherit;font-size:.875rem;color:var(--ink-muted);cursor:pointer}
+[role="tab"]:hover{color:var(--accent)}
+[role="tab"][aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabpanel{padding-top:var(--space-sm)}
+ol.steps{list-style:none;counter-reset:step;margin:var(--space-sm) 0 0;padding:0}
+ol.steps li{position:relative;counter-increment:step;padding:0 0 var(--space-md) calc(var(--space-xl) + 12px);border-left:2px solid var(--rule)}
+ol.steps li:last-child{border-left-color:transparent;padding-bottom:0}
+ol.steps li::before{content:counter(step,decimal-leading-zero);position:absolute;left:-15px;top:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--ink);background:var(--paper);font-family:var(--font-mono);font-size:.75rem}
+ol.steps li b{display:block}
+ol.steps li small{color:var(--ink-muted);font-size:.8125rem}
+ol.steps li[aria-current="step"]{border-left-color:var(--accent)}
+ol.steps li[aria-current="step"]::before{border-color:var(--accent);color:var(--accent)}
+.qa-list{list-style:none;counter-reset:qa;margin:var(--space-sm) 0 0;padding:0;columns:2;column-gap:var(--space-xl);font-size:.875rem}
+.qa-list li{position:relative;break-inside:avoid;margin-bottom:var(--space-xs);padding-left:var(--space-xl)}
+.qa-list li::before{content:counter(qa,decimal-leading-zero);counter-increment:qa;position:absolute;left:0;top:0;font-family:var(--font-mono);font-size:.6875rem;color:var(--accent)}
+.check-list{list-style:none;margin:var(--space-sm) 0 0;padding:0;font-size:.9375rem}
+.check-list li{position:relative;padding-left:var(--space-xl);margin-bottom:var(--space-xs)}
+.check-list li::before{content:'';position:absolute;left:0;top:.35em;width:9px;height:9px;border:2px solid var(--accent)}
+.term{position:relative;border-bottom:1px dashed var(--ink-muted);cursor:help}
+.term::after{content:attr(data-term);position:absolute;left:0;top:calc(100% + 6px);width:max-content;max-width:260px;background:var(--ink);color:var(--paper);padding:var(--space-xs) var(--space-sm);font-size:.75rem;line-height:1.5;opacity:0;visibility:hidden;transition:opacity 120ms;z-index:20;pointer-events:none}
+.term:hover::after,.term:focus-visible::after{opacity:1;visibility:visible}
+.callout{border-left:3px solid var(--accent);background:var(--accent-bg);padding:var(--space-sm) var(--space-md);font-size:.875rem;margin-top:var(--space-xs)}
+.callout b{color:var(--accent)}
+.score-chart{width:100%;height:auto;display:block;margin-top:var(--space-xs)}
+.score-chart .bar{fill:var(--accent)}
+.score-chart text{font-family:var(--font-mono);font-size:10px;fill:var(--ink)}
+.score-chart .val{fill:var(--ink-muted)}
+/* SECTION: block-mark 区域点击标记（伪元素选中态，零布局位移） */
+.block-sel{position:relative;z-index:0;scroll-margin-top:24px}
+.block-sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);opacity:0;transition:opacity 120ms;pointer-events:none;z-index:1}
+.block-sel::after{content:'';position:absolute;inset:0;background:var(--accent-bg);opacity:0;transition:opacity 120ms;pointer-events:none;z-index:-1}
+.block-sel.is-marked::before{opacity:1}
+.block-sel.is-marked::after{opacity:.35}
+/* SECTION: float-actions 悬浮定位功能区 */
+.float-actions{position:fixed;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;opacity:0;pointer-events:none;transition:opacity 150ms;z-index:1000}
+.float-actions.visible{opacity:1;pointer-events:auto}
+.float-actions button{width:44px;height:44px;border:1px solid var(--rule);background:var(--paper);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;color:var(--ink);font-family:var(--font-mono);font-size:1.05rem}
+.float-actions button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.float-actions button:disabled{color:var(--ink-muted);cursor:not-allowed}
+.mark-status{margin:0;width:44px;font-size:.625rem;line-height:1.35;color:var(--ink-muted);text-align:center;word-break:break-all}
+/* ============ 响应式 ============ */
+@media (max-width:768px){
+  :root{--space-xs:3px;--space-sm:6px;--space-md:10px;--space-lg:12px;--space-xl:16px;--space-2xl:20px}
+  .container{padding:var(--space-lg) var(--space-md)}
+  .grid{gap:var(--space-lg)}
+  .cell-half,.cell-third{grid-column:span 12}
+  .header-main,.header-aside{grid-column:span 12}
+  .header-aside{border-left:none;border-top:2px solid var(--ink);padding-left:0;padding-top:var(--space-md)}
+  .knowledge-card{padding:var(--space-md) var(--space-lg)}
+  figure{padding:var(--space-md) var(--space-lg)}
+  p{line-height:1.55}
+  .qa-list{columns:1}
+  .float-actions{top:auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));right:50%;transform:translateX(50%);flex-direction:row;align-items:center}
+  .mark-status{display:none}
+}
+@media (max-width:480px){
+  :root{--space-xs:2px;--space-sm:5px;--space-md:8px;--space-lg:10px;--space-xl:12px;--space-2xl:16px}
+  .container{padding:var(--space-md) var(--space-sm)}
+  .grid{gap:var(--space-md)}
+  .knowledge-card{padding:var(--space-md)}
+  figure{padding:var(--space-md)}
+  p{line-height:1.5;max-width:none}
+  .l2-support{padding-left:var(--space-lg)}
+}
+/* ============ 打印 ============ */
+@media print{
+  :root{--accent:#111111;--accent-bg:#efefef}
+  .float-actions{display:none!important}
+  .block-sel.is-marked::before,.block-sel.is-marked::after{opacity:0}
+  [role="tabpanel"][hidden]{display:block!important}
+  a{color:#111;text-decoration:none}
+  .skip{display:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#ch00">跳到正文</a>
+
+<header class="site-header container">
+  <div class="grid">
+    <div class="header-main">
+      <h1>Python 转型开发全体系学习文档</h1>
+      <p class="doc-meta">V2.0 · 双轨制 · 工程实战版</p>
+      <p class="lede">面向其它端开发者转型 Python 的系统化学习指导，兼容零基础读者：结构清晰、转型差异明确、工程工具链完整、项目可运行可验收、每章有练习闭环。</p>
+    </div>
+    <aside class="header-aside">
+      <ul class="track-list">
+        <li><b>转型轨</b>Java/Go/JS/C#/C++ 有经验开发者：第 0 → 1 章 → 各章迁移陷阱 → 第 12 章项目 → 第 14 章验收，2–4 周可交付</li>
+        <li><b>系统轨</b>零基础：第 1–11 章顺序学习 → 项目 → 部署 → 验收，8–12 周建立完整工程能力</li>
+      </ul>
+    </aside>
+  </div>
+</header>
+
+<nav class="toc container" aria-label="章节导航">
+  <ol class="toc-list">
+    <li><a href="#ch00"><b>00</b>转型总纲</a></li>
+    <li><a href="#ch01"><b>01</b>环境工具链</a></li>
+    <li><a href="#ch02"><b>02</b>语法类型</a></li>
+    <li><a href="#ch03"><b>03</b>流程控制</a></li>
+    <li><a href="#ch04"><b>04</b>函数编程</a></li>
+    <li><a href="#ch05"><b>05</b>面向对象</a></li>
+    <li><a href="#ch06"><b>06</b>文件异常日志</a></li>
+    <li><a href="#ch07"><b>07</b>高阶特性</a></li>
+    <li><a href="#ch08"><b>08</b>模块工程</a></li>
+    <li><a href="#ch09"><b>09</b>并发编程</a></li>
+    <li><a href="#ch10"><b>10</b>生态地图</a></li>
+    <li><a href="#ch11"><b>11</b>原理面试</a></li>
+    <li><a href="#ch12"><b>12</b>实战项目</a></li>
+    <li><a href="#ch13"><b>13</b>部署安全</a></li>
+    <li><a href="#ch14"><b>14</b>路线验收</a></li>
+    <li><a href="#appendix"><b>A</b>附录</a></li>
+  </ol>
+</nav>
+
+<main class="container">
+
+<!-- ================= 00 ================= -->
+<section id="ch00">
+  <h2><span class="sec-num">00</span>转型总纲：从其它语言到 Python</h2>
+  <p class="lede">转型的第一步不是背语法，而是建立差异意识与 Pythonic 写法习惯。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>解释型 + 动态强类型 + 胶水语言：迭代快，CPU 极致性能是弱项</h3>
+      <ul class="l2-support">
+        <li>解释型逐行执行：启动快、迭代快</li>
+        <li>动态类型需<span class="term" tabindex="0" data-term="为变量/函数签名标注类型，配合 mypy/pyright 做静态检查，弥补动态类型的工程短板">类型注解</span> + mypy 补强</li>
+        <li>强类型：`"1" + 1` 直接报错，与 JS 弱类型不同</li>
+        <li>一切皆对象：支持高阶函数、装饰器、元编程</li>
+        <li>缩进是语法的一部分：统一 4 空格，禁止混用 tab</li>
+      </ul>
+      <details class="l3-detail"><summary>展开特性表与适用场景</summary>
+        <div class="table-wrap"><table>
+          <thead><tr><th>特性</th><th>说明</th><th>对转型者的含义</th></tr></thead>
+          <tbody>
+            <tr><td>解释型</td><td>逐行解释执行</td><td>CPU 密集性能弱于 C/Go/Rust</td></tr>
+            <tr><td>动态类型</td><td>运行时推导</td><td>注解 + mypy 补强</td></tr>
+            <tr><td>强类型</td><td>不隐式危险转换</td><td>注意显式转换</td></tr>
+            <tr><td>一切皆对象</td><td>函数/类/模块都是对象</td><td>高阶函数、装饰器、元编程</td></tr>
+            <tr><td>缩进语法</td><td>缩进即语法</td><td>统一 4 空格</td></tr>
+            <tr><td>胶水语言</td><td>易对接 C/C++/AI/DB</td><td>适合编排层、服务层、AI 应用层</td></tr>
+          </tbody>
+        </table></div>
+        <p><strong>适用：</strong>后端、AI/大模型应用、数据分析、爬虫、自动化运维、测试开发。<strong>弱势：</strong>高性能底层服务、游戏引擎、高频交易等 CPU 极致性能场景。</p>
+      </details>
+    </article>
+    <figure class="cell-full">
+      <figcaption>十五个维度对照五语言：类型、包管理、并发、异常、接口……（右列高亮为 Python 方案）</figcaption>
+      <div class="table-wrap"><table>
+        <thead><tr><th>维度</th><th>Java</th><th>Go</th><th>JS/TS</th><th>C#</th><th class="col-py">Python</th></tr></thead>
+        <tbody>
+          <tr><td>类型系统</td><td>静态强类型</td><td>静态强类型</td><td>动态弱类型（TS 静态）</td><td>静态强类型</td><td class="col-py">动态强类型</td></tr>
+          <tr><td>变量声明</td><td><code>int a = 1</code></td><td><code>var a int = 1</code></td><td><code>let a = 1</code></td><td><code>int a = 1</code></td><td class="col-py"><code>a = 1</code></td></tr>
+          <tr><td>代码块</td><td><code>{}</code></td><td><code>{}</code></td><td><code>{}</code></td><td><code>{}</code></td><td class="col-py">缩进</td></tr>
+          <tr><td>包管理</td><td>Maven/Gradle</td><td>go mod</td><td>npm/pnpm</td><td>NuGet</td><td class="col-py">pip/uv/poetry</td></tr>
+          <tr><td>虚拟环境</td><td>无（JVM 全局）</td><td>无（模块级）</td><td>node_modules</td><td>无</td><td class="col-py">venv/conda</td></tr>
+          <tr><td>并发模型</td><td>线程 + 线程池</td><td>goroutine + channel</td><td>事件循环 + Promise</td><td>Task/async</td><td class="col-py">线程/进程/asyncio</td></tr>
+          <tr><td>异常</td><td>checked/unchecked</td><td>error 返回值</td><td>try/catch</td><td>try/catch</td><td class="col-py">try/except/finally</td></tr>
+          <tr><td>空值</td><td>null</td><td>nil</td><td>null/undefined</td><td>null</td><td class="col-py">None</td></tr>
+          <tr><td>接口</td><td>interface</td><td>interface</td><td>鸭子类型/TS interface</td><td>interface</td><td class="col-py">Protocol/ABC/鸭子类型</td></tr>
+          <tr><td>泛型</td><td>支持</td><td>1.18+</td><td>TS 支持</td><td>支持</td><td class="col-py">typing/TypeVar</td></tr>
+          <tr><td>字符串拼接</td><td>+ / StringBuilder</td><td>+ / Builder</td><td>模板字符串</td><td>插值</td><td class="col-py">f-string</td></tr>
+          <tr><td>容器</td><td>List/Map/Set</td><td>slice/map</td><td>Array/Map/Set</td><td>List/Dictionary</td><td class="col-py">list/dict/set/tuple</td></tr>
+          <tr><td>函数一等公民</td><td>部分（lambda）</td><td>是</td><td>是</td><td>委托</td><td class="col-py">是</td></tr>
+          <tr><td>装饰器/注解</td><td>注解（反射）</td><td>无</td><td>装饰器（TS）</td><td>Attribute</td><td class="col-py">装饰器（语法级）</td></tr>
+          <tr><td>导入</td><td>import</td><td>import</td><td>import</td><td>using</td><td class="col-py">import/from</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <article class="knowledge-card cell-full">
+      <h3>十条 Pythonic 写法替代原语言肌肉记忆</h3>
+      <ul class="l2-support">
+        <li><code>enumerate</code> 代替手动索引；<code>zip</code> 并行遍历</li>
+        <li>推导式代替循环 append（列表/字典/集合）</li>
+        <li><code>with</code> 管理资源；<code>pathlib</code> 代替 os.path 字符串拼接</li>
+        <li><code>dataclass</code> 代替手写 __init__；f-string 格式化</li>
+        <li>生成器处理大数据；collections 提升可读性；类型注解 + mypy 补强动态类型</li>
+      </ul>
+      <details class="l3-detail"><summary>展开十条完整代码</summary>
+<pre>from dataclasses import dataclass
+from collections import defaultdict, Counter
+from pathlib import Path
+
+# 1. enumerate 代替手动索引
+for i, v in enumerate(items): ...
+# 2. zip 并行遍历
+for a, b in zip(list1, list2): ...
+# 3. 推导式代替循环 append
+squares = [x * x for x in range(10)]
+mapping = {k: v for k, v in pairs}
+unique = {x for x in items}
+# 4. with 管理资源
+with open("a.txt", encoding="utf-8") as f:
+    data = f.read()
+# 5. pathlib 代替 os.path 字符串拼接
+p = Path("data") / "a.txt"
+# 6. dataclass 代替手写 __init__
+@dataclass
+class User:
+    name: str
+    age: int = 18
+# 7. f-string 格式化
+print(f"{user.name} is {user.age}")
+# 8. 生成器处理大数据
+total = sum(x * x for x in range(10_000_000))
+# 9. collections 提升可读性
+counter = Counter(items)
+grouped = defaultdict(list)
+# 10. 类型注解 + mypy 补强
+def add(a: int, b: int) -&gt; int:
+    return a + b</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>转型陷阱 Top 20：可变默认参数、is None、吞异常、浅拷贝……</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>陷阱</th><th>正确做法</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>可变默认参数 <code>def f(x=[])</code></td><td>用 <code>None</code> 哨兵</td></tr>
+          <tr><td>2</td><td>用 <code>==</code> 比较 None</td><td>用 <code>is None</code></td></tr>
+          <tr><td>3</td><td><code>except Exception</code> 吞异常</td><td>捕获具体异常并记录日志</td></tr>
+          <tr><td>4</td><td><code>+</code> 拼接大量字符串</td><td><code>"".join()</code> 或 f-string</td></tr>
+          <tr><td>5</td><td>循环里 append 后继续用旧引用</td><td>注意可变对象共享</td></tr>
+          <tr><td>6</td><td>浅拷贝当深拷贝用</td><td>嵌套可变对象用 <code>copy.deepcopy</code></td></tr>
+          <tr><td>7</td><td>os.path 字符串拼接路径</td><td><code>pathlib.Path</code></td></tr>
+          <tr><td>8</td><td>用 print 做日志</td><td>用 <code>logging</code></td></tr>
+          <tr><td>9</td><td>忽略虚拟环境</td><td>每项目独立 <code>venv/uv</code></td></tr>
+          <tr><td>10</td><td>把 map/filter 当列表用</td><td>它们是迭代器，需 <code>list()</code> 或直接迭代</td></tr>
+          <tr><td>11</td><td>用 global 到处改状态</td><td>参数/返回值/类封装</td></tr>
+          <tr><td>12</td><td>用 try/except 做流程控制</td><td>条件判断或 <code>dict.get</code></td></tr>
+          <tr><td>13</td><td>循环里做 IO 不开并发</td><td>IO 密集用线程/协程</td></tr>
+          <tr><td>14</td><td>CPU 密集用多线程期待加速</td><td>多进程或 C 扩展</td></tr>
+          <tr><td>15</td><td>用 <code>==</code> 比较浮点数</td><td><code>math.isclose</code></td></tr>
+          <tr><td>16</td><td>依赖 dict 插入顺序（老版本）</td><td>3.7+ 有序，显式 <code>OrderedDict</code> 更清晰</td></tr>
+          <tr><td>17</td><td>用 eval 解析用户输入</td><td><code>json.loads</code> 或 <code>ast.literal_eval</code></td></tr>
+          <tr><td>18</td><td>以为 <code>__pwd</code> 外部不能访问</td><td>名称改写仍可访问，用 property + 约定</td></tr>
+          <tr><td>19</td><td>用 <code>sys.path.append</code> 解决导入</td><td>包结构 + pyproject</td></tr>
+          <tr><td>20</td><td>用 <code>time.time()</code> 做计时/时区</td><td><code>time.perf_counter()</code> / 带时区 datetime</td></tr>
+        </tbody>
+      </table></div>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>用你熟悉的语言写"读取 JSON 文件并统计字段"，再用 Python 重写，对比代码量与可读性。</li>
+          <li>列出原语言中接口/抽象类/泛型/并发/异常对应的 Python 方案。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong>Python 侧重"协议 + 鸭子类型 + 组合"；并发按 IO/CPU 选择线程/进程/协程；异常用具体类型 + 日志。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 01 ================= -->
+<section id="ch01">
+  <h2><span class="sec-num">01</span>环境与工具链（P0 重构）</h2>
+  <p class="lede">企业级 Python 从虚拟环境与 pyproject.toml 开始，杜绝全局污染与不可复现构建。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>每个项目独立虚拟环境 + 锁文件，工具在 venv / uv / poetry 中选一</h3>
+      <ul class="l2-support">
+        <li>避免系统自带 Python 直接装包</li>
+        <li>推荐 Python 3.11/3.12（AI 生态看框架要求）</li>
+        <li>uv：快、锁文件、统一工具链（现代推荐）</li>
+        <li>poetry：传统企业常用</li>
+      </ul>
+      <div class="tablist" role="tablist" aria-label="依赖管理工具切换">
+        <button type="button" role="tab" id="tab-venv" aria-controls="panel-venv" aria-selected="true">venv 原生</button>
+        <button type="button" role="tab" id="tab-uv" aria-controls="panel-uv" aria-selected="false" tabindex="-1">uv（现代推荐）</button>
+        <button type="button" role="tab" id="tab-poetry" aria-controls="panel-poetry" aria-selected="false" tabindex="-1">poetry（企业常用）</button>
+      </div>
+      <div class="tabpanel" id="panel-venv" role="tabpanel" aria-labelledby="tab-venv">
+        <div class="grid">
+          <figure class="cell-full">
+            <figcaption>venv：标准库自带，pip freeze 导出依赖</figcaption>
+<pre>python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Mac/Linux
+source .venv/bin/activate
+deactivate
+
+pip install requests
+pip freeze &gt; requirements.txt
+pip install -r requirements.txt</pre>
+          </figure>
+        </div>
+      </div>
+      <div class="tabpanel" id="panel-uv" role="tabpanel" aria-labelledby="tab-uv" hidden>
+        <div class="grid">
+          <figure class="cell-full">
+            <figcaption>uv：极速安装 + 锁文件 + 统一工具链</figcaption>
+<pre>uv venv
+uv add requests fastapi uvicorn
+uv add --dev pytest ruff mypy
+uv run python main.py
+uv lock
+uv sync</pre>
+          </figure>
+        </div>
+      </div>
+      <div class="tabpanel" id="panel-poetry" role="tabpanel" aria-labelledby="tab-poetry" hidden>
+        <div class="grid">
+          <figure class="cell-full">
+            <figcaption>poetry：传统企业常用，依赖分组管理</figcaption>
+<pre>poetry init
+poetry add requests
+poetry add --group dev pytest ruff mypy
+poetry install
+poetry run python main.py</pre>
+          </figure>
+        </div>
+      </div>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>ruff + mypy + pytest + pre-commit 构成提交前质量闭环</h3>
+      <ul class="l2-support">
+        <li><code>ruff check</code>：静态检查 + 导入排序</li>
+        <li><code>ruff format</code>：格式化（替代 black/isort）</li>
+        <li><code>mypy src</code>：类型检查（strict 模式）</li>
+        <li><code>pre-commit install</code>：提交前自动检查</li>
+      </ul>
+      <details class="l3-detail"><summary>展开命令与 pre-commit 配置</summary>
+<pre>ruff check .          # 静态检查 + 导入排序
+ruff format .         # 格式化（替代 black/isort）
+mypy src              # 类型检查
+pytest                # 测试
+pre-commit install    # 提交前自动检查</pre>
+        <p class="file-name">.pre-commit-config.yaml</p>
+<pre>repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.9.0
+    hooks:
+      - id: mypy</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>一个 pyproject.toml 管住元数据、依赖分组与三大工具配置</h3>
+      <ul class="l2-support">
+        <li><code>requires-python = "&gt;=3.11"</code> 声明版本下限</li>
+        <li>dependencies 与 dev 可选依赖分组</li>
+        <li>ruff：line-length 88，select E/F/I/B/UP/SIM</li>
+        <li>mypy strict + pytest testpaths 一并内置</li>
+      </ul>
+      <details class="l3-detail"><summary>展开标准模板</summary>
+<pre>[project]
+name = "myapp"
+version = "0.1.0"
+description = "Demo project"
+requires-python = "&gt;=3.11"
+dependencies = [
+  "fastapi&gt;=0.110",
+  "uvicorn[standard]&gt;=0.29",
+  "pydantic&gt;=2.6",
+  "pydantic-settings&gt;=2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest&gt;=8.0", "pytest-cov&gt;=5.0",
+  "ruff&gt;=0.4", "mypy&gt;=1.9", "pre-commit&gt;=3.7",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --cov=src --cov-report=term-missing"</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>PEP8：4 空格缩进、snake_case、行宽 88、导入三分组</h3>
+      <ul class="l2-support">
+        <li>变量/函数 <code>snake_case</code></li>
+        <li>类 <code>PascalCase</code>；常量 <code>UPPER_CASE</code></li>
+        <li>行宽 88；导入分组：标准库 / 第三方 / 本地</li>
+      </ul>
+      <details class="l3-detail"><summary>展开第一个程序</summary>
+<pre>def main() -&gt; None:
+    name = "开发者"
+    print(f"Hello {name}, Python 工程化起步")
+
+if __name__ == "__main__":
+    main()</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>包管理差异：必须显式隔离，拒绝 sys.path.append</h3>
+      <ul class="l2-support">
+        <li>Maven / go mod / npm 是项目级依赖，Python 需显式虚拟环境隔离</li>
+        <li><code>pip install</code> 到全局容易污染系统；企业必须 venv/uv/poetry + 锁文件</li>
+        <li>用包结构 + pyproject 解决导入，不用 <code>sys.path</code> hack</li>
+      </ul>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>用 uv 创建项目，添加 fastapi 与 pytest，生成锁文件。</li>
+          <li>配置 ruff + mypy + pre-commit，提交一次代码触发检查。</li>
+          <li>写出 pyproject.toml 中 ruff/mypy/pytest 的最小配置。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong>见本章模板；重点是锁文件、开发依赖分组、pre-commit 钩子。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 02 ================= -->
+<section id="ch02">
+  <h2><span class="sec-num">02</span>基础语法与数据类型</h2>
+  <p class="lede">变量是"名字到对象的引用"，六大类型的可变性决定一切行为差异。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>变量是名字到对象的引用，不是存值的盒子</h3>
+      <ul class="l2-support">
+        <li>重新赋值让名字指向新对象</li>
+        <li>-5~256 小整数池是 CPython 实现细节，不是语言规范</li>
+        <li><code>id()</code> 相同不能单独证明缓存机制（可能受常量折叠影响）</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码与审校说明</summary>
+<pre>a = 10
+b = 10
+print(id(a), id(b))  # CPython 小整数缓存可能使地址一致，但这是实现细节
+a = 20
+print(id(a))         # 重新赋值指向新对象</pre>
+        <p class="callout"><b>审校说明：</b>变量是"名字到对象的引用"，不是"存值的盒子"；小整数池行为不能作为跨实现依赖。</p>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>list/dict/set 可变，int/str/tuple 不可变——选型先看可变性与有序性</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>类型</th><th>可变</th><th>有序</th><th>典型用途</th></tr></thead>
+        <tbody>
+          <tr><td><code>int/float/bool</code></td><td>不可变</td><td>—</td><td>数值</td></tr>
+          <tr><td><code>str</code></td><td>不可变</td><td>是</td><td>文本</td></tr>
+          <tr><td><code>tuple</code></td><td>不可变</td><td>是</td><td>固定记录</td></tr>
+          <tr><td><code>list</code></td><td>可变</td><td>是</td><td>序列</td></tr>
+          <tr><td><code>dict</code></td><td>可变</td><td>3.7+ 有序</td><td>键值</td></tr>
+          <tr><td><code>set</code></td><td>可变</td><td>无序</td><td>去重/集合运算</td></tr>
+        </tbody>
+      </table></div>
+      <details class="l3-detail"><summary>展开容器操作代码</summary>
+<pre>s = "Python AI开发"
+print(s[0:6], s[::-1])
+lst = [1, 2, 3]
+lst.append(4); lst.insert(0, 0); lst.pop(); lst.remove(2)
+user = {"name": "张三", "age": 22}
+user["age"] = 23
+print(user.keys(), user.values())
+s1, s2 = {1, 2, 3}, {3, 4, 5}
+print(s1 &amp; s2, s1 | s2, s1 - s2)</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>默认参数在定义时求值一次，可变默认参数被所有调用共享</h3>
+      <ul class="l2-support">
+        <li><code>bad(1)</code> 返回 [1]，<code>bad(2)</code> 返回 [1, 2]——意外共享</li>
+        <li>正确做法：None 哨兵，函数体内新建</li>
+      </ul>
+      <details class="l3-detail"><summary>展开 bad vs good 代码</summary>
+<pre># 错误：默认列表在函数定义时创建一次，被所有调用共享
+def bad(item, bucket=[]):
+    bucket.append(item)
+    return bucket
+print(bad(1))  # [1]
+print(bad(2))  # [1, 2] ← 意外共享
+
+# 正确：None 哨兵
+def good(item, bucket=None):
+    if bucket is None:
+        bucket = []
+    bucket.append(item)
+    return bucket</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>int("1.5") 报错、bool("") 为 False——动态强类型要求显式转换</h3>
+      <ul class="l2-support">
+        <li><code>str(123)</code>、<code>int("123")</code>、<code>list((1,2,3))</code>、<code>dict(name="李四")</code></li>
+        <li><code>int("1.5")</code> 报错；<code>float("1.5")</code> 可用</li>
+        <li><code>bool("")</code> 为 False；<code>bool("0")</code> 为 True</li>
+      </ul>
+      <details class="l3-detail"><summary>展开转换代码</summary>
+<pre>num = str(123)
+str_num = int("123")
+lst = list((1, 2, 3))
+dic = dict(name="李四")</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>来自 JS/Java："1"+1 是 TypeError，HashMap 对应 dict，没有 char</h3>
+      <ul class="l2-support">
+        <li>JS 弱类型拼接在 Python 直接 TypeError，需显式转换</li>
+        <li>Java ArrayList → list、HashMap → dict、HashSet → set</li>
+        <li>str 不可变，但切片/拼接更灵活；单字符也是 str</li>
+      </ul>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>写函数 <code>unique_keep_order(items)</code> 去重且保序。</li>
+          <li>解释 <code>a = [1,2]; b = a; b.append(3)</code> 后 a 的值。</li>
+          <li>修复一个可变默认参数 bug。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong><code>list(dict.fromkeys(items))</code>；a 也变为 [1,2,3]（引用共享）；用 None 哨兵。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 03 ================= -->
+<section id="ch03">
+  <h2><span class="sec-num">03</span>流程控制</h2>
+  <p class="lede">for 是迭代器遍历而非 C 风格三段式；缩进是语法；for…else 是 Python 特有。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>if/elif/else + for/while + break/continue 覆盖全部分支循环</h3>
+      <ul class="l2-support">
+        <li><code>range(1, 11)</code> 左闭右开</li>
+        <li>while 需手动自增计数</li>
+        <li>混用 tab/空格会报 <code>IndentationError</code></li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>score = 88
+if score &gt;= 90:
+    grade = "优秀"
+elif score &gt;= 80:
+    grade = "良好"
+elif score &gt;= 60:
+    grade = "及格"
+else:
+    grade = "不及格"
+
+for i in range(1, 11):
+    if i == 3: continue
+    if i == 5: break
+    print(i)
+
+i, total = 1, 0
+while i &lt;= 10:
+    total += i
+    i += 1</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>推导式 + enumerate + zip 代替 C 风格索引循环</h3>
+      <ul class="l2-support">
+        <li>列表/字典/集合三种推导式</li>
+        <li><code>enumerate</code> 同时取索引与值</li>
+        <li><code>zip</code> 并行遍历多个序列</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>squares = [x * x for x in range(10)]
+evens = [x for x in range(20) if x % 2 == 0]
+mapping = {k: v for k, v in [("a", 1), ("b", 2)]}
+unique = {x for x in [1, 1, 2, 3]}
+for i, v in enumerate(["a", "b"]):
+    print(i, v)
+for a, b in zip([1, 2], ["x", "y"]):
+    print(a, b)</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>for…else：循环未被 break 时执行，用于"查无则提示"</h3>
+      <ul class="l2-support">
+        <li><code>while…else</code> 与 <code>for…else</code> 均存在</li>
+        <li>不要与其它语言的 else 混淆</li>
+      </ul>
+      <details class="l3-detail"><summary>展开查找示例</summary>
+<pre>for item in items:
+    if item == target:
+        print("找到", item)
+        break
+else:
+    print("未找到目标")   # 循环未被 break 时执行</pre>
+      </details>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>用推导式生成 1–100 中能被 3 或 5 整除的数的平方。</li>
+          <li>用 zip 合并两个列表为字典。</li>
+          <li>用 for…else 实现"查找不存在则提示"。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong><code>[x*x for x in range(1,101) if x%3==0 or x%5==0]</code>；<code>dict(zip(keys, values))</code>；else 在未 break 时执行。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 04 ================= -->
+<section id="ch04">
+  <h2><span class="sec-num">04</span>函数编程</h2>
+  <p class="lede">参数四件套、LEGB 作用域与"传对象引用"语义是函数层的三大核心点。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>位置/默认/*args/**kwargs 四类参数覆盖全部签名需求</h3>
+      <ul class="l2-support">
+        <li>默认值在定义时求值</li>
+        <li><code>*args</code> 收元组；<code>**kwargs</code> 收字典</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>def calc_sum(a: int, b: int) -&gt; int:
+    """两数求和。"""
+    return a + b
+
+def user_info(name: str, age: int = 18) -&gt; None:
+    print(f"姓名：{name}，年龄：{age}")
+
+def args_demo(*args: int) -&gt; None:
+    print(args)          # 元组
+
+def kwargs_demo(**kwargs: str) -&gt; None:
+    print(kwargs)        # 字典
+
+user_info("张三")
+args_demo(1, 2, 3)
+kwargs_demo(skill="Python", level="精通")</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>LEGB 查找顺序：Local → Enclosing → Global → Built-in；少用 global</h3>
+      <ul class="l2-support">
+        <li>优先用参数/返回值传递状态</li>
+        <li><code>global</code> 修改模块级变量需显式声明</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>num = 100
+
+def change_num() -&gt; None:
+    global num
+    num = 200
+
+change_num()
+print(num)  # 200</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>传对象引用：不可变像值传递，可变的修改影响外部</h3>
+      <ul class="l2-support">
+        <li>不可变对象（int/str/tuple）表现像值传递</li>
+        <li>可变对象（list/dict/set）在函数内修改会影响调用方</li>
+        <li>Java 也是值传递（引用值），但 Python 没有 final、没有方法重载</li>
+        <li>默认参数定义时求值 → 可变默认参数是经典坑</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>map/filter 返回迭代器，reduce 需从 functools 导入</h3>
+      <ul class="l2-support">
+        <li>lambda 用于 key 与回调：<code>lst.sort(key=lambda x: x[1])</code></li>
+        <li>map/filter 是惰性迭代器，需 <code>list()</code> 或直接迭代</li>
+        <li><code>reduce</code> 位于 functools，不可直接调用</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码与审校说明</summary>
+<pre>from functools import reduce
+
+add = lambda a, b: a + b
+lst = [(1, 3), (2, 1), (3, 2)]
+lst.sort(key=lambda x: x[1])
+nums = [1, 2, 3, 4]
+new_nums = list(map(lambda x: x * 2, nums))     # map 返回迭代器
+filtered = list(filter(lambda x: x &gt; 2, nums))  # filter 返回迭代器
+total = reduce(lambda a, b: a + b, nums, 0)     # 需导入 reduce</pre>
+        <p class="callout"><b>审校说明：</b>Python 3 中 map/filter 返回迭代器，不是列表；reduce 必须显式导入。</p>
+      </details>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>写 <code>apply_twice(func, x)</code> 返回 <code>func(func(x))</code>。</li>
+          <li>用 reduce 求列表乘积。</li>
+          <li>解释 <code>def f(x, acc=[])</code> 的问题并修复。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong><code>return func(func(x))</code>；<code>reduce(lambda a,b:a*b, nums, 1)</code>；用 None 哨兵。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 05 ================= -->
+<section id="ch05">
+  <h2><span class="sec-num">05</span>面向对象编程（P1 扩展）</h2>
+  <p class="lede">封装靠约定 + property；接口用 <span class="term" tabindex="0" data-term="typing.Protocol 结构化子类型：静态检查按结构匹配，无需显式继承">Protocol</span>/ABC；企业实践优先组合优于继承。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>类属性共享、实例属性独有，__init__ 完成初始化</h3>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>class User:
+    species = "human"  # 类属性
+
+    def __init__(self, name: str, age: int) -&gt; None:
+        self.name = name
+        self.age = age
+
+    def show_info(self) -&gt; str:
+        return f"用户{self.name}，年龄{self.age}"
+
+u1 = User("张三", 22)
+print(u1.show_info())</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>封装靠约定（_ / __）+ property，不是强访问控制</h3>
+      <ul class="l2-support">
+        <li>单下划线 = "内部使用"约定</li>
+        <li><code>__pwd</code> 名称改写为 <code>_User__pwd</code>，仍可访问</li>
+        <li>property + setter 做受控读写与校验</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码与审校说明</summary>
+<pre>class Account:
+    def __init__(self, owner: str, balance: float = 0.0) -&gt; None:
+        self.owner = owner
+        self._balance = balance  # 约定：单下划线"内部使用"
+
+    @property
+    def balance(self) -&gt; float:
+        return self._balance
+
+    @balance.setter
+    def balance(self, value: float) -&gt; None:
+        if value &lt; 0:
+            raise ValueError("余额不能为负")
+        self._balance = value
+
+acc = Account("张三", 100)
+acc.balance = 200
+print(acc.balance)</pre>
+        <p class="callout"><b>审校说明：</b>名称改写不等于私有；Python 靠约定 + property 做封装，不是强访问控制。</p>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>super().__init__ 先完成父类初始化再扩展子类状态</h3>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>class Person:
+    def __init__(self, name: str) -&gt; None:
+        self.name = name
+
+class Student(Person):
+    def __init__(self, name: str, stu_id: str) -&gt; None:
+        super().__init__(name)
+        self.stu_id = stu_id
+
+    def show(self) -&gt; str:
+        return f"学生{self.name}，学号{self.stu_id}"</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Java interface 对应 Protocol（结构化）/ABC（名义）；日常优先鸭子类型</h3>
+      <ul class="l2-support">
+        <li>Protocol 静态检查按结构匹配，无需显式继承</li>
+        <li><span class="term" tabindex="0" data-term="不看类型看行为：对象实现所需方法即可用，运行时按能力匹配">鸭子类型</span>运行时按能力匹配</li>
+        <li><code>notify(n: Notifier)</code> 接受任何有 send 方法的对象</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>from typing import Protocol
+
+class Notifier(Protocol):
+    def send(self, msg: str) -&gt; None: ...
+
+class EmailNotifier:
+    def send(self, msg: str) -&gt; None:
+        print(f"Email: {msg}")
+
+class SmsNotifier:
+    def send(self, msg: str) -&gt; None:
+        print(f"SMS: {msg}")
+
+def notify(n: Notifier, msg: str) -&gt; None:
+    n.send(msg)  # 鸭子类型 + 静态协议
+
+notify(EmailNotifier(), "hello")
+notify(SmsNotifier(), "hello")</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>dataclass 生成样板方法；可变字段用 field(default_factory=…)</h3>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>from dataclasses import dataclass, field
+
+@dataclass
+class User:
+    name: str
+    age: int = 18
+    tags: list[str] = field(default_factory=list)  # 可变默认用 factory
+
+u = User("张三")
+u.tags.append("python")
+print(u)</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>__add__/__repr__ 让对象参与运算；组合优于继承</h3>
+      <ul class="l2-support">
+        <li>魔术方法：Vector 支持 <code>+</code> 运算与可读打印</li>
+        <li>组合：Car 内嵌 Engine，不继承</li>
+        <li>实例方法 / <code>@classmethod</code> / <code>@staticmethod</code> 三分</li>
+        <li>支持多继承与 <span class="term" tabindex="0" data-term="方法解析顺序：多继承时查找方法的线性顺序">MRO</span>，但企业更推荐组合</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>class Vector:
+    def __init__(self, x: float, y: float) -&gt; None:
+        self.x, self.y = x, y
+
+    def __add__(self, other: "Vector") -&gt; "Vector":
+        return Vector(self.x + other.x, self.y + other.y)
+
+    def __repr__(self) -&gt; str:
+        return f"Vector({self.x}, {self.y})"
+
+print(Vector(1, 2) + Vector(3, 4))
+
+class Engine:
+    def start(self) -&gt; str:
+        return "engine started"
+
+class Car:
+    def __init__(self) -&gt; None:
+        self.engine = Engine()  # 组合
+
+    def start(self) -&gt; str:
+        return self.engine.start()</pre>
+      </details>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>用 dataclass 定义 Order，含 items 默认工厂。</li>
+          <li>用 Protocol 定义 Storage，实现 MemoryStorage 与 FileStorage。</li>
+          <li>用 property 实现只读 full_name。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong><code>field(default_factory=list)</code>；Protocol + 两个实现类；<code>@property def full_name(self)</code>。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 06 ================= -->
+<section id="ch06">
+  <h2><span class="sec-num">06</span>文件、异常、日志、配置（P1 扩展）</h2>
+  <p class="lede">pathlib 管路径，异常要具体，日志用 logging，配置交给 pydantic-settings。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>Path 对象化路径：mkdir/read_text/write_text/open 全覆盖</h3>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>from pathlib import Path
+
+p = Path("data") / "test.txt"
+p.parent.mkdir(parents=True, exist_ok=True)
+p.write_text("Python 全栈学习\n工程化实操", encoding="utf-8")
+print(p.read_text(encoding="utf-8"))
+with p.open("a", encoding="utf-8") as f:
+    f.write("\n追加一行")</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>捕获具体异常 + 记日志 + 必要时重抛，禁止吞异常</h3>
+      <ul class="l2-support">
+        <li><code>logger.exception</code> 保留堆栈</li>
+        <li><code>finally</code> 用于资源清理，<code>else</code> 用于无异常分支</li>
+        <li>自定义异常继承 Exception 建层级</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码与审校说明</summary>
+<pre>import logging
+logger = logging.getLogger(__name__)
+
+def parse_int(s: str) -&gt; int:
+    try:
+        return int(s)
+    except ValueError:
+        logger.exception("数值转换失败: %r", s)
+        raise  # 保留堆栈，交给上层处理
+
+class AppError(Exception):
+    """应用基础异常。"""
+
+class ValidationError(AppError):
+    """校验失败。"""</pre>
+        <p class="callout"><b>审校说明：</b>线上不要用 <code>except Exception: print(...)</code> 吞异常；捕获具体异常、记录日志、必要时重抛。</p>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>模块级 getLogger(__name__)，生产用结构化日志，禁止 print</h3>
+      <ul class="l2-support">
+        <li>basicConfig 统一格式：时间 / 级别 / 名称 / 消息</li>
+        <li>占位符 <code>%s</code> 惰性格式化</li>
+        <li>敏感信息脱敏</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger(__name__)
+logger.info("服务启动")
+logger.warning("低库存: %s", "A001")</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>BaseSettings + .env + 环境变量前缀实现配置外置</h3>
+      <ul class="l2-support">
+        <li><code>env_file=".env"</code> 本地开发</li>
+        <li><code>env_prefix="APP_"</code> 避免变量冲突</li>
+        <li>环境变量示例：<code>APP_DEBUG=true APP_DATABASE_URL=...</code></li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    app_name: str = "myapp"
+    debug: bool = False
+    database_url: str = "sqlite:///./app.db"
+    model_config = {"env_file": ".env", "env_prefix": "APP_"}
+
+settings = Settings()</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>pdb 断点调试，cProfile 定位热点</h3>
+      <details class="l3-detail"><summary>展开命令</summary>
+<pre>python -m pdb main.py                   # 断点调试
+python -m cProfile -s cumtime main.py   # 性能分析</pre>
+      </details>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>用 pathlib 递归统计目录下 .py 文件数量。</li>
+          <li>写 <code>safe_divide(a, b)</code>，除零记录 warning 并返回 None。</li>
+          <li>用 pydantic-settings 读取 .env 配置。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong><code>list(Path(".").rglob("*.py"))</code>；<code>except ZeroDivisionError</code> + <code>logger.warning</code>；BaseSettings + env_file。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 07 ================= -->
+<section id="ch07">
+  <h2><span class="sec-num">07</span>高阶特性（P1 扩展）</h2>
+  <p class="lede">生成器惰性求值、装饰器函数包装、上下文管理器管资源、注解靠静态检查。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-full">
+      <h3>生成器惰性求值适合大数据流式处理；迭代器实现 __iter__/__next__</h3>
+      <ul class="l2-support">
+        <li>生成器表达式 <code>(x * x for x in ...)</code> 惰性，不占内存</li>
+        <li><code>yield</code> 暂停/恢复生成器函数</li>
+        <li>迭代器协议：<code>__iter__</code> 返回自身，<code>__next__</code> 取下一个</li>
+        <li>耗尽后抛 <code>StopIteration</code></li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre># 生成器表达式（惰性）
+gen = (x * x for x in range(1_000_000))
+print(next(gen))
+
+# yield 生成器函数
+def gen_num(n: int):
+    for i in range(n):
+        yield i
+
+for num in gen_num(5):
+    print(num)
+
+# 迭代器协议
+class Countdown:
+    def __init__(self, start: int) -&gt; None:
+        self.current = start
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -&gt; int:
+        if self.current &lt;= 0:
+            raise StopIteration
+        self.current -= 1
+        return self.current + 1</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>装饰器是函数包装，必须 functools.wraps 保留元信息</h3>
+      <ul class="l2-support">
+        <li>带参装饰器是"装饰器工厂"（两层嵌套）</li>
+        <li>类装饰器可实现有状态增强</li>
+        <li><code>functools.lru_cache</code> 做缓存</li>
+      </ul>
+      <details class="l3-detail"><summary>展开 timer 与 retry 代码</summary>
+<pre>import functools
+import time
+
+def timer(func):
+    @functools.wraps(func)  # 保留原函数元信息
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            print(f"{func.__name__} 耗时 {time.perf_counter() - start:.4f}s")
+    return wrapper
+
+def retry(times: int = 3, exceptions: tuple[type[Exception], ...] = (Exception,)):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exc = None
+            for _ in range(times):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    last_exc = e
+            raise last_exc
+        return wrapper
+    return decorator
+
+@timer
+def test() -&gt; None:
+    time.sleep(0.1)
+
+@retry(times=3, exceptions=(ValueError,))
+def flaky() -&gt; None:
+    raise ValueError("boom")</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>with 底层是 __enter__/__exit__；__exit__ 返回 True 会吞异常</h3>
+      <ul class="l2-support">
+        <li>类实现 <code>__enter__/__exit__</code></li>
+        <li><code>contextlib.contextmanager</code> 用生成器写上下文管理器</li>
+        <li><code>__exit__</code> 返回 True 吞异常，慎用</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>from contextlib import contextmanager
+
+class Resource:
+    def __enter__(self):
+        print("acquire")
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        print("release")
+        return False  # 不吞异常
+
+with Resource():
+    print("use")
+
+@contextmanager
+def tag(name: str):
+    print(f"&lt;{name}&gt;")
+    try:
+        yield
+    finally:
+        print(f"&lt;/{name}&gt;")
+
+with tag("div"):
+    print("content")</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>注解运行时不强制，静态检查靠 mypy/pyright</h3>
+      <ul class="l2-support">
+        <li>现代写法：<code>list[int]</code>、<code>dict[str, int]</code>、<code>T | None</code></li>
+        <li>泛型用 <code>TypeVar/Generic</code>；结构化类型用 Protocol</li>
+        <li>别把注解当 Java 泛型那样的运行时保证</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>from typing import TypeVar, Generic, Protocol
+
+T = TypeVar("T")
+
+def first(items: list[T]) -&gt; T | None:
+    return items[0] if items else None
+
+class Repo(Protocol[T]):
+    def get(self, id: int) -&gt; T | None: ...</pre>
+      </details>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>写 @cache 装饰器（可用 functools.lru_cache）。</li>
+          <li>写 <code>@retry(times=3)</code> 并测试异常重试。</li>
+          <li>用 contextmanager 写一个计时上下文。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong><code>@functools.lru_cache(maxsize=None)</code>；装饰器工厂 + try/except 循环；yield 前后计时。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 08 ================= -->
+<section id="ch08">
+  <h2><span class="sec-num">08</span>模块、包与工程结构（P0/P1）</h2>
+  <p class="lede">src 布局 + 四层分层 + 依赖注入，拒绝 sys.path hack 与循环导入。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-full">
+      <h3>src 布局 + api/services/repositories/models 四层是工程标准</h3>
+      <ul class="l2-support">
+        <li>api（接口）→ services（业务）→ repositories（数据）→ models（实体/Schema）</li>
+        <li>utils 放横切工具；config 集中配置</li>
+        <li>模块是单个 .py 文件；包是含 <code>__init__.py</code> 的目录（命名空间包可无）</li>
+      </ul>
+      <details class="l3-detail"><summary>展开目录树</summary>
+<pre>project/
+├── pyproject.toml
+├── README.md
+├── .env.example
+├── .pre-commit-config.yaml
+├── src/
+│   └── myapp/
+│       ├── __init__.py
+│       ├── main.py
+│       ├── config.py
+│       ├── api/
+│       │   └── routes.py
+│       ├── services/
+│       │   └── user_service.py
+│       ├── repositories/
+│       │   └── user_repo.py
+│       ├── models/
+│       │   └── user.py
+│       └── utils/
+│           └── logging.py
+└── tests/
+    ├── conftest.py
+    └── test_user_service.py</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>构造函数注入 repo；企业可用 FastAPI Depends</h3>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>class UserRepo:
+    def get(self, uid: int) -&gt; dict | None:
+        return {"id": uid, "name": "张三"}
+
+class UserService:
+    def __init__(self, repo: UserRepo) -&gt; None:
+        self.repo = repo
+
+    def get_name(self, uid: int) -&gt; str:
+        user = self.repo.get(uid)
+        return user["name"] if user else "unknown"</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>循环导入用局部导入 / 重构依赖方向 / TYPE_CHECKING 解决</h3>
+      <ul class="l2-support">
+        <li>Java 包名与目录强绑定；Python 包靠 <code>__init__.py</code> + 安装</li>
+        <li>不用 <code>sys.path.append</code>，用 <code>pip install -e .</code> 或 <code>uv sync</code></li>
+        <li>循环导入三招：局部导入、重构依赖方向、TYPE_CHECKING</li>
+      </ul>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>把单文件脚本拆成 api/services/repositories 三层。</li>
+          <li>用 Depends 在 FastAPI 中注入 UserService。</li>
+          <li>制造并修复一个循环导入。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong>分层目录；<code>Depends(get_service)</code>；局部导入或抽取公共模块。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 09 ================= -->
+<section id="ch09">
+  <h2><span class="sec-num">09</span>并发编程（P1 扩展）</h2>
+  <p class="lede">先分 IO 还是 CPU，再选线程 / <span class="term" tabindex="0" data-term="Python 标准库的单线程事件循环并发方案，需 async/await 语法">asyncio</span> / 多进程；GIL 之下没有银弹。</p>
+  <div class="grid">
+    <figure class="cell-full">
+      <figcaption>三模型选择矩阵：场景 → 推荐方案 → 原因</figcaption>
+      <div class="table-wrap"><table>
+        <thead><tr><th>场景</th><th>推荐</th><th>原因</th></tr></thead>
+        <tbody>
+          <tr><td>IO 密集（网络/文件/DB）</td><td>线程 / 协程</td><td>等待期间切换，提升吞吐</td></tr>
+          <tr><td>超高并发 IO</td><td><code>asyncio</code></td><td>单线程事件循环，开销小</td></tr>
+          <tr><td>CPU 密集</td><td>多进程 / C 扩展 / Rust</td><td>绕过 <span class="term" tabindex="0" data-term="CPython 全局解释器锁：同一时刻仅一个线程执行 Python 字节码，属 CPython 实现而非语言规范">GIL</span>，利用多核</td></tr>
+          <tr><td>简单并行任务</td><td>ThreadPoolExecutor / ProcessPoolExecutor</td><td>标准库、易用</td></tr>
+          <tr><td>需要共享状态</td><td>线程 + 锁 / 队列</td><td>注意竞态</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <article class="knowledge-card cell-half">
+      <h3>共享状态必须加锁；ThreadPoolExecutor 标准库易用</h3>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>import threading
+from concurrent.futures import ThreadPoolExecutor
+
+lock = threading.Lock()
+counter = 0
+
+def inc() -&gt; None:
+    global counter
+    with lock:
+        counter += 1
+
+with ThreadPoolExecutor(max_workers=8) as pool:
+    list(pool.map(lambda _: inc(), range(1000)))
+print(counter)</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>CPU 密集用 ProcessPoolExecutor 绕过 GIL</h3>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>from concurrent.futures import ProcessPoolExecutor
+
+def cpu_task(n: int) -&gt; int:
+    return sum(i * i for i in range(n))
+
+if __name__ == "__main__":
+    with ProcessPoolExecutor() as pool:
+        print(list(pool.map(cpu_task, [10_000, 20_000])))</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>协程里调用同步 IO 会阻塞事件循环；超时用 asyncio.timeout</h3>
+      <ul class="l2-support">
+        <li><code>asyncio.timeout(1.5)</code>（3.11+）取消超时任务</li>
+        <li><code>asyncio.gather</code> 并发多个协程</li>
+        <li>阻塞禁忌：协程里调用 <code>requests.get</code>、<code>time.sleep</code>、同步 DB</li>
+        <li>替代：<code>asyncio.to_thread</code> 或异步库（httpx、asyncpg）</li>
+      </ul>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>import asyncio
+
+async def fetch(name: str, delay: float) -&gt; str:
+    await asyncio.sleep(delay)
+    return f"{name} done"
+
+async def main() -&gt; None:
+    try:
+        async with asyncio.timeout(1.5):  # 3.11+
+            results = await asyncio.gather(
+                fetch("a", 1.0),
+                fetch("b", 2.0),
+            )
+        print(results)
+    except TimeoutError:
+        print("超时取消")
+
+asyncio.run(main())</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>GIL 下同一时刻仅一个线程执行字节码，IO 等待会释放</h3>
+      <ul class="l2-support">
+        <li>GIL 是 CPython 实现，不是 Python 语言规范</li>
+        <li>IO 等待释放 GIL，所以线程/协程对 IO 密集有效</li>
+        <li>CPU 密集用多进程；或把热点下沉到 C/Rust 扩展</li>
+      </ul>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>用线程池并发下载 10 个 URL（可用 httpx）。</li>
+          <li>用进程池计算 4 个 CPU 密集任务。</li>
+          <li>用 asyncio.timeout 取消超时任务，并解释阻塞调用风险。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong><code>ThreadPoolExecutor.map</code>；<code>ProcessPoolExecutor.map</code>；<code>asyncio.timeout</code> + <code>to_thread</code>。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 10 ================= -->
+<section id="ch10">
+  <h2><span class="sec-num">10</span>标准库与第三方库生态（P2）</h2>
+  <p class="lede">先记住高频标准库，再按场景选第三方库，不重复造轮子。</p>
+  <div class="grid">
+    <figure class="cell-full">
+      <figcaption>标准库地图：九大领域</figcaption>
+      <div class="table-wrap"><table>
+        <thead><tr><th>领域</th><th>库</th></tr></thead>
+        <tbody>
+          <tr><td>系统/路径</td><td><code>os</code>、<code>sys</code>、<code>pathlib</code>、<code>shutil</code></td></tr>
+          <tr><td>时间</td><td><code>time</code>、<code>datetime</code>、<code>zoneinfo</code></td></tr>
+          <tr><td>序列化</td><td><code>json</code>、<code>pickle</code>、<code>csv</code>、<code>tomllib</code></td></tr>
+          <tr><td>随机/数学</td><td><code>random</code>、<code>math</code>、<code>statistics</code></td></tr>
+          <tr><td>加密/哈希</td><td><code>hashlib</code>、<code>hmac</code>、<code>secrets</code></td></tr>
+          <tr><td>并发</td><td><code>threading</code>、<code>multiprocessing</code>、<code>asyncio</code>、<code>concurrent.futures</code></td></tr>
+          <tr><td>集合工具</td><td><code>collections</code>、<code>itertools</code>、<code>functools</code></td></tr>
+          <tr><td>日志/配置</td><td><code>logging</code>、<code>argparse</code>、<code>configparser</code></td></tr>
+          <tr><td>测试</td><td><code>unittest</code>、<code>doctest</code></td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <figure class="cell-full">
+      <figcaption>第三方库地图：十二个场景</figcaption>
+      <div class="table-wrap"><table>
+        <thead><tr><th>场景</th><th>推荐</th></tr></thead>
+        <tbody>
+          <tr><td>Web API</td><td><code>fastapi</code>、<code>flask</code>、<code>django</code></td></tr>
+          <tr><td>HTTP 客户端</td><td><code>httpx</code>、<code>requests</code></td></tr>
+          <tr><td>数据校验</td><td><code>pydantic</code></td></tr>
+          <tr><td>数据库</td><td><code>sqlalchemy</code>、<code>asyncpg</code>、<code>psycopg</code>、<code>pymysql</code></td></tr>
+          <tr><td>测试</td><td><code>pytest</code>、<code>pytest-cov</code>、<code>hypothesis</code></td></tr>
+          <tr><td>代码质量</td><td><code>ruff</code>、<code>mypy</code>、<code>pre-commit</code></td></tr>
+          <tr><td>数据</td><td><code>pandas</code>、<code>numpy</code>、<code>polars</code></td></tr>
+          <tr><td>可视化</td><td><code>matplotlib</code>、<code>plotly</code></td></tr>
+          <tr><td>AI/LLM</td><td><code>torch</code>、<code>transformers</code>、<code>langchain</code>、<code>openai</code></td></tr>
+          <tr><td>爬虫</td><td><code>httpx</code>、<code>bs4</code>、<code>playwright</code>、<code>scrapy</code></td></tr>
+          <tr><td>任务队列</td><td><code>celery</code>、<code>dramatiq</code>、<code>arq</code></td></tr>
+          <tr><td>部署</td><td><code>docker</code>、<code>uvicorn</code>、<code>gunicorn</code></td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <article class="knowledge-card cell-half">
+      <h3>高频 Demo：json 中文、UTC 时间、sha256、随机数</h3>
+      <details class="l3-detail"><summary>展开代码</summary>
+<pre>import json, hashlib, random
+from datetime import datetime, timezone
+from pathlib import Path
+
+data = {"name": "张三", "age": 22}
+s = json.dumps(data, ensure_ascii=False)
+d = json.loads(s)
+now = datetime.now(timezone.utc)
+print(now.isoformat())
+p = Path("a.txt")
+print(p.suffix, p.stem)
+print(hashlib.sha256(b"abc").hexdigest())
+print(random.randint(1, 10))</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>生态陷阱：ensure_ascii=False、时区用 zoneinfo、密码用 bcrypt/argon2</h3>
+      <ul class="l2-support">
+        <li>Java Jackson / Go encoding/json 对应 <code>json</code>；注意 <code>ensure_ascii=False</code> 输出中文</li>
+        <li>Java LocalDateTime 对应 <code>datetime</code>；时区用 <code>zoneinfo</code>，不要用 naive datetime 跨时区计算</li>
+        <li>JS crypto 对应 <code>hashlib/secrets</code>；密码存储用 bcrypt/argon2，不要裸 sha256</li>
+      </ul>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>用 pathlib + json 读写配置文件。</li>
+          <li>用 datetime + zoneinfo 转换时区。</li>
+          <li>用 secrets 生成安全令牌。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong><code>Path.read_text/write_text</code>；<code>ZoneInfo("Asia/Shanghai")</code>；<code>secrets.token_urlsafe(32)</code>。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 11 ================= -->
+<section id="ch11">
+  <h2><span class="sec-num">11</span>底层原理与面试专题（P1/P2）</h2>
+  <p class="lede">GIL、深浅拷贝、GC 是原理三件套；30 题覆盖面试高频。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>引用计数为主，标记清除/分代处理循环引用；GIL 是 CPython 实现</h3>
+      <ul class="l2-support">
+        <li>GIL：同一时刻一个线程执行字节码；IO 等待释放</li>
+        <li>浅拷贝外层新内层共享；深拷贝递归新对象</li>
+        <li>引用计数为主：引用为 0 立即回收</li>
+        <li>标记清除/分代回收主要处理循环引用，不是"主机制"</li>
+      </ul>
+      <details class="l3-detail"><summary>展开深浅拷贝代码</summary>
+<pre>import copy
+lst1 = [[1, 2], 3]
+lst2 = lst1                 # 引用
+lst3 = copy.copy(lst1)      # 浅拷贝：外层新，内层共享
+lst4 = copy.deepcopy(lst1)  # 深拷贝：递归新对象
+lst1[0].append(9)
+print(lst2)  # [[1,2,9],3]
+print(lst3)  # [[1,2,9],3] 内层共享
+print(lst4)  # [[1,2],3]</pre>
+      </details>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>解释 <code>a = [[]] * 3</code> 的问题。</li>
+          <li>写一个循环引用示例并说明 GC 如何处理。</li>
+          <li>用 perf_counter 对比线程/进程 CPU 任务耗时。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong>内层列表共享；<code>gc.collect()</code>；CPU 任务进程更快。</p>
+      </details>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>面试 30 题：从传参语义到 CI 作用一次过</h3>
+      <ol class="qa-list">
+        <li>值传递还是引用传递？→ 传对象引用</li>
+        <li><code>is</code> 与 <code>==</code>？→ 身份 vs 值</li>
+        <li>可变默认参数？→ 定义时求值共享</li>
+        <li>浅拷贝与深拷贝？→ 嵌套共享 vs 递归复制</li>
+        <li>GIL？→ CPython 全局锁</li>
+        <li>线程/进程/协程选择？→ IO/CPU/高并发 IO</li>
+        <li>装饰器原理？→ 函数包装 + wraps</li>
+        <li>生成器与迭代器？→ 生成器是迭代器的一种实现</li>
+        <li><code>*args/**kwargs</code>？→ 不定长位置/关键字参数</li>
+        <li><code>__new__</code> 与 <code>__init__</code>？→ 创建 vs 初始化</li>
+        <li><code>@classmethod/@staticmethod</code>？→ 类/静态</li>
+        <li>with 原理？→ <code>__enter__/__exit__</code></li>
+        <li>list 与 tuple？→ 可变 vs 不可变</li>
+        <li>dict 底层？→ 哈希表</li>
+        <li>set 去重原理？→ 哈希</li>
+        <li>闭包？→ 函数 + 捕获环境</li>
+        <li>装饰器带参？→ 工厂</li>
+        <li>yield 作用？→ 暂停/恢复生成器</li>
+        <li>asyncio 阻塞风险？→ 同步调用阻塞事件循环</li>
+        <li>mypy 作用？→ 静态类型检查</li>
+        <li>dataclass 优势？→ 样板代码生成</li>
+        <li>Protocol 作用？→ 结构化子类型</li>
+        <li>pydantic 作用？→ 运行时校验 + 序列化</li>
+        <li>pytest fixture？→ 依赖注入式测试准备</li>
+        <li>logging 与 print？→ 分级/输出/结构化</li>
+        <li>pathlib 优势？→ 面向对象路径</li>
+        <li>uv/poetry 作用？→ 依赖与锁</li>
+        <li>ruff 作用？→ 检查 + 格式化</li>
+        <li>Docker 作用？→ 环境一致性</li>
+        <li>CI 作用？→ 自动测试/构建/部署</li>
+      </ol>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 12 ================= -->
+<section id="ch12">
+  <h2><span class="sec-num">12</span>企业级实战项目（P0 完整可运行）</h2>
+  <p class="lede">FastAPI + SQLite + pydantic + logging + pytest + Docker + CI 的用户管理服务，可运行可验收。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-full">
+      <h3>一个项目打通分层、校验、异常、日志、测试、容器化、CI</h3>
+      <ul class="l2-support">
+        <li>src/user_service 单包分层：main / config / logging_conf / db / models / schemas / repositories / services / api</li>
+        <li>tests/conftest.py 用 fixture 隔离测试数据库</li>
+        <li>Dockerfile + GitHub Actions CI 一并交付</li>
+      </ul>
+      <details class="l3-detail"><summary>展开项目结构</summary>
+<pre>user-service/
+├── pyproject.toml
+├── README.md
+├── .env.example
+├── .pre-commit-config.yaml
+├── Dockerfile
+├── .github/workflows/ci.yml
+├── src/
+│   └── user_service/
+│       ├── __init__.py
+│       ├── main.py
+│       ├── config.py
+│       ├── logging_conf.py
+│       ├── db.py
+│       ├── models.py
+│       ├── schemas.py
+│       ├── repositories.py
+│       ├── services.py
+│       └── api.py
+└── tests/
+    ├── conftest.py
+    └── test_users.py</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>依赖注入串联 api → services → repositories，pydantic 做校验</h3>
+      <ul class="l2-support">
+        <li>schemas：<code>UserCreate/UserOut</code> 用 Field 限制长度与范围</li>
+        <li>repositories：原生 SQL 参数化查询（<code>?</code> 占位）防注入</li>
+        <li>services：持有 repo，记录业务日志</li>
+        <li>api：<code>Depends(get_service)</code> 注入；404 用 HTTPException</li>
+        <li>测试：<code>tmp_path + monkeypatch</code> 隔离测试 DB</li>
+      </ul>
+      <details class="l3-detail"><summary>展开完整代码（分文件）</summary>
+        <p class="file-name">pyproject.toml</p>
+<pre>[project]
+name = "user-service"
+version = "0.1.0"
+requires-python = "&gt;=3.11"
+dependencies = [
+  "fastapi&gt;=0.110",
+  "uvicorn[standard]&gt;=0.29",
+  "pydantic&gt;=2.6",
+  "pydantic-settings&gt;=2.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest&gt;=8.0", "pytest-cov&gt;=5.0", "httpx&gt;=0.27", "ruff&gt;=0.4", "mypy&gt;=1.9"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"</pre>
+        <p class="file-name">src/user_service/config.py</p>
+<pre>from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    app_name: str = "user-service"
+    debug: bool = False
+    database_path: str = "./app.db"
+    model_config = {"env_file": ".env", "env_prefix": "APP_"}
+
+settings = Settings()</pre>
+        <p class="file-name">src/user_service/logging_conf.py</p>
+<pre>import logging
+
+def setup_logging() -&gt; None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )</pre>
+        <p class="file-name">src/user_service/db.py</p>
+<pre>import sqlite3
+from contextlib import contextmanager
+from pathlib import Path
+
+from .config import settings
+
+def init_db() -&gt; None:
+    Path(settings.database_path).parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(settings.database_path) as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                age INTEGER NOT NULL
+            )
+            """
+        )
+        conn.commit()
+
+@contextmanager
+def get_conn():
+    conn = sqlite3.connect(settings.database_path)
+    try:
+        yield conn
+    finally:
+        conn.close()</pre>
+        <p class="file-name">src/user_service/schemas.py</p>
+<pre>from pydantic import BaseModel, Field
+
+class UserCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=50)
+    age: int = Field(ge=0, le=150)
+
+class UserOut(BaseModel):
+    id: int
+    name: str
+    age: int
+    model_config = {"from_attributes": True}</pre>
+        <p class="file-name">src/user_service/repositories.py</p>
+<pre>from .db import get_conn
+from .schemas import UserCreate, UserOut
+
+class UserRepo:
+    def create(self, data: UserCreate) -&gt; UserOut:
+        with get_conn() as conn:
+            cur = conn.execute(
+                "INSERT INTO users(name, age) VALUES (?, ?)",
+                (data.name, data.age),
+            )
+            conn.commit()
+            return UserOut(id=cur.lastrowid, name=data.name, age=data.age)
+
+    def list(self) -&gt; list[UserOut]:
+        with get_conn() as conn:
+            rows = conn.execute("SELECT id, name, age FROM users").fetchall()
+            return [UserOut(id=r[0], name=r[1], age=r[2]) for r in rows]
+
+    def get(self, uid: int) -&gt; UserOut | None:
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT id, name, age FROM users WHERE id = ?", (uid,)
+            ).fetchone()
+            return UserOut(id=row[0], name=row[1], age=row[2]) if row else None</pre>
+        <p class="file-name">src/user_service/services.py</p>
+<pre>import logging
+
+from .repositories import UserRepo
+from .schemas import UserCreate, UserOut
+
+logger = logging.getLogger(__name__)
+
+class UserService:
+    def __init__(self, repo: UserRepo) -&gt; None:
+        self.repo = repo
+
+    def create_user(self, data: UserCreate) -&gt; UserOut:
+        logger.info("创建用户: %s", data.name)
+        return self.repo.create(data)
+
+    def list_users(self) -&gt; list[UserOut]:
+        return self.repo.list()
+
+    def get_user(self, uid: int) -&gt; UserOut | None:
+        return self.repo.get(uid)</pre>
+        <p class="file-name">src/user_service/api.py</p>
+<pre>from fastapi import APIRouter, Depends, HTTPException, status
+
+from .repositories import UserRepo
+from .schemas import UserCreate, UserOut
+from .services import UserService
+
+router = APIRouter(prefix="/users", tags=["users"])
+
+def get_service() -&gt; UserService:
+    return UserService(UserRepo())
+
+@router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+def create_user(data: UserCreate, svc: UserService = Depends(get_service)) -&gt; UserOut:
+    return svc.create_user(data)
+
+@router.get("", response_model=list[UserOut])
+def list_users(svc: UserService = Depends(get_service)) -&gt; list[UserOut]:
+    return svc.list_users()
+
+@router.get("/{uid}", response_model=UserOut)
+def get_user(uid: int, svc: UserService = Depends(get_service)) -&gt; UserOut:
+    user = svc.get_user(uid)
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+    return user</pre>
+        <p class="file-name">src/user_service/main.py</p>
+<pre>from fastapi import FastAPI
+
+from .api import router
+from .db import init_db
+from .logging_conf import setup_logging
+
+setup_logging()
+init_db()
+
+app = FastAPI(title="user-service")
+app.include_router(router)</pre>
+        <p class="file-name">tests/conftest.py</p>
+<pre>import pytest
+from fastapi.testclient import TestClient
+
+from user_service import config
+
+@pytest.fixture()
+def client(tmp_path, monkeypatch):
+    db = tmp_path / "test.db"
+    monkeypatch.setattr(config.settings, "database_path", str(db))
+    from user_service.db import init_db
+    from user_service.main import app
+
+    init_db()
+    return TestClient(app)</pre>
+        <p class="file-name">tests/test_users.py</p>
+<pre>def test_create_and_list(client):
+    r = client.post("/users", json={"name": "张三", "age": 22})
+    assert r.status_code == 201
+    uid = r.json()["id"]
+    r2 = client.get("/users")
+    assert r2.status_code == 200
+    assert any(u["id"] == uid for u in r2.json())
+
+def test_get_not_found(client):
+    r = client.get("/users/9999")
+    assert r.status_code == 404</pre>
+        <p class="file-name">Dockerfile</p>
+<pre>FROM python:3.11-slim
+WORKDIR /app
+COPY pyproject.toml ./
+RUN pip install --no-cache-dir -e .
+COPY src ./src
+CMD ["uvicorn", "user_service.main:app", "--host", "0.0.0.0", "--port", "8000"]</pre>
+        <p class="file-name">.github/workflows/ci.yml</p>
+<pre>name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: mypy src
+      - run: pytest</pre>
+      </details>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>六条验收标准全过才算交付；进阶任务指向真实生产化</h3>
+      <ul class="l2-support">
+        <li>POST /users 返回 201 + 用户 JSON</li>
+        <li>GET /users 返回列表</li>
+        <li>GET /users/9999 返回 404</li>
+        <li>pytest 全绿；ruff check 与 mypy src 通过</li>
+        <li>Docker 镜像可启动并访问 /docs</li>
+      </ul>
+      <details class="l3-detail"><summary>展开运行命令</summary>
+<pre># 本地
+uv sync                # 或 pip install -e ".[dev]"
+uvicorn user_service.main:app --reload
+pytest
+
+# Docker
+docker build -t user-service .
+docker run -p 8000:8000 user-service</pre>
+      </details>
+      <details class="l3-detail"><summary>展开进阶任务与本章练习</summary>
+        <ol class="exercise-list">
+          <li>加 PATCH/DELETE，补测试。</li>
+          <li>加分页与搜索。</li>
+          <li>用 SQLAlchemy 替换原生 SQLite。</li>
+          <li>加 /health 与结构化日志。</li>
+          <li>加 GitHub Actions 缓存与覆盖率门槛。</li>
+        </ol>
+        <p><strong>练习：</strong>① 解释 <code>Depends(get_service)</code> 的依赖注入流程；② 为什么测试用 tmp_path + monkeypatch？③ 如何把 SQLite 换成 PostgreSQL？<br><strong>参考答案要点：</strong>FastAPI 解析依赖并注入；隔离测试 DB；换驱动 + 连接串 + 迁移工具。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 13 ================= -->
+<section id="ch13">
+  <h2><span class="sec-num">13</span>部署、安全与 CI/CD（P2）</h2>
+  <p class="lede">镜像要小要非 root，CI 四件套把门，安全从密码哈希与参数化查询开始。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>Docker：多阶段构建 + slim 基础镜像 + 非 root 用户</h3>
+      <ul class="l2-support">
+        <li><code>python:3.11-slim</code> 起步，多阶段构建减小镜像</li>
+        <li><code>.dockerignore</code> 排除 .venv/tests</li>
+        <li>环境变量注入配置，不把密钥打进镜像</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>CI 四件套 ruff + mypy + pytest + coverage；CD 构建推送部署</h3>
+      <ul class="l2-support">
+        <li>CD：构建镜像 → 推送 Registry → 部署（K8s/云服务）</li>
+        <li>分支保护 + PR 检查 + 锁文件保证可复现</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>安全基础：bcrypt/argon2、参数化查询、密钥走环境变量</h3>
+      <ul class="l2-support">
+        <li>密码用 bcrypt/argon2，不要裸 sha256</li>
+        <li>防 SQL 注入：参数化查询（<code>?</code> 占位）</li>
+        <li>防 XSS/CSRF：后端 API + 前端框架处理；CORS 白名单</li>
+        <li>密钥用环境变量/密钥管理；日志脱敏；依赖审计 <code>pip-audit</code></li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>版本差异：3.10 match、3.11 timeout、3.12 类型参数、3.13 实验 JIT</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>版本</th><th>关键变化</th></tr></thead>
+        <tbody>
+          <tr><td>3.10</td><td><code>match</code>、<code>X | Y</code> 类型</td></tr>
+          <tr><td>3.11</td><td><code>asyncio.timeout</code>、异常组、更快</td></tr>
+          <tr><td>3.12</td><td>类型参数语法、f-string 增强、性能提升</td></tr>
+          <tr><td>3.13</td><td>实验性自由线程/JIT（关注生态兼容）</td></tr>
+        </tbody>
+      </table></div>
+      <details class="l3-detail"><summary>本章练习与参考答案要点</summary>
+        <ol class="exercise-list">
+          <li>给项目加 /health 与结构化日志。</li>
+          <li>配置 CI 覆盖率门槛 80%。</li>
+          <li>用 pip-audit 检查依赖漏洞。</li>
+        </ol>
+        <p><strong>参考答案要点：</strong><code>@app.get("/health")</code>；<code>--cov-fail-under=80</code>；pip-audit。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 14 ================= -->
+<section id="ch14">
+  <h2><span class="sec-num">14</span>学习路线与验收（P2）</h2>
+  <p class="lede">两条轨、两张路线表、一份阶段验收清单。</p>
+  <div class="grid">
+    <article class="knowledge-card cell-full">
+      <h3>转型轨 4 周：从差异意识到项目交付</h3>
+      <ol class="steps" data-stepper>
+        <li aria-current="step"><b>第 1 周</b>第 0/1/2/3/4 章 + 差异总表 + 工具链<small>验收：能写脚本、配 pyproject/ruff/mypy</small></li>
+        <li><b>第 2 周</b>第 5/6/7 章 + OOP/异常/日志/装饰器<small>验收：能写分层小模块 + 测试</small></li>
+        <li><b>第 3 周</b>第 8/9/10 章 + 工程结构/并发/生态<small>验收：能选型并发、拆分分层</small></li>
+        <li><b>第 4 周</b>第 12/13 章 + 项目 + Docker/CI<small>验收：项目可运行、测试全绿、镜像可启动</small></li>
+      </ol>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>系统轨 10 周：语法 → OOP → 高阶 → 工程 → 并发 → 项目部署</h3>
+      <ul class="l2-support">
+        <li>第 1–2 周：基础语法与流程</li>
+        <li>第 3–4 周：函数 / OOP</li>
+        <li>第 5 周：文件异常日志；第 6 周：高阶特性</li>
+        <li>第 7 周：模块工程；第 8 周：并发</li>
+        <li>第 9 周：标准库/第三方；第 10 周：项目 + 部署</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>七项阶段验收全过 = 达到可交付标准</h3>
+      <ul class="check-list">
+        <li>能解释 GIL、深浅拷贝、GC、装饰器、生成器、上下文管理器</li>
+        <li>能写 pyproject.toml + ruff/mypy/pytest/pre-commit 配置</li>
+        <li>能按 api/services/repositories 分层写 FastAPI 服务</li>
+        <li>能写 pytest 测试并用 tmp_path/monkeypatch 隔离</li>
+        <li>能用线程/进程/协程解决对应场景</li>
+        <li>能 Docker 化并配 CI</li>
+        <li>能列出 10 个转型陷阱并给出正确写法</li>
+      </ul>
+      <details class="l3-detail"><summary>展开精选练习参考答案要点</summary>
+        <p>可变默认参数：None 哨兵；<code>is</code> vs <code>==</code>：身份 vs 值；浅/深拷贝：嵌套共享 vs 递归复制；并发选择：IO → 线程/协程，CPU → 进程；装饰器：functools.wraps + 包装；上下文：<code>__enter__/__exit__</code>；项目：分层 + 依赖注入 + 测试隔离。</p>
+      </details>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 附录 ================= -->
+<section id="appendix">
+  <h2><span class="sec-num">A</span>附录：速查表与自评</h2>
+  <p class="lede">转型差异速查、工具链速查与本版自评分数。</p>
+  <div class="grid">
+    <figure class="cell-full">
+      <figcaption>转型差异速查表（浓缩版）：10 个主题的 Python 对照</figcaption>
+      <div class="table-wrap"><table>
+        <thead><tr><th>主题</th><th>原语言常见</th><th class="col-py">Python</th></tr></thead>
+        <tbody>
+          <tr><td>类型</td><td>静态</td><td class="col-py">动态 + 注解 + mypy</td></tr>
+          <tr><td>包管理</td><td>Maven/go mod/npm</td><td class="col-py">uv/poetry/pip + venv</td></tr>
+          <tr><td>并发</td><td>线程/goroutine</td><td class="col-py">线程/进程/asyncio</td></tr>
+          <tr><td>接口</td><td>interface</td><td class="col-py">Protocol/ABC/鸭子类型</td></tr>
+          <tr><td>异常</td><td>checked/error</td><td class="col-py">try/except + 具体异常</td></tr>
+          <tr><td>空值</td><td>null/nil</td><td class="col-py">None + is None</td></tr>
+          <tr><td>字符串</td><td>+/模板</td><td class="col-py">f-string/join</td></tr>
+          <tr><td>资源</td><td>try-with/finally</td><td class="col-py">with</td></tr>
+          <tr><td>日志</td><td>框架</td><td class="col-py">logging</td></tr>
+          <tr><td>测试</td><td>JUnit</td><td class="col-py">pytest</td></tr>
+        </tbody>
+      </table></div>
+    </figure>
+    <article class="knowledge-card cell-half">
+      <h3>工具链速查：六条命令覆盖日常闭环</h3>
+<pre>uv venv &amp;&amp; uv sync
+ruff check . &amp;&amp; ruff format .
+mypy src
+pytest --cov=src
+pre-commit install
+docker build -t app .</pre>
+      <ul class="l2-support">
+        <li>Pythonic 十条速览：enumerate/zip、推导式、with、pathlib、dataclass、f-string、生成器、collections、类型注解、logging</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>本版自评：9 维度 8.3–9.0，加权 ≈8.66</h3>
+      <svg class="score-chart" viewBox="0 0 380 192" role="img" aria-label="九个维度自评分数条形图，范围 8.3 至 9.0，加权总分约 8.66">
+        <g>
+          <text x="0" y="14">定位匹配</text><rect class="bar" x="92" y="4" width="138" height="14"></rect><text class="val" x="236" y="14">8.6</text>
+          <text x="0" y="35">体系完整</text><rect class="bar" x="92" y="25" width="184" height="14"></rect><text class="val" x="282" y="35">8.8</text>
+          <text x="0" y="56">原理准确</text><rect class="bar" x="92" y="46" width="92" height="14"></rect><text class="val" x="190" y="56">8.4</text>
+          <text x="0" y="77">工程落地</text><rect class="bar" x="92" y="67" width="184" height="14"></rect><text class="val" x="282" y="77">8.8</text>
+          <text x="0" y="98">转型适配</text><rect class="bar" x="92" y="88" width="184" height="14"></rect><text class="val" x="282" y="98">8.8</text>
+          <text x="0" y="119">现代生态</text><rect class="bar" x="92" y="109" width="161" height="14"></rect><text class="val" x="259" y="119">8.7</text>
+          <text x="0" y="140">代码质量</text><rect class="bar" x="92" y="130" width="115" height="14"></rect><text class="val" x="213" y="140">8.5</text>
+          <text x="0" y="161">教学闭环</text><rect class="bar" x="92" y="151" width="69" height="14"></rect><text class="val" x="167" y="161">8.3</text>
+          <text x="0" y="182">结构可读</text><rect class="bar" x="92" y="172" width="230" height="14"></rect><text class="val" x="328" y="182">9.0</text>
+        </g>
+      </svg>
+      <details class="l3-detail"><summary>展开自评表（含说明）</summary>
+        <div class="table-wrap"><table>
+          <thead><tr><th>维度</th><th>自评</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>定位与受众匹配</td><td>8.6</td><td>双轨制 + 转型轨明确</td></tr>
+            <tr><td>知识体系完整性</td><td>8.8</td><td>基础到工程到部署</td></tr>
+            <tr><td>深度与原理准确性</td><td>8.4</td><td>审校修正 + 进阶扩展</td></tr>
+            <tr><td>工程化与实战可落地性</td><td>8.8</td><td>完整项目 + Docker + CI</td></tr>
+            <tr><td>转型适配性</td><td>8.8</td><td>差异总表 + 迁移陷阱</td></tr>
+            <tr><td>现代 Python 生态</td><td>8.7</td><td>uv/ruff/mypy/pydantic/pytest</td></tr>
+            <tr><td>代码质量与可运行性</td><td>8.5</td><td>项目可运行、测试全绿</td></tr>
+            <tr><td>教学法与练习闭环</td><td>8.3</td><td>每章目标/练习/答案要点</td></tr>
+            <tr><td>结构与可读性</td><td>9.0</td><td>章节清晰、附录速查</td></tr>
+            <tr><td><strong>加权总分</strong></td><td><strong>≈8.66</strong></td><td><strong>优秀目标达成</strong></td></tr>
+          </tbody>
+        </table></div>
+      </details>
+    </article>
+  </div>
+</section>
+
+</main>
+
+<footer class="container">
+  <p class="doc-meta">Python 转型开发全体系学习文档 V2.0 · 瑞士网格排版 · 文档转译，内容未虚构</p>
+  <p class="doc-meta">交互提示：点击正文任意区块可标记定位；右侧悬浮按钮提供 跳转 / 取消 / 下载含定位副本。</p>
+</footer>
+
+<!-- SECTION: doc-mark-state 定位状态节点（只存数据不存 HTML） -->
+<script type="application/json" id="docMarkState">{"i":null,"label":null,"savedAt":null}</script>
+
+<!-- SECTION: float-actions 悬浮定位功能区 -->
+<div class="float-actions" id="floatActions" aria-label="定位功能区">
+  <button type="button" id="btnMarkJump" disabled title="跳转到标记位置" aria-label="跳转到标记位置">↑</button>
+  <button type="button" id="btnMarkCancel" disabled title="取消标记" aria-label="取消标记">×</button>
+  <button type="button" id="btnMarkSave" disabled title="下载含定位参数的副本" aria-label="下载含定位参数的副本">⬇</button>
+  <p class="mark-status" role="status" aria-live="polite"></p>
+</div>
+
+<script>
+/* ============ 基础交互：Tabs / details aria 同步 / 打印展开 ============ */
+(function () {
+  'use strict';
+  Array.prototype.forEach.call(document.querySelectorAll('[role="tablist"]'), function (list) {
+    var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+    function activate(tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        var p = document.getElementById(t.getAttribute('aria-controls'));
+        if (p) { if (on) { p.removeAttribute('hidden'); } else { p.setAttribute('hidden', ''); } }
+      });
+      if (focus) tab.focus();
+    }
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () { activate(tab, false); });
+      tab.addEventListener('keydown', function (e) {
+        var i = tabs.indexOf(tab);
+        if (e.key === 'ArrowRight') { activate(tabs[(i + 1) % tabs.length], true); e.preventDefault(); }
+        else if (e.key === 'ArrowLeft') { activate(tabs[(i - 1 + tabs.length) % tabs.length], true); e.preventDefault(); }
+        else if (e.key === 'Home') { activate(tabs[0], true); e.preventDefault(); }
+        else if (e.key === 'End') { activate(tabs[tabs.length - 1], true); e.preventDefault(); }
+      });
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('details > summary'), function (s) {
+    var d = s.parentElement;
+    s.setAttribute('aria-expanded', d.open ? 'true' : 'false');
+    d.addEventListener('toggle', function () { s.setAttribute('aria-expanded', d.open ? 'true' : 'false'); });
+  });
+  var openState = [];
+  window.addEventListener('beforeprint', function () {
+    openState = [];
+    Array.prototype.forEach.call(document.querySelectorAll('details'), function (d, i) {
+      if (d.open) openState.push(i);
+      d.open = true;
+    });
+  });
+  window.addEventListener('afterprint', function () {
+    Array.prototype.forEach.call(document.querySelectorAll('details'), function (d, i) {
+      d.open = openState.indexOf(i) > -1;
+    });
+  });
+})();
+
+/* SECTION: block-mark 区域点击标记 + 悬浮功能区 + 下载式定位持久化 */
+(function () {
+  'use strict';
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var stateNode = document.getElementById('docMarkState');
+  var panel = document.getElementById('floatActions');
+  var statusLine = panel.querySelector('.mark-status');
+  var btnJump = document.getElementById('btnMarkJump');
+  var btnCancel = document.getElementById('btnMarkCancel');
+  var btnSave = document.getElementById('btnMarkSave');
+  var marked = null;
+  var statusTimer = null;
+  var NATIVE = 'a, button, summary, input, select, textarea, label, [role="tab"], [data-stepper] li';
+
+  function flatten(s) { return String(s).replace(/\s+/g, ' ').trim(); }
+
+  /* R1 采集：main 内所有网格容器的直接子元素，按文档顺序排序，覆盖隐藏 tab 面板与闭合 details 内的块 */
+  var blocks = Array.prototype.slice.call(document.querySelectorAll('main .grid > *'))
+    .sort(function (a, b) {
+      return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    })
+    .filter(function (el) {
+      if (el.matches('script, style, h1, h2, .sec-num, .tablist, p.lede')) return false;
+      if (!flatten(el.textContent)) return false;
+      return true;
+    });
+
+  function makeLabel(el) {
+    var sec = el.closest('section');
+    var secName = '';
+    if (sec) {
+      var h2 = sec.querySelector('h2');
+      var num = sec.querySelector('.sec-num');
+      if (h2) {
+        var rest = [];
+        Array.prototype.forEach.call(h2.childNodes, function (n) {
+          if (!(n.nodeType === 1 && n.classList.contains('sec-num'))) rest.push(n.textContent);
+        });
+        secName = (num ? num.textContent.trim() + ' ' : '') + flatten(rest.join(' '));
+      }
+    }
+    var head = el.querySelector('h3, h4, figcaption, th, strong, b');
+    var inner = head ? flatten(head.textContent) : '';
+    var full = ((secName ? secName + ' ｜ ' : '') + inner).trim();
+    var chars = Array.from(full);
+    if (chars.length > 22) return chars.slice(0, 22).join('') + '…';
+    return full || '未命名块';
+  }
+
+  blocks.forEach(function (el, i) {
+    el.classList.add('block-sel');
+    el.setAttribute('data-block-index', String(i + 1));
+    el.setAttribute('data-block-label', makeLabel(el));
+  });
+
+  function writeState(state) {
+    try { stateNode.textContent = JSON.stringify(state); } catch (e) { /* 降级 */ }
+    try { localStorage.setItem('swiss-mark:' + document.title, JSON.stringify(state)); } catch (e) { /* file:// 或隐私模式降级 */ }
+  }
+  function readState() {
+    try { return JSON.parse(stateNode.textContent); } catch (e) { return null; }
+  }
+  function say(msg) {
+    statusLine.textContent = msg;
+    if (statusTimer) clearTimeout(statusTimer);
+    statusTimer = setTimeout(function () { statusLine.textContent = ''; }, 2600);
+  }
+  function setButtons(on) {
+    btnJump.disabled = !on;
+    btnCancel.disabled = !on;
+    btnSave.disabled = !on;
+  }
+
+  /* R3 单选语义：点击已选中块不取消；aria-pressed 同步 */
+  function markBlock(block) {
+    if (marked === block) return;
+    if (marked) {
+      marked.classList.remove('is-marked');
+      marked.removeAttribute('aria-pressed');
+    }
+    marked = block;
+    marked.classList.add('is-marked');
+    marked.setAttribute('aria-pressed', 'true');
+    panel.classList.add('visible');
+    setButtons(true);
+    writeState({
+      i: marked.getAttribute('data-block-index'),
+      label: marked.getAttribute('data-block-label'),
+      savedAt: new Date().toISOString()
+    });
+    say('已定位：' + marked.getAttribute('data-block-label'));
+  }
+  function clearMark(msg) {
+    if (marked) {
+      marked.classList.remove('is-marked');
+      marked.removeAttribute('aria-pressed');
+    }
+    marked = null;
+    panel.classList.remove('visible');
+    setButtons(false);
+    writeState({ i: null, label: null, savedAt: new Date().toISOString() });
+    say(msg || '已取消');
+  }
+
+  /* R2 只监听 click，为原生交互让路；划词选择不触发 */
+  document.addEventListener('click', function (e) {
+    if (panel.contains(e.target)) return;
+    if (e.target.closest(NATIVE)) return;
+    var sel = window.getSelection();
+    if (sel && String(sel).replace(/\s+/g, '')) return;
+    var block = e.target.closest('.block-sel');
+    if (block) markBlock(block);
+  });
+
+  /* R5 跳转：先展开目标所在 tab 面板 / details，再滚动 */
+  function reveal(block) {
+    var p = block.closest('[role="tabpanel"][hidden]');
+    if (p && p.id) {
+      var tab = document.querySelector('[aria-controls="' + p.id + '"]');
+      if (tab) tab.click();
+    }
+    var d = block.closest('details:not([open])');
+    if (d) d.open = true;
+  }
+  btnJump.addEventListener('click', function () {
+    if (!marked) return;
+    reveal(marked);
+    marked.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  });
+  btnCancel.addEventListener('click', function () { clearMark('已取消'); });
+
+  /* R6 存：克隆文档、复位交互残留后下载独立副本（不使用 File System Access / IndexedDB） */
+  function resetClone(root) {
+    Array.prototype.forEach.call(root.querySelectorAll('.is-marked'), function (el) {
+      el.classList.remove('is-marked');
+      el.removeAttribute('aria-pressed');
+    });
+    var fp = root.querySelector('.float-actions');
+    if (fp) fp.classList.remove('visible');
+    Array.prototype.forEach.call(root.querySelectorAll('.float-actions button'), function (b) { b.disabled = true; });
+    Array.prototype.forEach.call(root.querySelectorAll('.mark-status'), function (el) { el.textContent = ''; });
+    Array.prototype.forEach.call(root.querySelectorAll('details'), function (d) {
+      d.removeAttribute('open');
+      var s = d.querySelector('summary');
+      if (s) s.setAttribute('aria-expanded', 'false');
+    });
+    Array.prototype.forEach.call(root.querySelectorAll('[aria-current]'), function (el) { el.removeAttribute('aria-current'); });
+    Array.prototype.forEach.call(root.querySelectorAll('[role="tablist"]'), function (list) {
+      var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+      tabs.forEach(function (t, i) {
+        var on = i === 0;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        var p = document.getElementById(t.getAttribute('aria-controls'));
+        if (p) { if (on) { p.removeAttribute('hidden'); } else { p.setAttribute('hidden', ''); } }
+      });
+    });
+  }
+  btnSave.addEventListener('click', function () {
+    var clone = document.documentElement.cloneNode(true);
+    resetClone(clone);
+    var html = '<!DOCTYPE html>\n' + clone.outerHTML;
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (document.title || 'document').replace(/[\\\/:*?"<>|]/g, '_') + '.marked.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    say('已下载副本（含定位）');
+  });
+
+  /* R6 回显：文档内状态优先，其次 localStorage；标签不匹配则放弃回显 */
+  (function restore() {
+    var st = readState();
+    if (!st || st.i == null || !st.label) {
+      try {
+        var ls = localStorage.getItem('swiss-mark:' + document.title);
+        if (ls) st = JSON.parse(ls);
+      } catch (e) { /* 降级 */ }
+    }
+    if (!st || st.i == null || !st.label) return;
+    var block = null;
+    for (var i = 0; i < blocks.length; i++) {
+      if (blocks[i].getAttribute('data-block-index') === String(st.i)) { block = blocks[i]; break; }
+    }
+    if (!block) return;
+    if (block.getAttribute('data-block-label') !== st.label) return; /* 防错位保护 */
+    marked = block;
+    marked.classList.add('is-marked');
+    marked.setAttribute('aria-pressed', 'true');
+    panel.classList.add('visible');
+    setButtons(true);
+    say('已恢复上次定位');
+  })();
+})();
+</script>
+</body>
+</html>
