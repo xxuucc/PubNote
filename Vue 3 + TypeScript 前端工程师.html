@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>移动端开发者 → Vue 3 + TypeScript 转型指南</title>
+<style>
+/* ===== 设计令牌（模块3） ===== */
+:root{
+  --paper:#ffffff; --ink:#111111; --ink-muted:#6b6b6b;
+  --accent:#0047AB; --accent-bg:#f0f4f8;
+  --rule:#e5e5e5; --radius:0;
+}
+*,*::before,*::after{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Inter","Helvetica Neue","PingFang SC","Noto Sans SC",sans-serif;
+  font-size:1rem;line-height:1.7;-webkit-font-smoothing:antialiased;}
+h1{font-size:clamp(2.074rem,4vw,3.052rem);font-weight:700;letter-spacing:-0.02em;line-height:1.2;margin:8px 0;}
+h2{font-size:clamp(1.728rem,3vw,2.441rem);font-weight:600;letter-spacing:-0.01em;margin:0;}
+h3{font-size:1.44rem;font-weight:600;margin:0 0 12px;}
+h4{font-size:1.125rem;font-weight:600;margin:16px 0 8px;}
+p{font-size:1rem;line-height:1.7;max-width:68ch;margin:0 0 12px;}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--rule);}
+a:hover{border-bottom-color:var(--accent);}
+ul,ol{margin:0 0 12px;padding-left:20px;}
+li{margin-bottom:4px;}
+caption,figcaption{font-size:.875rem;color:var(--ink-muted);}
+code{font-family:"JetBrains Mono","SF Mono",monospace;font-size:.85em;background:var(--accent-bg);padding:1px 5px;}
+pre{font-family:"JetBrains Mono","SF Mono",monospace;font-size:.8rem;line-height:1.6;
+  background:#fafafa;border:1px solid var(--rule);padding:16px;overflow:auto;margin:0 0 12px;}
+pre code{background:none;padding:0;}
+table{width:100%;border-collapse:collapse;font-size:.875rem;margin-bottom:12px;}
+th{text-align:left;border-bottom:2px solid var(--ink);padding:8px 12px;font-weight:600;}
+td{border-bottom:1px solid var(--rule);padding:8px 12px;vertical-align:top;}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;}html{scroll-behavior:auto;}}
+
+/* ===== 网格（8pt） ===== */
+.container{max-width:1200px;margin:0 auto;padding:48px 32px;}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;}
+.cell-full{grid-column:span 12;}
+.cell-half{grid-column:span 6;}
+.cell-third{grid-column:span 4;}
+@media (max-width:768px){.cell-half,.cell-third{grid-column:span 12;}}
+
+/* ===== 页头（不对称 8:4） ===== */
+.site-header{border-bottom:1px solid var(--rule);}
+.kicker{font-family:"JetBrains Mono","SF Mono",monospace;font-size:.75rem;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 8px;}
+.site-header h1{max-width:20ch;}
+.meta-cell{border-left:1px solid var(--rule);padding-left:24px;}
+.meta-cell dt{font-size:.75rem;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:12px;}
+.meta-cell dd{margin:0;font-size:.9rem;}
+.toc{columns:2;column-gap:32px;font-size:.9rem;}
+.toc a{display:block;padding:4px 0;border-bottom:none;color:var(--ink);}
+.toc a:hover{color:var(--accent);}
+.toc .toc-num{font-family:"JetBrains Mono","SF Mono",monospace;color:var(--ink-muted);font-size:.75rem;margin-right:8px;}
+@media (max-width:768px){.toc{columns:1;}}
+
+/* ===== 章节 ===== */
+section{border-top:1px solid var(--rule);}
+.sec-head{display:flex;align-items:baseline;gap:24px;margin-bottom:32px;}
+.sec-num{font-family:"JetBrains Mono","SF Mono",monospace;font-size:.875rem;color:var(--ink-muted);letter-spacing:.1em;}
+.knowledge-card{border:1px solid var(--rule);padding:24px;}
+.knowledge-card h3{font-size:1.125rem;}
+.l2-support{font-size:.9rem;color:var(--ink);}
+.l2-support li::marker{color:var(--ink-muted);}
+.callout{background:var(--accent-bg);border-left:3px solid var(--accent);padding:12px 16px;font-size:.875rem;margin-bottom:12px;}
+.term{border-bottom:1px dashed var(--ink-muted);cursor:help;position:relative;}
+.term::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);
+  background:var(--ink);color:var(--paper);font-size:.72rem;line-height:1.5;
+  padding:8px 12px;max-width:300px;width:max-content;opacity:0;pointer-events:none;transition:opacity 120ms;z-index:20;}
+.term:hover::after,.term:focus-visible::after{opacity:1;}
+
+/* Tabs */
+.tablist{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--rule);}
+.tablist [role="tab"]{appearance:none;background:none;border:none;border-bottom:2px solid transparent;
+  padding:12px 16px;font:inherit;font-size:.875rem;color:var(--ink-muted);cursor:pointer;margin-bottom:-1px;min-height:44px;}
+.tablist [role="tab"][aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+[role="tabpanel"]:not([hidden]){padding-top:24px;}
+
+/* Stepper */
+ol.steps{list-style:none;counter-reset:step;margin:0;padding:0 0 0 12px;}
+ol.steps li{counter-increment:step;position:relative;padding:0 0 16px 32px;border-left:2px solid var(--rule);}
+ol.steps li:last-child{padding-bottom:0;}
+ol.steps li::before{content:counter(step,decimal-leading-zero);position:absolute;left:-13px;top:0;
+  width:24px;height:24px;background:var(--paper);border:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:center;
+  font-family:"JetBrains Mono","SF Mono",monospace;font-size:.65rem;color:var(--ink-muted);}
+ol.steps li[aria-current="step"]::before{border-color:var(--accent);color:var(--accent);}
+ol.steps li strong{display:block;font-size:.9rem;}
+ol.steps li span{font-size:.85rem;color:var(--ink-muted);}
+
+/* details */
+details{border:1px solid var(--rule);margin-top:16px;}
+summary{padding:10px 16px;cursor:pointer;font-size:.875rem;font-weight:600;list-style:none;position:relative;min-height:44px;display:flex;align-items:center;}
+summary::-webkit-details-marker{display:none;}
+summary::before{content:'+';position:absolute;right:16px;color:var(--ink-muted);font-family:"JetBrains Mono","SF Mono",monospace;}
+details[open] summary::before{content:'−';}
+.detail-body{padding:0 16px 16px;}
+.checklist{list-style:none;padding-left:0;}
+.checklist li{padding-left:24px;position:relative;}
+.checklist li::before{content:'[ ]';position:absolute;left:0;font-family:"JetBrains Mono","SF Mono",monospace;font-size:.75rem;color:var(--ink-muted);top:3px;}
+.checklist li.done::before{content:'[x]';color:var(--accent);}
+
+/* 页脚 */
+footer{border-top:1px solid var(--rule);font-size:.8rem;color:var(--ink-muted);}
+
+/* SECTION: block-mark */
+.block-sel{position:relative;z-index:0;scroll-margin-top:24px;}
+.block-sel::before{content:'';position:absolute;left:-12px;top:0;bottom:0;width:3px;
+  background:var(--accent);opacity:0;transition:opacity 150ms;pointer-events:none;}
+.block-sel::after{content:'';position:absolute;inset:0;background:var(--accent-bg);
+  opacity:0;transition:opacity 150ms;pointer-events:none;z-index:-1;}
+.block-sel.is-marked::before{opacity:1;}
+.block-sel.is-marked::after{opacity:.35;}
+
+/* SECTION: float-actions */
+.float-actions{position:fixed;right:16px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:8px;opacity:0;pointer-events:none;transition:opacity 150ms;z-index:1000;}
+.float-actions.visible{opacity:1;pointer-events:auto;}
+.float-actions button{width:44px;height:44px;border:1px solid var(--rule);background:var(--paper);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
+  color:var(--ink);font-family:"JetBrains Mono","SF Mono",monospace;font-size:1rem;}
+.float-actions button:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+.float-actions button:disabled{color:var(--ink-muted);cursor:not-allowed;}
+.mark-status{margin:0;width:44px;font-size:.625rem;line-height:1.35;color:var(--ink-muted);
+  text-align:center;word-break:break-all;}
+@media (max-width:768px){
+  .float-actions{top:auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));
+    right:50%;transform:translateX(50%);flex-direction:row;align-items:center;}
+  .mark-status{display:none;}
+}
+@media print{
+  .float-actions{display:none !important;}
+  .block-sel::before,.block-sel::after{opacity:0 !important;}
+  details:not([open]) > *:not(summary){display:block;}
+  a{color:var(--ink);border-bottom:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header container">
+  <div class="grid">
+    <div class="cell-full" style="display:contents;"></div>
+    <div style="grid-column:span 8;">
+      <p class="kicker">Learning Roadmap · V2.0 · Swiss Grid Edition</p>
+      <h1>移动端开发者 → Vue&nbsp;3&nbsp;+&nbsp;TypeScript 前端工程师</h1>
+      <p class="lede">一份 22 周的完整转型路线。点击正文任意区域可建立阅读锚点，右侧悬浮功能区支持一键跳回（定位可持久化到文档内）。</p>
+    </div>
+    <div class="meta-cell" style="grid-column:span 4;">
+      <dl>
+        <dt>技术基线</dt><dd>Vue 3.5+ / TS 5.x / Vite 7.x / Pinia 3.x / Node 22 LTS</dd>
+        <dt>三大核心短板</dt><dd>① 现代 JS 深度 ② CSS 文档流思维 ③ 浏览器与网络环境</dd>
+        <dt>主线交互</dt><dd>L1 主论点 → L2 支撑 → L3 折叠细节（渐进式披露）</dd>
+      </dl>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+    <nav class="cell-full toc" aria-label="章节导航">
+      <a href="#s1"><span class="toc-num">01</span>转型总览</a>
+      <a href="#s2"><span class="toc-num">02</span>环境搭建</a>
+      <a href="#s3"><span class="toc-num">03</span>Web 基础 + 现代 JS ★</a>
+      <a href="#s4"><span class="toc-num">04</span>TypeScript ★</a>
+      <a href="#s5"><span class="toc-num">05</span>Vue 3 核心（主战场）</a>
+      <a href="#s6"><span class="toc-num">06</span>工程化与生态</a>
+      <a href="#s7"><span class="toc-num">07</span>原理 / 性能 / 浏览器 ★</a>
+      <a href="#s8"><span class="toc-num">08</span>项目实战路线</a>
+      <a href="#s9"><span class="toc-num">09</span>书单与资源</a>
+      <a href="#s10"><span class="toc-num">10</span>面试问答精选</a>
+      <a href="#s11"><span class="toc-num">11</span>最终检验标准</a>
+    </nav>
+  </div>
+</div>
+
+<main>
+
+<!-- ============ 01 ============ -->
+<section class="container" id="s1" data-sec="01 转型总览">
+  <div class="sec-head"><span class="sec-num">01</span><h2>转型总览</h2></div>
+  <div class="grid">
+    <div class="cell-full">
+      <table>
+        <caption>经验资产映射：你的存量能力如何兑换为前端能力</caption>
+        <thead><tr><th>移动端经验</th><th>前端对应物</th><th>迁移成本</th></tr></thead>
+        <tbody>
+          <tr><td>Activity / Fragment / ViewController</td><td>Vue 组件</td><td>★ 低</td></tr>
+          <tr><td>生命周期回调</td><td>Vue 生命周期钩子</td><td>★ 低</td></tr>
+          <tr><td>Compose <code>mutableStateOf</code> / SwiftUI <code>@State</code></td><td>Vue <code>ref()</code> 响应式</td><td>★ 低（心智一致）</td></tr>
+          <tr><td>RecyclerView 优化</td><td>虚拟列表</td><td>★★ 中</td></tr>
+          <tr><td>Gradle / CocoaPods</td><td>pnpm / Vite</td><td>★★ 中</td></tr>
+          <tr><td>Retrofit + OkHttp</td><td>Axios 封装</td><td>★ 低</td></tr>
+          <tr><td>MVVM 架构</td><td>Vue 天然 MVVM</td><td>★ 低</td></tr>
+          <tr><td>多线程 / 协程</td><td>JS 事件循环 + 异步</td><td>★★★ 高（核心难点）</td></tr>
+          <tr><td>封闭沙盒环境</td><td>浏览器兼容、跨域、安全</td><td>★★★ 高</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <article class="knowledge-card cell-half">
+      <h3>技术栈基线：学什么、明确不学什么</h3>
+      <ul class="l2-support">
+        <li>Vue 3.5+：Composition API + <code>&lt;script setup&gt;</code> 为主线</li>
+        <li>TypeScript 5.x：岗位标配；Vite 7.x（不学 Webpack 配置）</li>
+        <li>Pinia 3.x（不学 Vuex）、Vue Router 4.x</li>
+        <li>UI 库：Element Plus / Ant Design Vue 4 / Vant 4</li>
+        <li>测试：Vitest + Vue Test Utils</li>
+      </ul>
+      <details><summary>明确不学清单</summary><div class="detail-body">
+        <p>jQuery、Vue 2 / Vuex / Options API 深研、Webpack 配置、Bootstrap。把时间花在原理与现代工具链上。</p>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>时间规划：6 个阶段 · 22 周</h3>
+      <ul class="l2-support">
+        <li><strong>阶段 0</strong> 环境搭建 —— 第 1 周</li>
+        <li><strong>阶段 1</strong> Web 三件套 + 现代 JS —— 第 2~4 周 ★</li>
+        <li><strong>阶段 2</strong> TypeScript —— 第 5~7 周</li>
+        <li><strong>阶段 3</strong> Vue 3 核心 —— 第 8~12 周 ★ 主战场</li>
+        <li><strong>阶段 4</strong> 工程化与生态 —— 第 13~16 周</li>
+        <li><strong>阶段 5</strong> 原理 / 性能 / 浏览器网络 —— 第 17~22 周 ★</li>
+        <li><strong>阶段 6</strong> 项目实战 —— 贯穿全程</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 02 ============ -->
+<section class="container" id="s2" data-sec="02 环境搭建">
+  <div class="sec-head"><span class="sec-num">02</span><h2>阶段 0：环境搭建（第 1 周）</h2></div>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>工具链三件套：nvm / pnpm / VS Code</h3>
+      <ul class="l2-support">
+        <li><strong>nvm（或 fnm）</strong>管理 Node 22 LTS——不同项目锁定不同版本，等价 JDK 多版本管理</li>
+        <li><strong>pnpm</strong>：硬链接共享依赖，安装快、磁盘省、Monorepo 支持好</li>
+        <li><strong>VS Code 插件</strong>：Vue-Official（官方语言支持）、ESLint、Prettier、Error Lens</li>
+      </ul>
+      <details open><summary>初始化命令与加载链路</summary><div class="detail-body">
+<pre>pnpm create vue@latest my-first-app
+# 选择：TypeScript ✔ Router ✔ Pinia ✔ ESLint ✔ Prettier ✔
+cd my-first-app &amp;&amp; pnpm install &amp;&amp; pnpm dev</pre>
+        <p>项目加载链路：<code>index.html</code> → <code>src/main.ts</code>（createApp → use(router) → use(pinia) → mount）→ <code>App.vue</code> → <code>&lt;router-view&gt;</code> 渲染路由组件。</p>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Chrome DevTools：用移动端经验对号入座</h3>
+      <ul class="l2-support">
+        <li><strong>Elements</strong> ≈ Layout Inspector（查 DOM/样式）</li>
+        <li><strong>Network</strong> ≈ Charles（抓接口、看耗时）</li>
+        <li><strong>Sources</strong>：断点调试；<strong>Performance</strong> ≈ Profiler</li>
+        <li><strong>Application</strong>：查看 localStorage / Cookie</li>
+      </ul>
+      <div class="callout">动手验证一次断点调试与 Network 面板，建立"前端也有完整调试器"的直觉。</div>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 03 ============ -->
+<section class="container" id="s3" data-sec="03 Web基础+现代JS">
+  <div class="sec-head"><span class="sec-num">03</span><h2>阶段 1：Web 基础 + 现代 JavaScript（第 2~4 周）★</h2></div>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>CSS 文档流：移动端开发者最大的思维转变</h3>
+      <ul class="l2-support">
+        <li>原生布局是"我指定你放在哪"；CSS 默认是<strong>文档流</strong>——块级元素独占一行堆叠、行内从左到右、放不下自动换行</li>
+        <li>脱离文档流只有三种方式：<code>float</code>（历史产物）、<code>position: absolute/fixed</code>、flex/grid 子项</li>
+        <li>项目入口必写 <code>* { box-sizing: border-box; }</code>——width 即最终占宽，一刀切解决 padding 撑破问题</li>
+      </ul>
+      <details><summary>L3：移动端关键 meta 与 DPR</summary><div class="detail-body">
+<pre>&lt;meta name="viewport" content="width=device-width,
+  initial-scale=1.0, viewport-fit=cover"&gt;
+/* 物理像素 = CSS 像素 × devicePixelRatio
+   与 dp/sp 的换算逻辑本质相同 */</pre>
+        <p>图片优化：<code>srcset</code> 多分辨率、<code>loading="lazy"</code>、<code>&lt;picture&gt;</code> 艺术指导。安全区：<code>padding-bottom: calc(12px + env(safe-area-inset-bottom))</code>。</p>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Flexbox：90% 场景的布局方案</h3>
+      <ul class="l2-support">
+        <li><code>justify-content</code> 管主轴、<code>align-items</code> 管交叉轴、<code>gap</code> 替代 margin 塌陷</li>
+        <li><code>flex: 1</code>（1 1 0%）= 严格<strong>等分</strong>剩余空间；<code>flex: auto</code> = 按<strong>内容比例</strong>分配</li>
+        <li>左侧固定 + 右侧自适应时，右栏加 <code>min-width: 0</code> 防 flex 子项默认 <code>min-width:auto</code> 撑破</li>
+      </ul>
+      <details><summary>L3：移动端三段式布局（每天在写）</summary><div class="detail-body">
+<pre>/* 头部固定 + 内容滚动 + 底部固定 */
+.page { display: flex; flex-direction: column; height: 100vh; }
+.page header { flex: none; }
+.page main   { flex: 1; overflow-y: auto; }
+.page footer { flex: none; }
+/* 水平垂直居中 */
+.center { display: flex; justify-content: center; align-items: center; }</pre>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Grid：二维布局与零媒体查询的响应式卡片</h3>
+      <ul class="l2-support">
+        <li><code>grid-template-areas</code> 命名区域，仪表盘骨架可读性极佳</li>
+        <li><strong>必背一行</strong>：<code>repeat(auto-fill, minmax(240px, 1fr))</code>——视口变窄自动 4→3→2→1 列，零媒体查询</li>
+        <li>选型口诀：内容决定尺寸（按钮条）→ Flex；先划分结构（页面骨架）→ Grid</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>BFC 与层叠上下文：两个"玄学 bug"的元凶</h3>
+      <ul class="l2-support">
+        <li><span class="term" data-tip="块级格式化上下文：独立渲染区域，内部布局不影响外部">BFC</span> 触发：overflow 非 visible、flex/grid、absolute 等；解决 margin 塌陷、高度塌陷、两栏环绕</li>
+        <li><code>z-index</code> 只在同一层叠上下文内比较——<code>transform</code> / <code>opacity&lt;1</code> 的父级会创建"小世界"</li>
+        <li>弹窗 z-index:999 仍被盖住？Vue 3 的 <code>&lt;Teleport to="body"&gt;</code> 专治此症（见 05 节）</li>
+      </ul>
+      <details><summary>L3：position 五值速查</summary><div class="detail-body">
+        <p><code>static</code> 默认 ｜ <code>relative</code> 相对自身偏移、常作锚点 ｜ <code>absolute</code> 相对最近非 static 祖先 ｜ <code>fixed</code> 相对视口（吸底栏）｜ <code>sticky</code> 滚动阈值后固定（表头吸顶）。</p>
+      </div></details>
+    </article>
+    <div class="cell-full">
+      <table>
+        <caption>移动端响应式适配三种方案对比</caption>
+        <thead><tr><th>方案</th><th>原理</th><th>适用</th></tr></thead>
+        <tbody>
+          <tr><td><code>rem</code> + postcss-pxtorem</td><td>按设计稿写 px 构建时转 rem；JS 动态设 html font-size</td><td>H5 整体等比缩放（主流）</td></tr>
+          <tr><td><code>vw</code></td><td>1vw = 视口宽/100，postcss 直接 px→vw</td><td>同上，纯 CSS 无需 JS</td></tr>
+          <tr><td>媒体查询 + 断点</td><td>修改布局结构</td><td>需要"变布局"而非"等比缩放"</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <article class="knowledge-card cell-half">
+      <h3>闭包：函数 + 词法作用域的组合</h3>
+      <ul class="l2-support">
+        <li>内层函数引用外层变量，外层执行结束后变量<strong>不会被回收</strong></li>
+        <li>四大应用：私有变量、函数工厂、防抖节流的实现基础、Vue Composable "记住状态"的底层机制</li>
+        <li>两个坑：循环 + <code>var</code>（let 每轮新建块级作用域）；意外持有大对象 → <strong>内存泄漏</strong>——这正是 <code>onUnmounted</code> 必须清理监听的原因</li>
+      </ul>
+      <details><summary>L3：最小示例</summary><div class="detail-body">
+<pre>function createCounter() {
+  let count = 0              // 私有变量
+  return function () { return ++count }
+}
+const counter = createCounter()
+counter() // 1 —— createCounter 早已执行完，count 却活着
+counter() // 2</pre>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>this 指向：四规则 + 箭头函数</h3>
+      <ul class="l2-support">
+        <li>优先级：<code>new</code> &gt; 显式（call/apply/bind）&gt; 隐式（谁调用指向谁）&gt; 默认（window/undefined）</li>
+        <li>高频坑：<code>const fn = obj.say; fn()</code>——赋值后调用者丢失</li>
+        <li>箭头函数<strong>没有自己的 this</strong>，取定义时外层的词法 this（等价 Kotlin Lambda）</li>
+        <li>Vue 3 <code>&lt;script setup&gt;</code> 中 this 被刻意禁用——this 问题主要出现在读旧代码时</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>原型链与 class：心智直接套用 Kotlin/Java</h3>
+      <ul class="l2-support">
+        <li>对象经 <code>__proto__</code> 链条查找属性，终点 <code>Object.prototype.__proto__ === null</code></li>
+        <li><code>class</code> 是原型机制的语法糖；<code>#field</code> 是真私有字段</li>
+        <li>子类 constructor 必须先 <code>super()</code>——等价先初始化父类构造</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>ESM：Vite 一切魔法的基石</h3>
+      <ul class="l2-support">
+        <li>ESM 是<strong>静态结构</strong>（导入导出编译期确定）——Tree Shaking 的前提、Vite 按需编译快的根源</li>
+        <li>CommonJS（<code>require</code>）是运行时动态加载，看懂即可</li>
+        <li>每个文件最多一个默认导出；<code>import * as utils</code> 命名空间导入</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>数组高阶方法：前端的"集合流操作"</h3>
+      <ul class="l2-support">
+        <li><code>map/filter/concat/slice</code> 返回新数组；<code>sort/splice/reverse/push</code> 是<strong>原地修改</strong>——会直接改变响应式数据</li>
+        <li><code>reduce</code> 第二参数（初始值）必传；<code>sort</code> 数字排序必须传比较函数（默认按字符串排，高频坑）</li>
+        <li>数组去重一行：<code>[...new Set(arr)]</code></li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Promise：三态不可逆，then 链会"传递"</h3>
+      <ul class="l2-support">
+        <li><code>pending → fulfilled / rejected</code>，一旦落定不可逆</li>
+        <li>then 中 return 另一个 Promise → 链条等待它落定（串行的原理）；throw → 被最近 catch 捕获</li>
+      </ul>
+      <details><summary>L3：并发四兄弟（面试必考）</summary><div class="detail-body">
+        <p><code>all</code> 一损俱损（多独立请求齐渲染）｜ <code>allSettled</code> 全要结果（批量上传知成败）｜ <code>race</code> 先到先得含失败（超时控制）｜ <code>any</code> 第一个成功的（多 CDN 竞速）。</p>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>async/await：无依赖的请求必须并行</h3>
+      <ul class="l2-support">
+        <li><code>await</code> ≈ Kotlin <code>suspend</code> ≈ Swift async/await；挂起期间事件循环继续转</li>
+        <li>串行 <code>await a; await b</code> 耗时相加；<code>Promise.all([a, b])</code> 同时发、一起等</li>
+        <li>await 的 rejection 可被 <code>try/catch</code> 捕获，需要继续抛出让调用方感知</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>事件循环：前端面试第一原理题</h3>
+      <ol class="steps" data-stepper>
+        <li aria-current="step"><strong>执行同步代码</strong><span>调用栈逐行执行，栈未清空一切排队</span></li>
+        <li><strong>异步 API 交接</strong><span>定时器/网络回调交给 Web API 线程，就绪后入队</span></li>
+        <li><strong>栈清空 → 清空全部微任务</strong><span>Promise.then / await 后续 / queueMicrotask，优先级最高</span></li>
+        <li><strong>取一个宏任务</strong><span>setTimeout / I/O / UI 事件回调——注意 0ms 也不是立刻</span></li>
+        <li><strong>（必要时渲染）→ 下一轮循环</strong><span>长任务会阻塞渲染掉帧，切片丢进宏任务缓解</span></li>
+      </ol>
+      <details><summary>L3：经典输出题（必须能秒答）</summary><div class="detail-body">
+<pre>console.log('1')                              // 同步
+setTimeout(() =&gt; console.log('2'), 0)         // 宏任务
+Promise.resolve().then(() =&gt; console.log('3'))// 微任务
+console.log('4')                              // 同步
+// 输出：1 → 4 → 3 → 2
+// await 后面的代码 = .then 回调 = 微任务</pre>
+        <p>实战意义：① <code>Vue.nextTick</code> 就是用微任务实现的；② 长任务拆片用宏任务或 <code>requestIdleCallback</code>。</p>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>事件委托：列表上千项的性能关键</h3>
+      <ul class="l2-support">
+        <li>利用冒泡把 N 个子元素监听挂到父元素；<code>e.target.closest('li')</code> 定位实际目标</li>
+        <li>Vue 对应：<code>@click.stop</code> / <code>@submit.prevent</code> / <code>@keyup.enter</code> 修饰符直接写在模板</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Map / Set / WeakMap：为读 Vue 源码铺路</h3>
+      <ul class="l2-support">
+        <li>Map vs 对象：任意类型做键、有序、频繁增删性能更好</li>
+        <li><span class="term" data-tip="键只能是对象且为弱引用，键无其他引用时可被 GC">WeakMap</span>：Vue 响应式内部用它存"对象→依赖"，防止框架持有的映射阻止对象回收</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>阶段 1 自查：手写防抖与节流（默写级）</h3>
+      <details><summary>展开参考实现</summary><div class="detail-body">
+<pre>// 防抖：停止触发 delay 后才执行（只要还在动就不执行）→ 搜索联想、resize
+function debounce(fn, delay = 300) {
+  let timer = null
+  return function (...args) {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() =&gt; fn.apply(this, args), delay)
+  }
+}
+// 节流：固定间隔内最多一次（再频繁也按时执行）→ 滚动加载、按钮防连点
+function throttle(fn, interval = 300) {
+  let last = 0
+  return function (...args) {
+    const now = Date.now()
+    if (now - last &gt;= interval) { last = now; fn.apply(this, args) }
+  }
+}</pre>
+      </div></details>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 04 ============ -->
+<section class="container" id="s4" data-sec="04 TypeScript">
+  <div class="sec-head"><span class="sec-num">04</span><h2>阶段 2：TypeScript 系统学习（第 5~7 周）</h2></div>
+  <div class="grid">
+    <article class="knowledge-card cell-full">
+      <h3>总认知：TS = JS + 编译期类型系统，运行时全部擦除</h3>
+      <ul class="l2-support">
+        <li>默认 <code>const</code>、能推断就不手写、永远不用 <code>any</code></li>
+        <li>联合类型是 TS 表达"多态"的日常手段：<code>'idle' | 'loading' | 'success' | 'error'</code></li>
+      </ul>
+    </article>
+    <div class="cell-full">
+      <div class="tablist" role="tablist" aria-label="类型系统核心对比">
+        <button role="tab" id="tab-4a" aria-controls="panel-4a" aria-selected="true">interface vs type</button>
+        <button role="tab" id="tab-4b" aria-controls="panel-4b" aria-selected="false" tabindex="-1">any / unknown / never</button>
+      </div>
+      <div id="panel-4a" role="tabpanel" aria-labelledby="tab-4a">
+        <div class="grid">
+          <article class="knowledge-card cell-full">
+            <h3>interface 支持声明合并；type 能表达联合/交叉/条件/映射</h3>
+            <ul class="l2-support">
+              <li>同名 interface 自动合并（给第三方库扩展留口子）；type 不行</li>
+              <li>交叉 <code>A &amp; B</code> 是机械合并；interface extends 会检查兼容性</li>
+              <li>社区惯例：<strong>对象结构优先 interface</strong>，联合/工具类型/映射用 type</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+      <div id="panel-4b" role="tabpanel" aria-labelledby="tab-4b" hidden>
+        <div class="grid">
+          <article class="knowledge-card cell-full">
+            <h3>any 放弃检查；unknown 用前必收窄；never 用于穷尽性检查</h3>
+            <ul class="l2-support">
+              <li><code>any</code>：双向兼容一切，编译器躺平——<strong>禁用</strong></li>
+              <li><code>unknown</code>：任何值可赋给它（单向），使用前必须收窄——处理接口响应、<code>JSON.parse</code> 的正解</li>
+              <li><code>never</code>：不可能存在的类型；switch 的 default 接住它，<strong>未来漏处理新分支时编译期直接报错</strong></li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </div>
+    <article class="knowledge-card cell-half">
+      <h3>判别式联合：前端"状态建模"的标准范式</h3>
+      <ul class="l2-support">
+        <li>多个类型共享一个字面量"标签"字段；检查标签 → TS 自动收窄到对应分支</li>
+        <li><code>success</code> 状态才有 <code>data</code>、<code>error</code> 状态才有 <code>message</code>——杜绝大杂烩类型的"哪个字段该有"困惑</li>
+      </ul>
+      <details><summary>L3：RequestState 建模</summary><div class="detail-body">
+<pre>type RequestState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: User[] }
+  | { status: 'error'; message: string }
+function render(s: RequestState) {
+  switch (s.status) {
+    case 'success': return s.data.map(u =&gt; u.name) // ✔ 有类型
+    case 'error':   return s.message               // ✔ 有类型
+    default: { const _: never = s; return _ }      // 穷尽性检查
+  }
+}</pre>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>泛型 + keyof：类型安全的属性访问</h3>
+      <ul class="l2-support">
+        <li>泛型约束 <code>T extends { length: number }</code> 限定 T 的能力</li>
+        <li><code>prop(obj, key)</code> 模式：传错属性名<strong>编译期直接报错</strong>——Vue 源码/工具库大量使用</li>
+        <li><code>interface ApiResponse&lt;T = unknown&gt;</code> 默认类型参数</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>工具类型：DTO 建模的七把瑞士军刀</h3>
+      <ul class="l2-support">
+        <li><code>Partial</code> 更新接口 ｜ <code>Pick</code> 列表瘦身 ｜ <code>Omit</code> 创建接口去掉后端生成的 id</li>
+        <li><code>Record&lt;K,V&gt;</code> 字典/枚举翻译 ｜ <code>ReturnType</code> 提取函数返回类型 ｜ <code>Awaited</code> 提取 Promise 值类型</li>
+      </ul>
+      <details><summary>L3：手写映射类型（面试高频）</summary><div class="detail-body">
+<pre>type MyPartial&lt;T&gt;   = { [K in keyof T]?: T[K] }
+type MyPick&lt;T, K extends keyof T&gt; = { [P in K]: T[P] }
+type MyReturnType&lt;T&gt; =
+  T extends (...args: any[]) =&gt; infer R ? R : never
+// infer：在条件类型中"声明一个待推断的变量"</pre>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>断言、satisfies 与类型守卫</h3>
+      <ul class="l2-support">
+        <li><code>as</code> 是逃生舱不是常规手段；双重断言 <code>unknown as T</code> 是最后手段</li>
+        <li><code>satisfies</code>（TS 4.9+）：校验类型但保留更精确的字面量推断——现代推荐</li>
+        <li>自定义守卫 <code>function isUser(v: unknown): v is User</code>，通过后自动按 User 处理</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>tsconfig 关键项</h3>
+      <ul class="l2-support">
+        <li><code>"strict": true</code>——严格模式全家桶，企业项目必开</li>
+        <li><code>"noUncheckedIndexedAccess": true</code>——<code>arr[i]</code> 自动带 undefined，防越界</li>
+        <li><code>paths: { "@/*": ["src/*"] }</code> 与 Vite alias 同步</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 05 ============ -->
+<section class="container" id="s5" data-sec="05 Vue3核心">
+  <div class="sec-head"><span class="sec-num">05</span><h2>阶段 3：Vue 3 核心技术（第 8~12 周）· 主战场</h2></div>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>响应式 = Proxy 代理 + 依赖收集 + 派发更新</h3>
+      <ul class="l2-support">
+        <li>组件渲染函数被包在一个 <strong>effect</strong> 里：模板读数据 → Proxy get → track 记录依赖；改数据 → set → trigger → 重跑 effect</li>
+        <li>Proxy 三大优势：监听<strong>属性增删</strong>、监听<strong>数组索引/length</strong>、<strong>惰性深层代理</strong>（访问到才递归）</li>
+        <li>依赖存于 <code>WeakMap&lt;target, Map&lt;key, Set&lt;effect&gt;&gt;&gt;</code>，自动收集、无需手动声明</li>
+      </ul>
+      <details><summary>L3：为什么 ref 需要 .value</summary><div class="detail-body">
+        <p>基本类型无法被 Proxy 代理——Vue 把它装进带 <code>value</code> 属性的"盒子对象"再代理盒子；<code>.value</code> 的 get/set 就是依赖收集/派发的触发点。模板中编译器自动插入 <code>.value</code>，所以不用写。</p>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>默认全用 ref，reactive 只留给表单聚合</h3>
+      <ul class="l2-support">
+        <li><strong>坑 1</strong>：reactive 解构丢失响应性——值被"拷出" Proxy；解法 <code>toRefs(state)</code></li>
+        <li><strong>坑 2</strong>：整体替换丢失响应性——解法 <code>Object.assign(state, newData)</code></li>
+        <li>大列表用 <code>shallowRef</code>（只监听 .value 整体替换）+ <code>triggerRef()</code> 手动触发</li>
+      </ul>
+      <div class="callout">统一心智：ref + .value 可避免 reactive 的全部三大坑。</div>
+    </article>
+    <div class="cell-full">
+      <div class="tablist" role="tablist" aria-label="响应式 API 对比">
+        <button role="tab" id="tab-5a" aria-controls="panel-5a" aria-selected="true">computed</button>
+        <button role="tab" id="tab-5b" aria-controls="panel-5b" aria-selected="false" tabindex="-1">watch</button>
+        <button role="tab" id="tab-5c" aria-controls="panel-5c" aria-selected="false" tabindex="-1">watchEffect</button>
+      </div>
+      <div id="panel-5a" role="tabpanel" aria-labelledby="tab-5a">
+        <div class="grid">
+          <article class="knowledge-card cell-full">
+            <h3>computed：有缓存的派生值，不应有副作用</h3>
+            <ul class="l2-support">
+              <li>依赖不变直接返回缓存；不要在里面发请求/改其他状态</li>
+              <li>可写 computed 充当双向绑定中间层（get/set）——如 TodoMVC 的"全选"</li>
+              <li>缓存原理：带 dirty 标记的惰性 effect——依赖变化只置 dirty，<strong>下次读取</strong>才重算</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+      <div id="panel-5b" role="tabpanel" aria-labelledby="tab-5b" hidden>
+        <div class="grid">
+          <article class="knowledge-card cell-full">
+            <h3>watch：明确指定"监听谁"，懒执行，能拿新旧值</h3>
+            <ul class="l2-support">
+              <li>监听 reactive 单属性用 getter：<code>watch(() =&gt; user.age, cb)</code></li>
+              <li><code>immediate</code> 初始化立即执行；<code>flush: 'post'</code> 拿更新后 DOM</li>
+              <li>监听同一路由组件参数变化：<code>watch(() =&gt; route.params.id, fetchData)</code>——组件被复用不会重建</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+      <div id="panel-5c" role="tabpanel" aria-labelledby="tab-5c" hidden>
+        <div class="grid">
+          <article class="knowledge-card cell-full">
+            <h3>watchEffect：立即执行，读到谁就自动监听谁</h3>
+            <ul class="l2-support">
+              <li>适合"副作用与依赖一目了然、不关心旧值"：如自动同步 localStorage</li>
+              <li><code>onCleanup</code> 清理副作用——用 AbortController 取消上一次请求，<strong>防竞态</strong>（旧响应覆盖新数据）</li>
+            </ul>
+            <div class="callout">口诀：算出来的值用 computed；要旧值/明确目标用 watch；自动追踪副作用用 watchEffect。</div>
+          </article>
+        </div>
+      </div>
+    </div>
+    <article class="knowledge-card cell-half">
+      <h3>模板语法四条铁律</h3>
+      <ul class="l2-support">
+        <li><code>v-if</code> 真创建/销毁（条件少变：权限、错误页）；<code>v-show</code> 仅 display 切换（频繁切换：Tab、hover）</li>
+        <li><code>v-for</code> 的 key 必须是<strong>稳定唯一 id</strong>，禁止 index——见 07 节 diff 原理</li>
+        <li><code>v-for</code> 与 <code>v-if</code> 不同标签：用 computed 先过滤</li>
+        <li><code>v-html</code> 渲染富文本有 <span class="term" data-tip="跨站脚本攻击：注入恶意脚本">XSS</span> 风险，内容必须可信或消毒</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>生命周期：onUnmounted 是线上事故防线</h3>
+      <ul class="l2-support">
+        <li><code>onMounted</code>：请求数据、初始化图表、addEventListener</li>
+        <li><code>onUnmounted</code> 必须清理：<code>clearInterval</code>、<code>removeEventListener</code>、<code>AbortController.abort()</code>——不清理 = 内存泄漏 + 幽灵回调</li>
+        <li>KeepAlive 缓存页的数据刷新放 <code>onActivated</code>（每次进入触发），不放 onMounted（只执行一次）</li>
+      </ul>
+    </article>
+    <div class="cell-full">
+      <table>
+        <caption>组件通信六种方式选型表（面试背熟）</caption>
+        <thead><tr><th>方式</th><th>方向</th><th>场景</th></tr></thead>
+        <tbody>
+          <tr><td>props / emits</td><td>父⇄子</td><td>90% 的组件通信</td></tr>
+          <tr><td>v-model / defineModel</td><td>父⇄子</td><td>表单、弹窗 visible</td></tr>
+          <tr><td>插槽 / 作用域插槽</td><td>父→子内容</td><td>布局组件、列表定制</td></tr>
+          <tr><td>provide / inject</td><td>祖先→后代</td><td>主题、国际化、表单上下文</td></tr>
+          <tr><td>Pinia</td><td>全局</td><td>跨页面共享状态</td></tr>
+          <tr><td>模板引用 + defineExpose</td><td>父→子方法</td><td>触发子组件校验/重置</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <article class="knowledge-card cell-half">
+      <h3>defineModel：一行搞定组件双向绑定</h3>
+      <ul class="l2-support">
+        <li>Vue 3.4+：<code>const model = defineModel&lt;string&gt;({ required: true })</code>——编译为 <code>:modelValue</code> + <code>@update:modelValue</code></li>
+        <li>支持多个 v-model（<code>defineModel&lt;string&gt;('title')</code>）与修饰符处理</li>
+        <li>单向数据流原则：子组件禁止直接改 props，需要"改"就 emit 或用 v-model 模式</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>provide / inject：类型安全的跨层注入</h3>
+      <ul class="l2-support">
+        <li>用 <code>InjectionKey&lt;Ref&lt;Theme&gt;&gt;</code> + Symbol 做类型安全 key</li>
+        <li>provide 时包 <code>readonly()</code>——防后代篡改，单向数据流贯彻到底</li>
+        <li>要修改？provide 一个 <code>changeTheme</code> 方法而不是裸暴露 ref</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Composables：初级 → 中级的分水岭</h3>
+      <ul class="l2-support">
+        <li>规范：<code>useXxx</code> 命名；只在 setup 中调用；返回 ref 组成的对象；内部完成清理</li>
+        <li><code>useRequest</code> 模式：data 用 shallowRef + loading/error 状态 + 手动 run 重试——页面三行接入</li>
+        <li>定时器类（useCountDown）必须在内部 <code>onUnmounted</code> 清理</li>
+      </ul>
+      <details><summary>L3：VueUse 必学清单</summary><div class="detail-body">
+        <p><code>useMouse</code>、<code>useEventListener</code>（自动清理）、<code>useIntersectionObserver</code>（曝光埋点/无限滚动）、<code>useVirtualList</code>（万级列表）、<code>useDebounceFn</code>、<code>useClipboard</code>、<code>useDark</code>。先读源码再仿写。</p>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Teleport / KeepAlive / 自定义指令</h3>
+      <ul class="l2-support">
+        <li><code>&lt;Teleport to="body"&gt;</code>：弹窗逃出父级 overflow / transform 层叠上下文</li>
+        <li>KeepAlive：<code>include</code> 按组件 name 匹配（script setup 用 <code>defineOptions</code> 定义）；内部是缓存 Map + LRU 淘汰</li>
+        <li><code>v-permission</code> 按钮级权限：无权限直接从 DOM 移除</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>nextTick：DOM 异步批量更新的产物</h3>
+      <ul class="l2-support">
+        <li>同一轮多次修改只更新一次（性能优化）；更新在<strong>微任务</strong>中批量刷新</li>
+        <li><code>await nextTick()</code> 后能读到最新 DOM——修改数据后立即查 DOM 会拿到旧值</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>验收项目：TodoMVC（基础功验收）</h3>
+      <ul class="l2-support">
+        <li>filteredTodos 用 computed（缓存）而非方法；allDone 用可写 computed 实现"全选"回写</li>
+        <li>持久化：watch 深层监听 + localStorage；删除用 filter 不可变风格</li>
+      </ul>
+      <details><summary>L3：三个复盘必答题</summary><div class="detail-body">
+        <p>① filteredTodos 为什么用 computed？——依赖不变不重算；② allDone 为什么需要 get/set？——checkbox 双向绑定需要写回；③ <code>todos.value.push</code> 为什么能触发更新？——ref 深层响应，深层 Proxy 拦截。</p>
+      </div></details>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 06 ============ -->
+<section class="container" id="s6" data-sec="06 工程化">
+  <div class="sec-head"><span class="sec-num">06</span><h2>阶段 4：工程化与生态（第 13~16 周）</h2></div>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>Vue Router 4：懒加载 + 守卫 + RBAC 动态路由</h3>
+      <ul class="l2-support">
+        <li>路由懒加载 <code>component: () =&gt; import(...)</code>——首屏体积优化第一手段</li>
+        <li><code>props: true</code> 把 params 作为 props 传入——组件与路由解耦（可测试）</li>
+        <li>守卫顺序：beforeRouteLeave → 全局 beforeEach → beforeEnter → beforeResolve → afterEach；Vue3 用返回值语义（false 取消 / 路由对象重定向）</li>
+        <li>history 模式需 Nginx <code>try_files $uri $uri/ /index.html;</code></li>
+      </ul>
+      <details><summary>L3：RBAC 动态路由三步</summary><div class="detail-body">
+        <p>登录后请求后端菜单 → 过滤出本角色可见的 RouteRecordRaw → <code>router.addRoute()</code> 逐条注册 → <strong>addRoute 后必须 <code>router.replace(to.fullPath)</code></strong> 重新触发导航。</p>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Pinia：Setup Store 与 Composition API 心智统一</h3>
+      <ul class="l2-support">
+        <li>三段式：ref = state、computed = getters、普通/async 函数 = actions（无 commit/dispatch 样板）</li>
+        <li>解构规则：state/getter 用 <code>storeToRefs</code>；action 是普通函数直接解构</li>
+        <li>持久化：<code>pinia-plugin-persistedstate</code> 配 <code>persist: true</code></li>
+      </ul>
+      <div class="callout">判据：数据需要跨页面/跨组件树共享（用户、购物车、主题）→ Pinia；页面私有（表单临时值）→ 组件内。</div>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Axios 封装：企业必考的三层结构</h3>
+      <ul class="l2-support">
+        <li>第一层实例（baseURL/timeout）→ 第二层请求拦截统一注入 Token → 第三层响应拦截<strong>抹平协议只把 data 返回</strong></li>
+        <li>HTTP 层错误分类：401 登出跳转、断网提示、其余统一 toast</li>
+        <li>Token 无感刷新：捕获 401 → 挂起请求 → 刷新 → 重发；<strong>并发 401 用 isRefreshing 标志 + 等待队列只刷一次</strong></li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>Vite 工程配置三件事</h3>
+      <ul class="l2-support">
+        <li>开发期跨域：<code>server.proxy</code> 同源转发，浏览器全程无跨域</li>
+        <li><code>manualChunks</code>：vendor 独立分包，业务迭代时第三方库走浏览器缓存</li>
+        <li>环境变量必须以 <code>VITE_</code> 开头才暴露给客户端</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-full">
+      <h3>代码规范链路：ESLint → Prettier → husky → commitlint</h3>
+      <ul class="l2-support">
+        <li>ESLint（9.x Flat Config）管语法与风格；Prettier 纯格式化——二者分工不冲突</li>
+        <li>husky 注册 git hooks + lint-staged 只对暂存文件执行 + commitlint 校验 <code>feat:/fix:</code> 格式（可自动生成 Changelog）</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 07 ============ -->
+<section class="container" id="s7" data-sec="07 原理与浏览器">
+  <div class="sec-head"><span class="sec-num">07</span><h2>阶段 5：原理、性能与浏览器网络（第 17~22 周）★ 中高级门票</h2></div>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>手写迷你响应式：50 行讲清 track / trigger</h3>
+      <ul class="l2-support">
+        <li>存储结构：<code>WeakMap&lt;target, Map&lt;key, Set&lt;effectFn&gt;&gt;&gt;</code>；get 时 track、set 值真变了才 trigger</li>
+        <li>effect 先 <code>cleanup</code> 旧依赖再执行——处理"条件分支导致依赖变化"</li>
+        <li>Vue 真实调度是<strong>批量异步</strong>：trigger 不直接执行 effect，入队微任务去重后统一跑——这就是 nextTick 存在的原因</li>
+      </ul>
+      <details><summary>L3：effect 与 computed/watch 的关系</summary><div class="detail-body">
+        <p><code>effect(fn)</code> 就是组件渲染的包装（render 函数即 effect）；<code>computed</code> 是带 dirty 缓存、不立即执行的特化 effect；<code>watch</code> 是"指定源 + 用户回调"的 effect。</p>
+      </div></details>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>diff 与 key：为什么禁止用 index</h3>
+      <ul class="l2-support">
+        <li>四大规则：只同层比较、不同类型节点直接销毁重建、靠 key 判断"同一个节点"、静态内容跳过</li>
+        <li>index 作 key 头部插入时：旧 A(key=0) 配对新 X(key=0)——<strong>全量就地更新内容 + 表单组件状态错乱（输入框内容残留）</strong></li>
+        <li>Vue 3 编译优化：PatchFlag（只 diff 动态部分）、Block Tree（拍平收集动态节点）、最长递增子序列（最小化 DOM 移动）</li>
+      </ul>
+    </article>
+    <div class="cell-full">
+      <table>
+        <caption>性能优化清单 · 加载（首屏）</caption>
+        <thead><tr><th>手段</th><th>原理</th></tr></thead>
+        <tbody>
+          <tr><td>路由懒加载 / 组件按需加载</td><td>按路由切分 chunk；重弹窗延迟加载</td></tr>
+          <tr><td>manualChunks 分包</td><td>vendor 独立 chunk 走浏览器缓存</td></tr>
+          <tr><td>图片：懒加载 + WebP + CDN</td><td>减少请求体积与阻塞</td></tr>
+          <tr><td>Gzip / Brotli + preload 关键资源</td><td>传输体积降 70%+；提前拉取首屏必要资源</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cell-full">
+      <table>
+        <caption>性能优化清单 · 运行时</caption>
+        <thead><tr><th>手段</th><th>原理</th></tr></thead>
+        <tbody>
+          <tr><td>v-show 替代频繁切换的 v-if</td><td>避免反复创建销毁组件</td></tr>
+          <tr><td>shallowRef 大列表</td><td>跳过深层 Proxy 开销</td></tr>
+          <tr><td>虚拟列表</td><td>只渲染可视区 ± buffer；scrollTop/itemHeight 算起始索引——万级数据唯一正解（RecyclerView 同款思想）</td></tr>
+          <tr><td>KeepAlive 缓存列表页 / v-memo / 长任务切片</td><td>返回免重渲染；依赖不变跳过重渲染；分帧执行防掉帧</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <article class="knowledge-card cell-full">
+      <h3>从输入 URL 到页面展示（标准答题版）</h3>
+      <ol class="steps" data-stepper>
+        <li aria-current="step"><strong>URL 解析 → DNS 解析</strong><span>逐级缓存：浏览器→系统→路由器→运营商→递归查询</span></li>
+        <li><strong>TCP 三次握手 → TLS 握手</strong><span>HTTPS 场景额外协商密钥</span></li>
+        <li><strong>发送 HTTP 请求 → 服务器返回 HTML</strong><span></span></li>
+        <li><strong>解析 HTML 建 DOM 树</strong><span>同步 &lt;script&gt; 阻塞解析：defer 保序在 DOMContentLoaded 前执行；async 下完即执行不保序</span></li>
+        <li><strong>CSSOM → Render Tree → Layout → Paint → Composite</strong><span>Render Tree 不含 display:none 节点；Composite 走 GPU 分层</span></li>
+      </ol>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>重排 / 重绘 / 合成：动画只用 transform 与 opacity</h3>
+      <ul class="l2-support">
+        <li>重排：几何变化，Layout→Paint→Composite 全跑，代价大；重绘：仅外观</li>
+        <li>合成：仅 <code>transform / opacity</code>，GPU 合成层处理，<strong>动画首选</strong></li>
+        <li>避免强制同步布局：读 offsetTop 后紧跟写样式会迫使同步重排——先集中读、后集中写</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>跨域：限制的是"读取响应"，不是"发不出去"</h3>
+      <ul class="l2-support">
+        <li><span class="term" data-tip="浏览器安全策略：协议+域名+端口全相同才同源">同源策略</span>下，简单请求直接发送带 Origin 头；服务端回 Access-Control-Allow-Origin 即可读</li>
+        <li><strong>预检请求</strong>触发条件：PUT/DELETE/PATCH、Content-Type 为 JSON、自定义头（Authorization）——你的 Axios 封装每次跨域都伴随一次 OPTIONS</li>
+        <li>带 Cookie：<code>withCredentials: true</code> + 后端 Allow-Credentials 且 Origin 不能是 *</li>
+        <li>开发期 Vite proxy；生产期 Nginx 反向代理同域部署——一劳永逸</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>HTTP 缓存：强缓存 → 协商缓存两级瀑布</h3>
+      <ul class="l2-support">
+        <li>强缓存 <code>Cache-Control: max-age</code> 未过期直接用本地，<strong>不发请求</strong></li>
+        <li>过期后协商：ETag（If-None-Match）优先于 Last-Modified；资源没变回 <strong>304</strong>（无 body）</li>
+        <li>实战：hash 资源 <code>max-age=31536000, immutable</code>；index.html <code>no-cache</code>——<strong>"发布后用户看到旧版本"九成是这里配错</strong></li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>认证：JWT 双 Token 是企业主流</h3>
+      <ul class="l2-support">
+        <li>Session 状态在服务端 + Cookie 自动携带（App 原生请求没有这层自动机制）</li>
+        <li>JWT 存 localStorage（XSS 可窃）vs HttpOnly Cookie（防 XSS 但需防 CSRF）</li>
+        <li>主流实践：access token 短期 + refresh token 长期 + 401 无感刷新；CSRF 用 Token / SameSite 防御</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>跨端与全栈延伸（选修）</h3>
+      <ul class="l2-support">
+        <li>Nuxt 4：SSR 首屏快 + SEO；理解 SPA / SSR / SSG 取舍即可</li>
+        <li><strong>uni-app / Taro：原生背景 + H5 = 混合开发赛道的差异化竞争力</strong>，转型过渡期的黄金岗位选择</li>
+        <li>Node.js：Koa/Express + JWT 中间件打通全栈认知闭环，不必深入</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 08 ============ -->
+<section class="container" id="s8" data-sec="08 项目实战">
+  <div class="sec-head"><span class="sec-num">08</span><h2>阶段 6：项目实战路线（贯穿全程）</h2></div>
+  <div class="grid">
+    <div class="cell-full">
+      <table>
+        <caption>四个项目：由练手到求职核心</caption>
+        <thead><tr><th>项目</th><th>阶段</th><th>技术要点</th><th>简历价值</th></tr></thead>
+        <tbody>
+          <tr><td>① TodoMVC（TS 版）</td><td>阶段 3 中</td><td>5.7 完整代码</td><td>练手，不上简历</td></tr>
+          <tr><td>② 移动端 H5 商城</td><td>阶段 4</td><td>Vant 4、vw/rem 适配、Pinia 购物车、图片懒加载</td><td>发挥移动端存量经验</td></tr>
+          <tr><td>③ 中后台管理系统</td><td>阶段 4~5</td><td>见下方功能清单</td><td><strong>求职核心项目</strong></td></tr>
+          <tr><td>④ 全栈小项目</td><td>阶段 5</td><td>Vue3 + Koa + MySQL + JWT</td><td>工程闭环能力</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <article class="knowledge-card cell-full">
+      <h3>项目三功能清单（对标企业真实场景，逐项打勾）</h3>
+      <ul class="checklist l2-support">
+        <li class="done">登录（验证码 + JWT + 401 无感刷新 + 记住回跳）</li>
+        <li class="done">RBAC 动态路由 + v-permission 按钮级权限</li>
+        <li>用户管理：表格 + 分页 + 多条件筛选 + 表单校验 + 批量删除</li>
+        <li>Axios 统一封装（拦截器 / 错误分类 / loading 防重复）</li>
+        <li>全局布局：面包屑、标签页缓存、主题切换（CSS 变量）、全屏</li>
+        <li>ECharts 图表页 + 大数据虚拟列表页</li>
+        <li>路由级代码分包 + 图片懒加载 + Lighthouse ≥ 85</li>
+        <li>全局错误上报（app.config.errorHandler + window.onerror）</li>
+        <li>Docker 部署 + Nginx（history 回退 + Gzip + 缓存策略）</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 09 ============ -->
+<section class="container" id="s9" data-sec="09 书单与资源">
+  <div class="sec-head"><span class="sec-num">09</span><h2>书单与资源</h2></div>
+  <div class="grid">
+    <article class="knowledge-card cell-half">
+      <h3>必读书目（深度补充，非学习前提）</h3>
+      <ul class="l2-support">
+        <li>《JavaScript 高级程序设计（第4版）》核心章节</li>
+        <li>《你不知道的 JavaScript（上卷）》</li>
+        <li>《Effective TypeScript（第2版）》《Vue.js 设计与实现》《CSS 新世界》</li>
+      </ul>
+    </article>
+    <article class="knowledge-card cell-half">
+      <h3>官方文档 = 最高频读物</h3>
+      <ul class="l2-support">
+        <li>cn.vuejs.org（3.5）&gt; TS Handbook &gt; Pinia / Vue Router / Vite / VueUse</li>
+        <li>原则：文档优先于二手教程，源码优先于文档（进阶后）</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section class="container" id="s10" data-sec="10 面试问答">
+  <div class="sec-head"><span class="sec-num">10</span><h2>综合面试问答精选（中高级标准）</h2></div>
+  <div class="grid">
+    <article class="knowledge-card cell-full">
+      <h3>六道高频题的标准答案</h3>
+      <details><summary>Q1：Vue 3 响应式原理，从数据修改到视图更新的完整链路？</summary><div class="detail-body">
+        <p>① 渲染函数被包装为 ReactiveEffect 运行；② 模板读数据触发 Proxy get → track 记入依赖集合（targetMap: WeakMap&lt;target, Map&lt;key, Set&lt;effect&gt;&gt;&gt;）；③ 修改触发 set，值变化时 trigger；④ effect 入队，微任务中去重后批量执行；⑤ 生成新虚拟 DOM，经 Patch Flag 优化的 diff 得最小变更集应用到真实 DOM。</p>
+      </div></details>
+      <details><summary>Q2：Vue 2 与 Vue 3 响应式差异？</summary><div class="detail-body">
+        <p>Vue2 用 defineProperty：初始化递归遍历整棵树（大对象慢）、无法监听属性增删（需 $set）与数组索引（重写七个方法）；Vue3 用 Proxy：拦截一切读写、惰性深层代理、数组与增删天然支持，WeakMap 存依赖防泄漏。局限：Proxy 无法代理基本类型——所以有 ref。</p>
+      </div></details>
+      <details><summary>Q3：computed 缓存原理？</summary><div class="detail-body">
+        <p>computed 是带 dirty 标记的惰性 effect：首次读取才求值；依赖变化只置 dirty 并通知读取过它的 effect，不立即重算；下次读取发现 dirty 才重算并更新缓存——"依赖不变时多次读取零开销"。</p>
+      </div></details>
+      <details><summary>Q4：跨域是什么？你们项目怎么解决的？</summary><div class="detail-body">
+        <p>同源策略限制 JS 读取非同源响应。标准方案 CORS（区分简单请求 / 预检 OPTIONS，带 Cookie 需 withCredentials + 精确 Allow-Origin）；开发期 Vite proxy；生产期 Nginx 反向代理同域部署（我们项目的做法，一劳永逸）；历史方案 JSONP 仅 GET。</p>
+      </div></details>
+      <details><summary>Q5：强缓存与协商缓存？项目中如何配置？</summary><div class="detail-body">
+        <p>hash 资源 <code>max-age=31536000, immutable</code> 永久强缓存（内容变则文件名变）；index.html <code>no-cache</code> 每次协商——保证入口最新，从而加载新 hash 资源，解决"发版后旧版本"问题。</p>
+      </div></details>
+      <details><summary>Q6：手写题清单（全部默写级）</summary><div class="detail-body">
+        <p>防抖 / 节流（见 03 节）｜深拷贝带循环引用（WeakMap 破环）｜Promise 并发限制调度器（asyncPool + Promise.race 腾位）｜迷你 reactive（见 07 节）｜MyPartial / MyPick（见 04 节）。</p>
+      </div></details>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section class="container" id="s11" data-sec="11 检验标准">
+  <div class="sec-head"><span class="sec-num">11</span><h2>最终检验标准（达成即中高级）</h2></div>
+  <div class="grid">
+    <article class="knowledge-card cell-full">
+      <h3>六条硬指标</h3>
+      <ul class="checklist l2-support">
+        <li>闭包 / this / 事件循环 / Promise 能给别人讲明白（费曼检验）</li>
+        <li>默写：防抖节流、深拷贝、并发调度、迷你 reactive、MyPartial</li>
+        <li>讲清：Proxy 响应式完整链路、diff 与 key、nextTick、computed 缓存</li>
+        <li>讲清：URL→渲染全流程、强缓存/协商缓存、CORS 预检、JWT 双 Token</li>
+        <li>独立完成并部署项目三全部功能清单，Lighthouse ≥ 85</li>
+        <li>拿到新需求能自主完成"组件拆分 → 状态设计 → 接口层 → 权限"的架构决策</li>
+      </ul>
+      <div class="callout">差异化叙事模板："我做移动端 X 年，架构与性能优化的方法论是通用的——RecyclerView 复用思想帮我快速理解虚拟列表；原生渲染管线经验让我做重排重绘优化有直觉。前端对我而言是能力半径的扩展，而不是从零开始。"</div>
+    </article>
+  </div>
+</section>
+
+</main>
+
+<footer class="container">
+  <p>基于《移动端开发者 → Vue 3 + TypeScript 前端.md》V2.0 生成 · Swiss Grid × Progressive Disclosure · 单文件自包含 · 定位标记数据仅存于本文档内部</p>
+</footer>
+
+<!-- SECTION: doc-mark-state -->
+<script type="application/json" id="docMarkState">{"i":null,"label":null,"savedAt":null}</script>
+
+<script>
+/* ===== 基础交互：Tabs / details aria 同步 ===== */
+(function () {
+  'use strict';
+  document.querySelectorAll('[role="tablist"]').forEach(function (list) {
+    var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+    function activate(i, focus) {
+      tabs.forEach(function (t, j) {
+        t.setAttribute('aria-selected', j === i ? 'true' : 'false');
+        t.tabIndex = j === i ? 0 : -1;
+      });
+      tabs.forEach(function (t) {
+        var p = document.getElementById(t.getAttribute('aria-controls'));
+        if (p) p.hidden = t.getAttribute('aria-selected') !== 'true';
+      });
+      if (focus) tabs[i].focus();
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { activate(i); });
+      t.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') activate((i + 1) % tabs.length, true);
+        if (e.key === 'ArrowLeft') activate((i - 1 + tabs.length) % tabs.length, true);
+      });
+    });
+  });
+  document.querySelectorAll('details > summary').forEach(function (s) {
+    var d = s.parentElement;
+    s.setAttribute('aria-expanded', d.open ? 'true' : 'false');
+    d.addEventListener('toggle', function () {
+      s.setAttribute('aria-expanded', d.open ? 'true' : 'false');
+    });
+  });
+})();
+
+/* SECTION: block-mark 区域点击标记 + 悬浮功能区 + 定位持久化 */
+(function () {
+  'use strict';
+  var LSKEY = 'swiss-mark:' + document.title;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var INTERACTIVE = 'a, button, summary, input, select, textarea, label, [role="tab"], [data-stepper] li';
+
+  /* ---- R1 采集：网格容器直接子元素，文档顺序排序，运行时生成标签 ---- */
+  var EXCLUDE = '.sec-num, h1, h2, p.lede, .tablist, script, style, .float-actions, .float-actions *';
+  var blocks = [];
+  document.querySelectorAll('.grid').forEach(function (c) {
+    Array.prototype.forEach.call(c.children, function (ch) {
+      if (ch.closest(EXCLUDE)) return;
+      if (ch.matches(EXCLUDE)) return;
+      if (!ch.textContent.replace(/\s+/g, '')) return;
+      blocks.push(ch);
+    });
+  });
+  blocks.sort(function (a, b) {
+    return (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
+  });
+  function firstHeading(b) {
+    var el = b.querySelector('h3, h4, figcaption, th, strong, b, caption');
+    return el ? el.textContent.trim() : '';
+  }
+  function trunc(s) { return s.length > 22 ? s.slice(0, 22) + '…' : s; }
+  blocks.forEach(function (b, i) {
+    b.classList.add('block-sel');
+    var sec = b.closest('section[data-sec]');
+    var secName = sec ? sec.getAttribute('data-sec') : '';
+    b.setAttribute('data-block-index', String(i));
+    b.setAttribute('data-block-label', trunc(secName + ' ｜ ' + firstHeading(b)));
+    b.setAttribute('aria-pressed', 'false');
+  });
+
+  /* ---- 状态持久化（R6） ---- */
+  var stateNode = document.getElementById('docMarkState');
+  var current = null;
+  var hasHandle = false;
+
+  function idbOpen() {
+    return new Promise(function (res, rej) {
+      var r = indexedDB.open('swiss-mark', 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('h'); };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  function idbGetHandle() {
+    return idbOpen().then(function (db) {
+      return new Promise(function (res) {
+        var rq = db.transaction('h', 'readonly').objectStore('h').get('doc');
+        rq.onsuccess = function () { res(rq.result || null); };
+        rq.onerror = function () { res(null); };
+      });
+    }).catch(function () { return null; });
+  }
+  function idbSetHandle(h) {
+    idbOpen().then(function (db) {
+      db.transaction('h', 'readwrite').objectStore('h').put(h, 'doc');
+    }).catch(function () {});
+  }
+  function serialize() {
+    var clone = document.documentElement.cloneNode(true);
+    clone.querySelectorAll('.is-marked').forEach(function (el) {
+      el.classList.remove('is-marked');
+      el.setAttribute('aria-pressed', 'false');
+    });
+    var fa = clone.querySelector('.float-actions');
+    if (fa) fa.classList.remove('visible');
+    var st = clone.querySelector('.mark-status');
+    if (st) st.textContent = '';
+    clone.querySelectorAll('details[open]').forEach(function (d) { d.removeAttribute('open'); });
+    clone.querySelectorAll('[aria-current]').forEach(function (el) { el.removeAttribute('aria-current'); });
+    clone.querySelectorAll('[role="tablist"]').forEach(function (list) {
+      var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+      tabs.forEach(function (t, j) {
+        t.setAttribute('aria-selected', j === 0 ? 'true' : 'false');
+        t.tabIndex = j === 0 ? 0 : -1;
+        var p = document.getElementById(t.getAttribute('aria-controls'));
+        if (p) p.hidden = j !== 0;
+      });
+    });
+    return '<!DOCTYPE html>\n' + clone.outerHTML;
+  }
+  function writeFile(html) {
+    return idbGetHandle().then(function (h) {
+      if (!h) return Promise.resolve(false);
+      return h.queryPermission({ mode: 'readwrite' }).then(function (perm) {
+        if (perm !== 'granted') return Promise.resolve(false);
+        return h.createWritable().then(function (w) {
+          return w.write(html).then(function () { return w.close(); }).then(function () { return true; });
+        });
+      }).catch(function () { return false; });
+    });
+  }
+  function persist(statusMsg) {
+    var st = current
+      ? { i: current.index, label: current.label, savedAt: new Date().toISOString() }
+      : { i: null, label: null, savedAt: new Date().toISOString() };
+    try { stateNode.textContent = JSON.stringify(st); } catch (e) {}
+    try { localStorage.setItem(LSKEY, JSON.stringify(st)); } catch (e) {}
+    if (current && hasHandle) {
+      writeFile(serialize()).catch(function () {});
+    }
+    setStatus(statusMsg);
+  }
+
+  /* ---- R4 悬浮功能区 ---- */
+  var panel = document.querySelector('.float-actions');
+  var btnJump = document.getElementById('markJump');
+  var btnCancel = document.getElementById('markCancel');
+  var btnSave = document.getElementById('markSave');
+  var statusEl = panel.querySelector('.mark-status');
+  var statusTimer = null;
+  function setStatus(msg) {
+    statusEl.textContent = msg;
+    if (statusTimer) clearTimeout(statusTimer);
+    statusTimer = setTimeout(function () { statusEl.textContent = ''; }, 2600);
+  }
+  function refreshPanel() {
+    if (current) {
+      panel.classList.add('visible');
+      btnJump.disabled = false; btnCancel.disabled = false; btnSave.disabled = false;
+    } else {
+      panel.classList.remove('visible');
+      btnJump.disabled = true; btnCancel.disabled = true; btnSave.disabled = true;
+    }
+  }
+
+  function applyMark(block) {
+    if (current && current.el !== block) {
+      current.el.classList.remove('is-marked');
+      current.el.setAttribute('aria-pressed', 'false');
+    }
+    block.classList.add('is-marked');
+    block.setAttribute('aria-pressed', 'true');
+    current = { el: block, index: Number(block.getAttribute('data-block-index')), label: block.getAttribute('data-block-label') };
+  }
+
+  /* ---- R2 点击识别 ---- */
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.float-actions')) return;
+    if (e.target.closest(INTERACTIVE)) return;
+    var sel = window.getSelection();
+    if (sel && !sel.isCollapsed && sel.toString()) return;
+    var block = e.target.closest('.block-sel');
+    if (!block) return;
+    if (current && current.el === block) return; /* R3：点击已选中不取消 */
+    applyMark(block);
+    persist('已定位');
+    refreshPanel();
+  });
+
+  /* ---- R5 跳转：先展开隐藏容器再滚动 ---- */
+  function reveal(block) {
+    var d = block.closest('details');
+    while (d) { d.open = true; d = d.parentElement ? d.parentElement.closest('details') : null; }
+    var panelEl = block.closest('[role="tabpanel"]');
+    if (panelEl && panelEl.hidden) {
+      var tab = document.querySelector('[role="tab"][aria-controls="' + panelEl.id + '"]');
+      if (tab) tab.click();
+    }
+  }
+  btnJump.addEventListener('click', function () {
+    if (!current) return;
+    reveal(current.el);
+    current.el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  });
+  btnCancel.addEventListener('click', function () {
+    if (!current) return;
+    current.el.classList.remove('is-marked');
+    current.el.setAttribute('aria-pressed', 'false');
+    current = null;
+    persist('已取消');
+    refreshPanel();
+  });
+
+  /* ---- R6 「存」按钮：File System Access API + 下载降级 ---- */
+  btnSave.addEventListener('click', function () {
+    var html = serialize();
+    idbGetHandle().then(function (h) {
+      if (h) {
+        return h.queryPermission({ mode: 'readwrite' }).then(function (perm) {
+          if (perm !== 'granted') return h.requestPermission({ mode: 'readwrite' }).then(function (p2) { return p2 === 'granted' ? h : null; });
+          return h;
+        }).then(function (ok) {
+          if (!ok) throw new Error('noperm');
+          hasHandle = true;
+          return ok.createWritable().then(function (w) { return w.write(html).then(function () { return w.close(); }); });
+        });
+      }
+      throw new Error('nohandle');
+    }).then(function () {
+      setStatus('已存入文档');
+    }).catch(function (err) {
+      if (window.showSaveFilePicker && !(err && err.message === 'noperm' && false)) {
+        window.showSaveFilePicker({
+          suggestedName: (document.title || 'doc') + '.html',
+          types: [{ description: 'HTML', accept: { 'text/html': ['.html'] } }]
+        }).then(function (h) {
+          hasHandle = true;
+          idbSetHandle(h);
+          return h.createWritable().then(function (w) { return w.write(html).then(function () { return w.close(); }); });
+        }).then(function () { setStatus('已存入文档'); })
+          .catch(function (e2) { if (e2 && e2.name === 'AbortError') return; download(); });
+      } else {
+        download();
+      }
+      function download() {
+        var blob = new Blob([html], { type: 'text/html' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (document.title || 'doc') + '.html';
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+        setStatus('已下载副本');
+      }
+    });
+  });
+
+  /* ---- R6 回显：优先文档内状态节点，标签校验防错位 ---- */
+  function restore() {
+    var s = null;
+    try { s = JSON.parse(stateNode.textContent); } catch (e) {}
+    if (!s || s.i == null) {
+      try { s = JSON.parse(localStorage.getItem(LSKEY)); } catch (e2) {}
+    }
+    if (!s || s.i == null) return;
+    var b = blocks[s.i];
+    if (b && b.getAttribute('data-block-label') === s.label) {
+      applyMark(b);
+      refreshPanel();
+      setStatus('已回显标记');
+    }
+  }
+  refreshPanel();
+  restore();
+})();
+</script>
+</body>
+</html>
