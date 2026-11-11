@@ -1,44 +1,3 @@
-<!--
-【新增单词接入说明 · 请勿删除本注释块】
-> 目的：后续遇到需要收录的新技术单词，不需要通读全部现有词条，仅按下面规则构造单条词条对象，追加到 WORDS 数组末尾即可。
-
-## 1、词条对象必填/可选字段说明
-{
-  w:"单词本体",                // 必填，英文单词，作为唯一标识，不要复数变体，原型形式
-  ph:"/音标/",                 // 必填，英式/美式音标，多个读音用 · 分隔，缩写写全称
-  pos:"n./v./adj.",            // 必填，词性，多个用 · 分隔
-  tag:"dart|android|backend|tools|async|general",
-                               // 必填，6选1分类：
-                               // dart=Flutter/Dart；android=Android/Kotlin；backend=后端/网络；
-                               // tools=工程/工具；async=并发/协程；general=通用
-  short:"一句话精简释义（开发语境）", // 必填，一行简短解释，界面列表直接展示
-  def:["释义1","释义2"],       // 可选数组，详细释义，多条分数组元素，可使用**加粗**标记重点
-  uses:["搭配1","搭配2"],      // 可选数组，常用代码/文档搭配短语
-  ex:[["英文例句","中文翻译"]],// 可选二维数组，每一项 [原句,译文]
-  deriv:"派生词文本",          // 可选，派生词、变形
-  vs:[["对比词","对比说明"]],  // 可选二维数组，易混辨析，每一项 [被对比词,区别描述]
-  tip:"补充提示文本",          // 可选，踩坑、拼写注意、特殊语境提醒，支持**加粗**
-  say:"A B C"                  // 可选，仅缩写词需要，写字母朗读顺序，普通单词不要此字段
-}
-
-## 2、插入位置规则
-1. 找到代码末尾 `WORDS.push(...)`，新单词直接新增独立的 `WORDS.push({...})`；
-2. 多条新词可以写在同一个 push 内用逗号分隔对象，不要修改原有已经存在的数组元素；
-3. 禁止修改头部CSS、html结构、渲染JS逻辑，只新增词条对象。
-
-## 3、格式约束（严格遵守，保证页面渲染正常）
-1. 字符串内换行禁止，所有字段值单行书写；
-2. 特殊符号只使用 `**内容**` 做加粗，不要用html标签写在词条数据中；
-3. 引号统一使用双引号，对象最后一个属性不要尾随多余逗号；
-4. 数组空则省略该key，不要写空数组 `[]`；
-5. 音标使用标准 /xxx/ 格式；
-6. 中文释义全部贴合软件开发语境，不要照搬普通词典生活化释义。
-
-## 4、输出交付格式
-直接输出完整修改后的完整HTML，保留全部原有内容，仅在JS的WORDS数组末尾追加新词条对象。
--->
-
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -175,33 +134,18 @@ body{
 .entry-head{
   width:100%;display:grid;
   grid-template-columns:42px minmax(150px,214px) 128px 1fr 22px;
-  align-items:baseline;gap:14px;
-  padding:9px 10px 9px 0;background:none;border:0;
+  align-items:baseline;gap:16px;
+  padding:15px 10px 15px 0;background:none;border:0;
   font:inherit;color:inherit;text-align:left;cursor:pointer;
 }
 .entry-head:hover{background:var(--surface)}
 .entry-head:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .idx{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
-.hw{min-width:0}
 .hw .w{
   display:block;font-family:var(--serif);font-weight:600;
-  font-size:20px;line-height:1.2;letter-spacing:-.01em;
+  font-size:21.5px;line-height:1.25;letter-spacing:-.01em;
 }
-.hw .pl{display:flex;align-items:center;gap:6px;margin-top:2px}
-.hw .ph{font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.4}
-.say{
-  flex:none;width:20px;height:20px;border-radius:6px;
-  display:inline-flex;align-items:center;justify-content:center;
-  color:var(--ink-3);cursor:pointer;transition:color .15s,background .15s;
-}
-.say:hover{color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent)}
-.say:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.say svg{width:13px;height:13px}
-.say .wv{opacity:.5}
-.say.playing{color:var(--accent)}
-.say.playing .wv{animation:wave .85s ease-in-out infinite}
-.say.playing .wv2{animation-delay:.28s}
-@keyframes wave{0%,100%{opacity:.15}50%{opacity:1}}
+.hw .ph{display:block;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);margin-top:3px}
 .tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2)}
 .tag .dot{width:7px;height:7px;border-radius:50%;flex:none}
 .tag[data-t="dart"] .dot{background:var(--t-dart)}
@@ -219,7 +163,7 @@ mark{background:color-mix(in srgb,var(--accent) 16%,transparent);color:inherit;p
 .entry-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1)}
 .entry.open .entry-body{grid-template-rows:1fr}
 .entry-body>.inner{overflow:hidden}
-.body-pad{padding:2px 10px 20px 58px;max-width:74ch}
+.body-pad{padding:2px 10px 26px 58px;max-width:74ch}
 
 .sec{margin:0 0 15px}
 .sec h4{margin:0 0 5px;font-size:12px;font-weight:500;color:var(--ink-3);letter-spacing:.02em}
@@ -266,11 +210,10 @@ table.vs strong{color:var(--ink);font-weight:600}
   .masthead{padding:36px 0 22px}
   .entry-head{
     grid-template-columns:32px 1fr 20px;grid-template-areas:"idx hw chev" "short short short" "tag tag tag";
-    gap:6px 12px;padding:9px 4px 9px 0;align-items:center;
+    gap:6px 12px;padding:14px 4px 14px 0;align-items:center;
   }
   .idx{grid-area:idx;align-self:start;padding-top:4px;font-size:12px}
-  .hw .ph{font-size:12px}
-  .say{width:26px;height:26px}
+  .hw .ph{font-size:12.5px}
   .hw{grid-area:hw}
   .tag{grid-area:tag;margin-top:2px}
   .short{grid-area:short}
@@ -295,7 +238,7 @@ table.vs strong{color:var(--ink);font-weight:600}
     <div class="meta">
       <span>收录 <b id="m-total">0</b> 条</span>
       <span>分类 <b>6</b> 个</span>
-      <span>更新 <b>2026-10-14</b></span>
+      <span>更新 <b>2026-11-11</b></span>
     </div>
   </header>
 
@@ -569,7 +512,7 @@ WORDS.push(
  ex:[["Write a migration before changing the table schema.","改表结构前先写一条迁移。"]],
  deriv:"migrate v. 迁移"},
 
-{w:"reduce / reducer",say:"reduce reducer",ph:"/rɪˈdjuːs/ · /rɪˈdjuːsə(r)/",pos:"v./n.",tag:"general",
+{w:"reduce / reducer",ph:"/rɪˈdjuːs/ · /rɪˈdjuːsə(r)/",pos:"v./n.",tag:"general",
  short:"reduce 归约：把一组值压缩成一个结果；reducer 执行归约的函数",
  def:["**reduce**：把集合里的元素逐个合并，最终得到一个值（求和、拼接、聚合都靠它）。","**reducer**：执行归约的那个函数，在 Redux / 状态管理里就是「根据旧状态与动作算出新状态」的纯函数。"],
  uses:["reduce(list, initial) 归约计算","reducer(state, action) 状态处理函数"],
@@ -737,7 +680,7 @@ WORDS.push(
  vs:[["resume","中断后接着跑"],["restart","从头重新开始"],["restore","还原数据或状态，不是继续运行"]],
  tip:"拼写相同的名词 resume /ˈrezjumeɪ/ 是「简历」，重音和读音都不一样，技术文档里基本只取「恢复」义。"},
 
-{w:"CPS",say:"C P S",ph:"Continuation-Passing Style",pos:"n.",tag:"async",
+{w:"CPS",ph:"Continuation-Passing Style",pos:"n.",tag:"async",
  short:"续体传递风格：把「后续要执行的代码」当参数传进去",
  def:["全称 **Continuation-Passing Style**，三个词：Continuation 续体 + Passing 传递 + Style 风格。","普通函数靠 return 把结果交回调用者；CPS 把后面还没执行的逻辑包装成续体参数传进去，等异步完成再调用它。"],
  uses:["CPS transformation CPS 变换","continuation: Continuation<T> 续体参数"],
@@ -803,7 +746,7 @@ WORDS.push(
  uses:["senior engineer 高级工程师","senior architect 资深架构师","senior colleague 老同事"],
  ex:[["She is a senior mobile developer on the team.","她是团队里的资深移动端开发。"]]},
 
-{w:"ANR",say:"A N R",ph:"Application Not Responding",pos:"n.",tag:"android",
+{w:"ANR",ph:"Application Not Responding",pos:"n.",tag:"android",
  short:"应用无响应：主线程被卡住太久，系统弹窗",
  def:["全称 **Application Not Responding**。系统发现**主线程长时间无法响应用户输入**，就弹出「等待 / 关闭应用」。","判定阈值：按键触摸事件约 5 秒、广播 onReceive 约 10 秒、前台服务约 20 秒。"],
  uses:["ANR dialog 无响应弹窗","main thread blocked 主线程阻塞","trace 分析 ANR 日志"],
@@ -878,21 +821,21 @@ WORDS.push(
  deriv:"shrinkage n. 收缩量；shrinkable adj. 可收缩的",
  vs:[["shrink","尺寸、体积变小"],["reduce","泛指数量或大小降低"],["compress","编码压缩，如压缩文件"]]},
 
-{w:"GMA",say:"G M A",ph:"Google Mobile Ads",pos:"n.",tag:"dart",
+{w:"GMA",ph:"Google Mobile Ads",pos:"n.",tag:"dart",
  short:"Google 移动广告 SDK 的缩写",
  def:["移动端语境下默认指 **Google Mobile Ads**，Flutter 里对应 google_mobile_ads 包。","用来接入开屏、插屏、激励视频和横幅广告。"],
  uses:["GMA SDK 谷歌移动广告 SDK","GMA rewarded ad 激励广告","GMA banner ad 横幅广告","GMA interstitial ad 插屏广告"],
  ex:[["We integrated the GMA SDK to show rewarded ads.","我们集成了 GMA SDK 来展示激励广告。"]],
  vs:[["GMA","移动端默认指谷歌移动广告"],["其他含义","Global Media Alliance 等，按上下文区分"]]},
 
-{w:"UI / UX / UE",say:"U I, U X, U E",ph:"User Interface / User Experience",pos:"n.",tag:"general",
+{w:"UI / UX / UE",ph:"User Interface / User Experience",pos:"n.",tag:"general",
  short:"界面 / 体验 / 体验（UX 的旧写法）",
  def:["**UI = User Interface**：界面长什么样，管配色、图标、布局、字体与间距。","**UX = User Experience**：用起来怎么样，管流程、交互、反馈与容错；UI 只是 UX 的一部分。","**UE** 是 UX 的旧写法，如今统一写 UX；别和 UE5（虚幻引擎）混淆。"],
  uses:["UI designer 界面设计师","UX flow 体验流程","UED 用户体验设计部门"],
  ex:[["UI is part of UX, not a synonym.","UI 是 UX 的一部分，不是同义词。"]],
  vs:[["UI","视觉界面长什么样"],["UX","整体体验与流程"],["UED","做体验设计的部门或岗位"]]},
 
-{w:"UUID",say:"U U I D",ph:"/ˌjuː juː aɪ ˈdiː/",pos:"n.",tag:"backend",
+{w:"UUID",ph:"/ˌjuː juː aɪ ˈdiː/",pos:"n.",tag:"backend",
  short:"通用唯一标识符：128 位的全局唯一 ID",
  def:["128 位的唯一标识，UUIDv4 是 36 位字符串（含 4 个连字符）。","完全无序，做主键时索引性能差；建议去掉连字符按 CHAR(32) 存储。"],
  uses:["UUIDv4 随机版本","去掉横杠得 32 位字符串","CHAR(32) 固定长度存储"],
@@ -907,7 +850,7 @@ WORDS.push(
  vs:[["Snowflake","有序递增，索引友好"],["数据库自增","连续，易被遍历，分布式下不好用"],["号段模式","批量预取，适合高并发"]],
  tip:"两个坑：服务器时间回拨会生成重复 ID，要做回拨检测；多实例部署时机器 ID 必须唯一。"},
 
-{w:"MD5",say:"M D five",ph:"/ˌem diː ˈfaɪv/",pos:"n.",tag:"backend",
+{w:"MD5",ph:"/ˌem diː ˈfaɪv/",pos:"n.",tag:"backend",
  short:"摘要算法：输出 128 位，即 32 位十六进制字符串",
  def:["哈希摘要算法，输出**固定的 32 位十六进制字符串**，不可逆。","适合做签名与完整性校验，**不适合充当业务主键**：有碰撞风险，而且完全无序。"],
  uses:["32 位 hex 字符串","签名与校验","不适合做主键"],
@@ -936,7 +879,7 @@ WORDS.push(
  ex:[["Please check this official document.","请查看这份官方文档。"]],
  deriv:"documentation n. 文档（集合）；documented adj. 有文档记录的"},
 
-{w:"API",say:"A P I",ph:"/ˌeɪ piː ˈaɪ/",pos:"n.",tag:"backend",
+{w:"API",ph:"/ˌeɪ piː ˈaɪ/",pos:"n.",tag:"backend",
  short:"应用程序接口：程序之间约定的调用入口",
  def:["全称 **Application Programming Interface**，一套约定好的调用方式。","前端调后端、SDK 对外提供能力，都要经过 API。"],
  uses:["API definition 接口定义","API endpoint 接口地址","REST API / GraphQL API"],
@@ -1017,7 +960,7 @@ WORDS.push(
  ex:[["Run a release build before submitting.","提交前跑一次正式构建。"]],
  deriv:"builder n. 构建器；build.gradle 构建脚本"},
 
-{w:"SDK",say:"S D K",ph:"/ˌes diː ˈkeɪ/",pos:"n.",tag:"general",
+{w:"SDK",ph:"/ˌes diː ˈkeɪ/",pos:"n.",tag:"general",
  short:"软件开发工具包",
  def:["全称 **Software Development Kit**：把一套工具、接口和文档打包给你接入。","广告 SDK、支付 SDK、地图 SDK 都是这个套路。"],
  uses:["SDK version SDK 版本","integrate the SDK 接入 SDK","SDK upgrade SDK 升级"],
@@ -1058,6 +1001,149 @@ WORDS.push(
  uses:["system compatibility 系统兼容性","backward compatibility 向后兼容","compatibility issue 兼容性问题"],
  ex:[["Pay attention to compatibility between system versions.","注意不同系统版本之间的兼容性。"]],
  deriv:"compatible adj. 兼容的；incompatible adj. 不兼容的"}
+);
+
+/* ===== 补录：弹道、航空与气象技术词汇（三） ===== */
+WORDS.push(
+{w:"spotter",ph:"/ˈspɒtə(r)/",pos:"n.",tag:"general",
+ short:"观察者；检出器；侦察员",
+ def:["指**搜寻、找出目标**的人或设备。","计算机视觉领域里，object spotter 指目标检出模块。"],
+ uses:["object spotter 目标检测器","defect spotter 缺陷检出器","anomaly spotter 异常识别模块"],
+ ex:[["The spotter can quickly locate small targets in the image.","该识别器可以快速定位图像里的小目标。"]],
+ deriv:"spot v. 发现、识别、定位；spotting n. 检出",
+ vs:[["detector","通用检测器，CV 领域标准术语"],["spotter","侧重搜寻、揪出目标，偏轻量化"],["tracker","跟踪器，持续追踪目标移动"]]},
+
+{w:"quantum",ph:"/ˈkwɒntəm/",pos:"n./adj.",tag:"general",
+ short:"量子；量子的",
+ def:["物理学术语，指**量子**。","技术场景中常见于 quantum computing（量子计算）。"],
+ uses:["quantum computing 量子计算","quantum bit / qubit 量子比特","quantum model 量子模型"],
+ ex:[["Quantum computers have special advantages for certain mathematical problems.","量子计算机在部分数学问题上具备独特优势。"]],
+ deriv:"quantify v. 量化；quantity n. 数量；quantization n. 模型量化",
+ vs:[["quantum","量子，物理概念"],["quantization","模型量化，把高精度浮点数转低精度"],["quantity","数量，通用词"]],
+ tip:"注意区分：quantum 是量子，quantization 是模型量化，两者完全不同。"},
+
+{w:"latitude",ph:"/ˈlætɪtjuːd/",pos:"n.",tag:"general",
+ short:"纬度；（行动的）自由度",
+ def:["地理学术语，指**纬度**。","也比喻行动、解释的回旋余地。"],
+ uses:["latitude and longitude 经纬度","latitude (lat) 纬度坐标"],
+ ex:[["This API returns the latitude and longitude of the location.","这个接口返回该位置的经纬度。"]],
+ deriv:"latitudinal adj. 纬度的",
+ vs:[["latitude","纬度，南北方向，平行于赤道"],["longitude","经度，东西方向，连接南北极点"]]},
+
+{w:"reticle",ph:"/ˈretɪkl/",pos:"n.",tag:"general",
+ short:"分划板；十字准线；取景标线",
+ def:["光学仪器、相机、AR 视觉中的**瞄准十字或标线框**。","扫码、物体识别 APP 里中间那个方框/十字瞄准框就叫 reticle。"],
+ uses:["camera reticle 相机取景十字框","alignment reticle 对准十字标线","reticle overlay 准心图层"],
+ ex:[["The reticle will lock onto the QR code automatically.","准心框会自动对准二维码。"]],
+ deriv:"reticular adj. 网状的",
+ vs:[["reticle","准心、十字标线，相机/AR 视觉用"],["crosshair","单纯十字线"],["grid","网格，通用格子"]]},
+
+{w:"density altitude",ph:"/ˈdensəti ˈæltɪtjuːd/",pos:"n.",tag:"general",
+ short:"密度高度：根据空气密度换算的等效海拔",
+ def:["航空术语，指**根据空气密度换算出来的等效海拔**。","空气越热、湿度越高，空气密度越低，density altitude 就越高，飞机升力会下降。"],
+ uses:["density alt. calculation 密度高度计算","high density altitude 高密度高度"],
+ ex:[["The performance drops significantly at high density altitude.","在高密度高度环境下，飞行性能会明显下降。"]],
+ deriv:"density n. 密度；altitude n. 海拔",
+ vs:[["true altitude","真实海拔，离海平面高度"],["density altitude","密度高度，空气密度等效高度"],["pressure altitude","气压高度"]]},
+
+{w:"humidity",ph:"/hjuːˈmɪdəti/",pos:"n.",tag:"general",
+ short:"湿度；潮湿",
+ def:["空气中水汽含量的测量值。","物联网、传感器、气象数据中高频出现。"],
+ uses:["relative humidity (RH) 相对湿度","humidity sensor 湿度传感器","air humidity 空气湿度"],
+ ex:[["The sensor outputs temperature and humidity.","传感器输出温度与湿度。"]],
+ deriv:"humid adj. 潮湿的；humidify v. 加湿；humidifier n. 加湿器",
+ vs:[["humidity","湿度，专业测量指标"],["moist","湿润的，形容词"],["damp","潮湿，略带负面"]]},
+
+{w:"elevation",ph:"/ˌelɪˈveɪʃn/",pos:"n.",tag:"general",
+ short:"高程；海拔；仰角",
+ def:["GIS、测绘中指**地表本身的海拔高程**。","也指仰角、升高、立面图。"],
+ uses:["elevation data 高程数据","elevation map 高程图","elevation angle 仰角","elevation gain 爬升高度"],
+ ex:[["The API returns latitude, longitude and elevation.","该接口返回纬度、经度和高程。"]],
+ deriv:"elevate v. 提升、抬高；elevated adj. 抬高的",
+ vs:[["elevation","地面高程，地形本身的海拔"],["altitude","飞行器高度，物体离海平面的高度"],["height","相对高度，从某个底面往上"]]},
+
+{w:"windage",ph:"/ˈwɪndɪdʒ/",pos:"n.",tag:"general",
+ short:"风偏；风力修正量；游隙",
+ def:["弹道学术语，指**风造成的横向偏移**。","也指机件间隙、游隙，以及船舶受风面积。"],
+ uses:["windage correction 风偏修正","windage error 风偏误差"],
+ ex:[["We adjust windage to offset horizontal drift caused by wind.","我们调整风偏，抵消风力造成的横向偏移。"]],
+ deriv:"wind n. 风 + -age 名词后缀",
+ vs:[["windage","风造成的横向偏移"],["drag","空气阻力，减速"],["spin drift","弹头自旋导致的偏移"]]},
+
+{w:"Coriolis",ph:"/ˌkɒriˈəʊlɪs/",pos:"n./adj.",tag:"general",
+ short:"科里奥利效应；科氏力",
+ def:["全称 **Coriolis effect / Coriolis force**，指**地球自转带来的侧向偏移**。","远距离弹道、长航时无人机、远程炮弹仿真需要考虑这个修正项。"],
+ uses:["Coriolis force 科氏力","Coriolis effect 科里奥利效应","Coriolis correction 科氏力修正"],
+ ex:[["For long-range projectiles, the Coriolis effect must be considered.","远距离抛射物需要考虑科氏效应。"]],
+ vs:[["windage","风造成的偏移"],["Coriolis","地球自转造成的偏移"],["spin drift","弹头自旋造成的偏移"]],
+ tip:"短距离射击可以忽略科氏效应，远距离（数百米以上）才需要修正。"},
+
+{w:"spin drift",ph:"/spɪn drɪft/",pos:"n.",tag:"general",
+ short:"自旋漂移；陀螺偏流",
+ def:["弹道学术语，指**自旋稳定的弹头因陀螺效应产生的侧向偏移**。","和风向无关，是弹头自身旋转导致的偏移。"],
+ uses:["spin drift correction 自旋漂移修正","gyroscopic drift 陀螺漂移"],
+ ex:[["Spin drift becomes obvious for supersonic bullets at long range.","超音速弹头在远距离下自旋漂移会很明显。"]],
+ deriv:"spin n./v. 旋转、自旋；drift n. 偏移、漂移",
+ vs:[["spin drift","弹头自旋陀螺效应导致的偏移"],["windage","风造成的横向偏移"],["Coriolis","地球自转造成的偏移"]],
+ tip:"弹道补偿三件套：windage（风偏）+ Coriolis（科氏偏移）+ spin drift（自旋漂移）。"},
+
+{w:"flight",ph:"/flaɪt/",pos:"n.",tag:"general",
+ short:"飞行；航班；弹道",
+ def:["泛指**飞行**这个行为或过程。","弹道学中也指弹头的飞行轨迹。"],
+ uses:["flight control 飞行控制（飞控）","flight controller 飞控板","flight mode 飞行模式","flight path 飞行航线、弹道","flight time 续航时长"],
+ ex:[["Record all data during the flight.","记录飞行全过程的数据。"]],
+ deriv:"fly v. 飞行；flying adj. 飞行的",
+ vs:[["flight","名词，飞行、航班"],["fly","动词，飞"],["float","漂浮，无动力悬浮"]]},
+
+{w:"Mach",ph:"/mɑːk/",pos:"n.",tag:"general",
+ short:"马赫：音速倍数的无量纲单位",
+ def:["**Mach number 马赫数**，物体速度和当地音速的比值。Mach 1 = 音速。","以物理学家 Ernst Mach 命名。"],
+ uses:["Mach 1 一倍音速","supersonic 超音速（Mach > 1）","subsonic 亚音速（Mach < 1）","hypersonic 高超音速（Mach ≥ 5）"],
+ ex:[["The projectile travels at Mach 2.","该抛射物以2马赫速度飞行。"]],
+ deriv:"Mach number 马赫数",
+ vs:[["Mach","马赫数，速度与音速的比值，无量纲"],["velocity","速度，绝对速率"],["speed","速率，通用词"]],
+ tip:"音速不是固定值，和温度、海拔有关；温度越低音速越低。"},
+
+{w:"drag",ph:"/dræɡ/",pos:"n./v.",tag:"general",
+ short:"阻力；拖拽",
+ def:["空气动力学中指**空气阻力**，让物体减速。","前端交互中也指拖拽动作。"],
+ uses:["drag force 阻力","drag coefficient 阻力系数（Cd）","drag and drop 拖拽","drag gesture 拖动手势"],
+ ex:[["The drag slows the projectile down continuously.","阻力持续让抛射物减速。"]],
+ deriv:"draggable adj. 可拖拽的；dragging n. 拖拽中",
+ vs:[["drag","空气阻力 / 拖拽动作"],["windage","风偏，风带来横向偏移"],["lift","升力，向上的力"]]},
+
+{w:"diameter",ph:"/daɪˈæmɪtə(r)/",pos:"n.",tag:"general",
+ short:"直径",
+ def:["穿过圆心、两端在圆周上的线段长度。","弹道、机械、CAD 中高频出现。"],
+ uses:["bullet diameter 弹头直径","bore diameter 内径、膛径","outer diameter (OD) 外径","inner diameter (ID) 内径"],
+ ex:[["The diameter of the projectile affects drag coefficient.","弹头直径会影响阻力系数。"]],
+ deriv:"diametral adj. 直径的；diametrically adv. 截然地",
+ vs:[["diameter","直径，穿过圆心"],["radius","半径，圆心到圆周"],["circumference","周长"]]},
+
+{w:"twist",ph:"/twɪst/",pos:"v./n.",tag:"general",
+ short:"扭转；膛线缠距",
+ def:["通用含义是扭转、拧。","弹道学中特指**枪管膛线缠距**，单位长度内膛线旋转圈数。"],
+ uses:["barrel twist 枪管缠距","twist rate 缠距（如 1:8 twist）","twist angle 扭转角"],
+ ex:[["A faster twist rate produces more spin for the bullet.","更高的缠距转速会让弹头获得更大自旋。"]],
+ deriv:"twisted adj. 扭曲的；twister n. 扭转器",
+ vs:[["twist","扭转；膛线缠距，产生自旋"],["spin","自旋，弹头转动的状态"],["rotate","通用旋转"]]},
+
+{w:"altitude",ph:"/ˈæltɪtjuːd/",pos:"n.",tag:"general",
+ short:"海拔高度；高度",
+ def:["物体（飞机、弹头）**距离海平面的高度**。","飞控、弹道、气象中高频出现。"],
+ uses:["pressure altitude 气压高度","density altitude 密度高度","altitude hold 定高","altimeter n. 高度计"],
+ ex:[["At high altitude, air density drops and drag decreases.","在高海拔处，空气密度下降，阻力变小。"]],
+ deriv:"altitudinal adj. 高度的；altimeter n. 高度计",
+ vs:[["altitude","飞行器/抛射物的海拔高度"],["elevation","地表高程，地形本身的海拔"],["height","相对高度，从某个底面往上"]]},
+
+{w:"mrad",ph:"/ˈemræd/",pos:"n.",tag:"general",
+ short:"毫弧度：弹道瞄准常用角度单位",
+ def:["**milliradian 毫弧度**，1 mrad = 1/1000 弧度。","远距离弹道、瞄准镜分划最常用的角度单位之一。"],
+ uses:["mrad adjustment 毫弧度修正","1 mrad @ 100m ≈ 10 cm 偏移"],
+ ex:[["We dial 0.2 mrad of elevation up.","向上调0.2毫弧度高低修正。"]],
+ deriv:"rad = radian 弧度",
+ vs:[["mrad","毫弧度，角度单位"],["MOA","角分，另一种瞄准单位体系"]],
+ tip:"mrad 和 MOA 是瞄准镜的两套主流分划体系：mrad 用十进制换算更方便，MOA 偏英制。"}
 );
 
 /* ===== 渲染与交互 ===== */
@@ -1102,37 +1188,12 @@ function secBody(e){
 
 const CHEV='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 
-/* ===== 美式发音：Web Speech API 合成，无需音频文件，自动覆盖全部词条 ===== */
-const synth=('speechSynthesis' in window)?window.speechSynthesis:null;
-let voices=[];
-function loadVoices(){try{voices=synth.getVoices();}catch(e){}}
-if(synth){loadVoices();synth.onvoiceschanged=loadVoices;}
-function pickUSVoice(){
-  if(!voices.length) return null;
-  const us=voices.filter(v=>v.lang&&v.lang.toLowerCase().indexOf('en-us')===0);
-  return (us.find(v=>/google|samantha|aria|jenny|zira|siri|alex|allison|ava|karen/i.test(v.name))||us[0]||null);
-}
-function speakWord(text,el){
-  if(!synth) return;
-  synth.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang='en-US';
-  const v=pickUSVoice();
-  if(v) u.voice=v;
-  u.rate=0.92;
-  const done=()=>{if(el)el.classList.remove('playing');};
-  u.onend=done;u.onerror=done;
-  if(el)el.classList.add('playing');
-  synth.speak(u);
-}
-const SAY_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path class="wv" d="M15 9.5a4.2 4.2 0 0 1 0 5"/><path class="wv wv2" d="M17.5 7a8 8 0 0 1 0 10"/></svg>';
-
 function rowHTML(e,i){
   const on=state.open.has(e.w);
   return '<article class="entry'+(on?' open':'')+'" data-i="'+i+'" data-l="'+initial(e)+'">'
     +'<button class="entry-head" type="button" aria-expanded="'+on+'" aria-controls="body-'+i+'">'
     +'<span class="idx">'+PAD(i+1)+'</span>'
-    +'<span class="hw"><span class="w">'+hl(e.w)+'</span><span class="pl"><span class="ph">'+esc(e.ph)+(e.pos?' · '+esc(e.pos):'')+'</span><span class="say" role="button" tabindex="0" aria-label="播放 '+esc(e.w)+' 的美式发音" title="播放美式发音">'+SAY_ICON+'</span></span></span>'
+    +'<span class="hw"><span class="w">'+hl(e.w)+'</span><span class="ph">'+esc(e.ph)+(e.pos?' · '+esc(e.pos):'')+'</span></span>'
     +'<span class="tag" data-t="'+e.tag+'"><span class="dot"></span>'+TAGNAME[e.tag]+'</span>'
     +'<span class="short">'+hl(e.short)+'</span>'
     +'<span class="chev">'+CHEV+'</span>'
@@ -1156,11 +1217,6 @@ function render(){
     list.innerHTML='<div class="empty"><p class="big">没有匹配的词条</p><p>换个关键词，或者点「全部」看完整词库。</p></div>';
   }else{
     list.innerHTML=rows.map(({e,i})=>rowHTML(e,i)).join('');
-    list.querySelectorAll('.say').forEach(btn=>{
-      btn.addEventListener('keydown',ev=>{
-        if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();ev.stopPropagation();btn.click();}
-      });
-    });
   }
   countEl.textContent='结果 '+rows.length+' / '+WORDS.length+' 条';
   // 字母索引
@@ -1189,13 +1245,6 @@ function render(){
 
 /* ===== 事件 ===== */
 list.addEventListener('click',ev=>{
-  const say=ev.target.closest('.say');
-  if(say){
-    ev.stopPropagation();
-    const e=WORDS[+say.closest('.entry').dataset.i];
-    speakWord(e.say||e.w,say);
-    return;
-  }
   const head=ev.target.closest('.entry-head');
   if(!head) return;
   const art=head.closest('.entry');
