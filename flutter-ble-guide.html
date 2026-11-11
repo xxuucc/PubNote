@@ -1,0 +1,1862 @@
+<!doctype html>
+<html lang="zh-CN" data-style="swiss-grid" data-purpose="tutorial">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flutter BLE 应用开发全指南</title>
+<meta name="description" content="从 ATT 原理到可签字协议的 Flutter BLE 工程路径：六篇知识地图、平台权限矩阵、插件选型、M0–M4 里程碑、M1 骨架代码、Top 14 坑与附录 A 协议模板。">
+<meta name="author" content="PubNote">
+<style>
+:root {
+  --paper: #ffffff;
+  --bg: #f7f7f5;
+  --ink: #111111;
+  --muted: #6b6b6b;
+  --accent: #0047ab;
+  --accent-bg: #f0f4f8;
+  --rule: #e5e5e5;
+  --radius: 0px;
+  --font-body: "Inter","Helvetica Neue","PingFang SC","Noto Sans SC",sans-serif;
+  --font-display: var(--font-body);
+  --font-mono: "JetBrains Mono","SF Mono",ui-monospace,monospace;
+  --measure: 68ch;
+  --space: 8px;
+  --code-bg: #111111;
+  --code-ink: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #1b1d21;
+    --bg: #0e0f11;
+    --ink: #ededed;
+    --muted: #9a9a9a;
+    --accent: #7ba7ff;
+    --accent-bg: rgba(123,167,255,.14);
+    --rule: #2a2c31;
+    --code-bg: #0e0f11;
+    --code-ink: #ededed;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); line-height: 1.75;
+  font-size: 16px; text-wrap: pretty;
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto; } }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+code, kbd, pre { font-family: var(--font-mono); font-size: .9em; }
+p code, li code, td code, dd code { background: var(--accent-bg); padding: .1em .35em; }
+pre {
+  margin: 0; padding: calc(var(--space) * 2) calc(var(--space) * 2.5);
+  border: 0; border-radius: var(--radius); background: var(--code-bg); color: var(--code-ink);
+  overflow: auto; line-height: 1.6; font-size: .86rem; tab-size: 2;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.22; text-wrap: balance; margin: 0 0 .4em; }
+h1 { font-size: clamp(2.074rem, 4.4vw, 3.052rem); letter-spacing: -.02em; }
+h2 { font-size: clamp(1.44rem, 2.4vw, 1.95rem); letter-spacing: -.01em; }
+h3 { font-size: 1.16rem; margin-top: calc(var(--space) * 3); }
+h4 { font-size: .95rem; letter-spacing: .01em; color: var(--muted); }
+p, li { max-width: var(--measure); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* 外壳 */
+.topbar {
+  position: sticky; top: 0; z-index: 20; display: flex; gap: calc(var(--space) * 2);
+  align-items: center; padding: calc(var(--space) * 1.5) calc(var(--space) * 3);
+  background: var(--paper); border-bottom: 1px solid var(--rule);
+}
+.topbar .doc-title { font-weight: 600; font-size: .9rem; margin-right: auto; letter-spacing: .01em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modes { display: flex; gap: 4px; }
+.modes button {
+  font: inherit; font-size: .82rem; padding: 8px 12px; min-height: 40px; cursor: pointer; white-space: nowrap;
+  color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: var(--radius);
+}
+.modes button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+.progress { position: fixed; inset: 0 auto auto 0; height: 2px; background: var(--accent); width: 0; z-index: 30; }
+
+.layout {
+  display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: calc(var(--space) * 7);
+  max-width: 1240px; margin: 0 auto; padding: calc(var(--space) * 7) calc(var(--space) * 4) calc(var(--space) * 12);
+}
+.toc { position: sticky; top: 86px; align-self: start; font-size: .84rem; max-height: 82vh; overflow: auto; }
+.toc .toc-head { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); padding: 0 0 10px 12px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+.toc a { display: flex; gap: 8px; padding: 6px 0 6px 12px; border-left: 2px solid var(--rule); color: var(--muted); text-decoration: none; }
+.toc a:hover { color: var(--ink); }
+.toc a[aria-current="true"] { border-color: var(--accent); color: var(--ink); font-weight: 600; }
+.toc-num { font-family: var(--font-mono); font-size: .74em; opacity: .7; padding-top: .2em; }
+.toc a[aria-current="true"] .toc-num { opacity: 1; color: var(--accent); }
+.toc-label { min-width: 0; }
+main { min-width: 0; }
+.chapter { padding: calc(var(--space) * 7) 0; border-top: 1px solid var(--rule); scroll-margin-top: 80px; }
+.chapter:first-of-type { border-top: 0; padding-top: 0; }
+.chapter-head { display: block; margin-bottom: calc(var(--space) * 2); }
+.chapter-no {
+  display: inline-block; font-family: var(--font-mono); font-size: .74rem; color: var(--accent);
+  letter-spacing: .18em; padding-bottom: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--accent);
+}
+.lede { font-size: 1.06rem; color: var(--ink); }
+.sub { color: var(--muted); font-size: .92rem; }
+.kicker { font-size: .74rem; letter-spacing: .12em; color: var(--muted); margin: 0 0 .6em; }
+
+.card { border: 1px solid var(--rule); border-radius: var(--radius); padding: calc(var(--space) * 3); margin: calc(var(--space) * 3) 0; background: var(--paper); }
+.card.accent { border-left: 3px solid var(--accent); }
+.card h3, .card h4 { margin-top: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(var(--space) * 2); }
+@media (max-width: 780px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.l2 { margin: calc(var(--space) * 2) 0; padding-left: 1.1em; }
+.l2 li { margin: .45em 0; }
+
+/* 表格 */
+.table-wrap { overflow-x: auto; margin: calc(var(--space) * 3) 0; border: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: .89rem; }
+caption { text-align: left; font-size: .8rem; color: var(--muted); padding: 8px 0; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+thead th { background: var(--accent-bg); font-weight: 600; font-size: .8rem; letter-spacing: .02em; }
+tbody tr:last-child td { border-bottom: 0; }
+td.nowrap, th.nowrap { white-space: nowrap; }
+
+/* 披露层 */
+details { border-top: 1px solid var(--rule); padding: calc(var(--space) * 1.5) 0; }
+details:last-of-type { border-bottom: 1px solid var(--rule); }
+details > summary { cursor: pointer; color: var(--accent); font-size: .88rem; min-height: 32px; display: flex; align-items: center; gap: .4em; }
+details[open] > summary { color: var(--ink); font-weight: 600; }
+
+/* 代码块 + 复制 */
+.codeblock { border: 1px solid var(--rule); margin: calc(var(--space) * 2) 0; background: var(--code-bg); }
+.codebar {
+  display: flex; align-items: center; gap: 12px; justify-content: space-between;
+  padding: 6px 10px 6px 12px; border-bottom: 1px solid var(--code-bg);
+  background: var(--code-bg); color: var(--code-ink);
+}
+.codebar .fname { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .02em; opacity: .66; }
+.copy {
+  font: inherit; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .04em;
+  min-height: 28px; padding: 3px 10px; cursor: pointer; color: var(--code-ink);
+  background: transparent; border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.copy:hover { border-color: var(--code-ink); }
+.copy[data-copied="true"] { color: var(--accent); border-color: var(--accent); }
+
+figure { margin: calc(var(--space) * 4) 0; }
+figure svg { width: 100%; height: auto; display: block; color: var(--ink); }
+figcaption { font-size: .82rem; color: var(--muted); margin-top: var(--space); max-width: var(--measure); }
+.fig-frame { border: 1px solid var(--rule); padding: calc(var(--space) * 2); background: var(--paper); }
+
+mark { background: var(--accent-bg); color: inherit; padding: 0 .2em; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: .72rem; letter-spacing: .04em; border: 1px solid var(--rule); padding: 1px 7px; color: var(--muted); }
+.warn { border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; margin: calc(var(--space) * 2) 0; }
+
+/* 步骤器 */
+.steps { list-style: none; padding: 0; margin: calc(var(--space) * 3) 0; }
+.steps > li { position: relative; padding: 0 0 calc(var(--space) * 4) 56px; }
+.steps > li::before {
+  content: "M" attr(data-step); position: absolute; left: 0; top: 5px;
+  font-family: var(--font-mono); font-size: .74rem; color: var(--accent); letter-spacing: .06em;
+}
+.steps > li::after {
+  content: ""; position: absolute; left: 22px; top: 30px; bottom: 10px; width: 1px; background: var(--rule);
+}
+.steps > li:last-child::after { display: none; }
+.steps h3 { margin: 0 0 6px; font-size: 1.04rem; }
+.steps .meta { font-family: var(--font-mono); font-size: .74rem; color: var(--muted); letter-spacing: .03em; margin: 0 0 10px; }
+.steps p, .steps ul { max-width: var(--measure); }
+.steps .sub { margin: 6px 0 0; }
+@media (max-width: 640px) { .steps > li { padding-left: 42px; } .steps > li::after { left: 14px; } }
+
+/* 清单 */
+.checklist { list-style: none; padding: 0; margin: calc(var(--space) * 2) 0; }
+.checklist li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; align-items: start; padding: 9px 0; border-bottom: 1px solid var(--rule); max-width: none; }
+.checklist input { width: 18px; height: 18px; margin: 4px 0 0; accent-color: var(--accent); cursor: pointer; }
+.checklist label { cursor: pointer; font-size: .93rem; }
+.checklist input:checked + label { color: var(--muted); text-decoration: line-through; }
+.check-head { display: flex; align-items: baseline; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.check-count { font-family: var(--font-mono); font-size: .78rem; color: var(--accent); }
+.reset-btn { font: inherit; font-size: .78rem; padding: 6px 12px; min-height: 34px; background: transparent; border: 1px solid var(--rule); color: var(--muted); cursor: pointer; border-radius: var(--radius); }
+
+/* 坑清单 */
+.pit { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+.pit-no { font-family: var(--font-mono); font-size: .8rem; color: var(--accent); padding-top: .25em; }
+.pit p { margin: 0; }
+.pit .fix { color: var(--muted); font-size: .88rem; }
+
+.hero-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: calc(var(--space) * 4) 0; }
+.hero-meta div { background: var(--paper); padding: 18px; }
+.hero-meta dt { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.hero-meta dd { margin: 6px 0 0; font-size: .92rem; }
+@media (max-width: 780px) { .hero-meta { grid-template-columns: minmax(0, 1fr); } }
+
+.quiz { padding-left: 1.2em; }
+.quiz > li { margin: calc(var(--space) * 1.5) 0; }
+.quiz details { border: 0; padding: 4px 0; }
+
+/* 三种模式 */
+body[data-mode="deck"] .layout { grid-template-columns: minmax(0, 1fr); max-width: 960px; }
+body[data-mode="deck"] .toc { display: none; }
+body[data-mode="deck"] .chapter { display: none; border: 0; padding: 0; min-height: 62vh; }
+body[data-mode="deck"] .chapter.is-current { display: block; }
+body[data-mode="deck"] details { display: block; }
+body[data-mode="deck"] details > *:not(summary) { display: block; }
+body[data-mode="learn"] .chapter .quiz summary { color: var(--ink); }
+body:not([data-mode="learn"]) .done-toggle { display: none; }
+.done-toggle { margin-top: calc(var(--space) * 2); font: inherit; font-size: .78rem; padding: 7px 12px; min-height: 34px; background: transparent; border: 1px solid var(--rule); color: var(--muted); cursor: pointer; border-radius: var(--radius); }
+.done-toggle[data-done="true"] { border-color: var(--accent); color: var(--accent); }
+.done { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--muted); font-family: var(--font-mono); }
+
+@media (max-width: 620px) {
+  .topbar { padding: 10px 12px; gap: 8px; }
+  .topbar .doc-title { font-size: .8rem; }
+  .modes button { padding: 7px 9px; font-size: .76rem; min-height: 36px; }
+  .topbar .done { display: none; }
+  th, td { padding: 8px 10px; }
+  h1 { font-size: 1.85rem; }
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); padding: calc(var(--space) * 4) calc(var(--space) * 2) calc(var(--space) * 10); }
+  .toc { position: static; order: 2; max-height: none; }
+}
+@media print {
+  :root {
+    --paper: #ffffff; --bg: #ffffff; --ink: #111111; --muted: #6b6b6b;
+    --accent: #0047ab; --accent-bg: #f0f4f8; --rule: #e5e5e5;
+    --code-bg: #f7f7f5; --code-ink: #111111;
+  }
+  .topbar, .toc, .progress, .modes, .reset-btn, .done-toggle, .copy { display: none !important; }
+  body { background: var(--bg); font-size: 10.5pt; }
+  .layout { display: block; max-width: none; padding: 0; }
+  .chapter { display: block !important; break-inside: auto; page-break-inside: auto; border-top: 1px solid var(--rule); }
+  details { display: block; }
+  details > *:not(summary) { display: block; }
+  details > summary { color: var(--ink); }
+  a { color: inherit; text-decoration: none; }
+  pre { background: var(--code-bg); color: var(--ink); border: 1px solid var(--rule); }
+  .codebar { background: transparent; color: var(--ink); border-bottom: 1px solid var(--rule); }
+  .codebar .fname { opacity: 1; }
+  thead th { background: var(--accent-bg); }
+  h2, h3 { break-after: avoid; }
+  figure, table, pre, .card, .steps > li { break-inside: avoid; }
+}
+</style>
+</head>
+<body data-mode="atlas">
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <span class="doc-title">Flutter BLE 应用开发全指南</span>
+  <div class="modes" role="group" aria-label="阅读模式">
+    <button type="button" data-mode-btn="deck" aria-pressed="false">演示</button>
+    <button type="button" data-mode-btn="atlas" aria-pressed="true">查阅</button>
+    <button type="button" data-mode-btn="learn" aria-pressed="false">学习</button>
+  </div>
+  <span class="done" data-progress-label>已学 0 / 0</span>
+</header>
+
+<div class="layout">
+  <nav class="toc" data-toc-nav aria-label="目录">
+    <div class="toc-head">目录</div>
+    <a href="#ch-0" aria-current="true"><span class="toc-num">00</span><span class="toc-label">成品形态与六篇地图</span></a>
+    <a href="#ch-1"><span class="toc-num">01</span><span class="toc-label">全景架构</span></a>
+    <a href="#ch-2"><span class="toc-num">02</span><span class="toc-label">原理：GATT / ATT</span></a>
+    <a href="#ch-3"><span class="toc-num">03</span><span class="toc-label">平台差异</span></a>
+    <a href="#ch-4"><span class="toc-num">04</span><span class="toc-label">插件选型</span></a>
+    <a href="#ch-5"><span class="toc-num">05</span><span class="toc-label">代码架构</span></a>
+    <a href="#ch-6"><span class="toc-num">06</span><span class="toc-label">M0–M4 与骨架</span></a>
+    <a href="#ch-7"><span class="toc-num">07</span><span class="toc-label">Top 14 坑</span></a>
+    <a href="#ch-8"><span class="toc-num">08</span><span class="toc-label">协议模板</span></a>
+    <a href="#ch-9"><span class="toc-num">09</span><span class="toc-label">工具链与差异</span></a>
+    <a href="#ch-10"><span class="toc-num">10</span><span class="toc-label">自测与自检</span></a>
+  </nav>
+
+  <main>
+
+    <section class="chapter" id="ch-0" aria-labelledby="ch-0-h">
+      <p class="kicker">2026-11 校准 · Bluetooth Core 6.2 · Flutter 3.x</p>
+      <h1 id="ch-0-h">Flutter BLE<br>应用开发全指南</h1>
+      <p class="lede">从知识底座到协议签字的完整路径。一份可以直接当 checklist 用的 BLE 应用开发知识体系，按「地基 → 差异 → 选型 → 架构 → 落地 → 交付」六篇组织。</p>
+
+      <div class="hero-meta">
+        <div>
+          <dt>时效基线</dt>
+          <dd>2026-11 核实 / Bluetooth Core 6.2 / Flutter 3.x / 插件版本以 pub.dev 实时为准</dd>
+        </div>
+        <div>
+          <dt>使用方法</dt>
+          <dd>新人按篇顺序通读 → 立项用第三篇选型 → 开发对照第 05、06 章 → 硬件对齐直接签第 08 章协议 → 发版过 M4 清单</dd>
+        </div>
+        <div>
+          <dt>最终交付物</dt>
+          <dd>一份双端签字的《BLE 应用层协议模板》，以及一套与之对齐的 M1 工程骨架</dd>
+        </div>
+      </div>
+
+      <div class="card accent">
+        <h3>先记住这一句</h3>
+        <p>Flutter 从不直接和蓝牙硬件对话，一切经过<strong>平台栈 → 插件 → 通道</strong>。99% 的「串味 bug」出现在<mark>协议层</mark>和<mark>平台差异层</mark>，而不是 UI——所以这份指南的重心在第一、二篇和附录 A。</p>
+      </div>
+
+      <h2>六篇的分工与关联</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>每一篇都产出一个可交付物，后一篇的输入是前一篇的输出</caption>
+          <thead><tr><th class="nowrap">篇</th><th>解决什么问题</th><th>产出物</th><th>关联</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">第一篇 · 原理篇</td><td>BLE 底层为什么这样设计</td><td>能听懂固件工程师说的话</td><td>原理支撑第四篇架构设计</td></tr>
+            <tr><td class="nowrap">第二篇 · 平台篇</td><td>各平台权限 / 后台 / 审核差异</td><td>平台适配清单</td><td>直接落地为第 06 章权限代码</td></tr>
+            <tr><td class="nowrap">第三篇 · 选型篇</td><td>用哪个插件、什么生态</td><td>技术选型决策记录</td><td>决定第 06 章 pubspec</td></tr>
+            <tr><td class="nowrap">第四篇 · 架构篇</td><td>代码怎么分层、插件怎么隔离</td><td>工程结构模板</td><td>第 06 章骨架的依据</td></tr>
+            <tr><td class="nowrap">第五篇 · 落地篇</td><td>0→1 排期与避坑</td><td>里程碑 + 骨架 + 坑清单</td><td>M0 → 第 08 章；M1 → 第 06 章</td></tr>
+            <tr><td class="nowrap">第六篇 · 交付篇</td><td>与固件双端签字的协议文档</td><td>《协议模板》第 08 章</td><td>全文的技术收口</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-1" aria-labelledby="ch-1-h">
+      <div class="chapter-head">
+        <div class="chapter-no">01</div>
+        <h2 id="ch-1-h">全景架构：一屏记住七层</h2>
+        <p class="lede">你的代码永远只碰到最上面四层，但故障永远从下面三层冒上来。</p>
+      </div>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 720 430" role="img" aria-label="Flutter BLE 七层架构：UI 层、业务层、蓝牙服务层、协议层、插件层、系统栈、外设">
+            <g font-family="Inter, PingFang SC, sans-serif" font-size="12">
+              <g fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="126" y="10" width="558" height="44"/>
+                <rect x="126" y="64" width="558" height="44"/>
+                <rect x="126" y="118" width="558" height="52"/>
+                <rect x="126" y="180" width="558" height="44"/>
+                <rect x="126" y="234" width="558" height="52"/>
+                <rect x="126" y="296" width="558" height="44"/>
+                <rect x="126" y="350" width="558" height="44"/>
+              </g>
+              <g fill="currentColor" font-family="JetBrains Mono, monospace" font-size="10" opacity=".6">
+                <text x="8" y="37">UI 层</text>
+                <text x="8" y="91">业务层 SF</text>
+                <text x="8" y="149">蓝牙服务层</text>
+                <text x="8" y="207">协议层</text>
+                <text x="8" y="265">插件层</text>
+                <text x="8" y="323">系统栈</text>
+                <text x="8" y="377">外设</text>
+              </g>
+              <g fill="currentColor">
+                <text x="140" y="32">扫描列表 / 设备面板 / OTA 页</text>
+                <text x="140" y="45" font-size="10" opacity=".6">只呈现状态，不持有连接</text>
+                <text x="140" y="86">Riverpod / Bloc Notifier、路由、持久化配置</text>
+                <text x="140" y="99" font-size="10" opacity=".6">把「设备状态」变成「界面状态」</text>
+                <text x="140" y="138">ConnectionManager（状态机 / 重连 / 心跳）</text>
+                <text x="140" y="156">CommandQueue（单飞串行 / 超时 / 重试）</text>
+                <text x="140" y="200">帧格式 / 分包重组 / CRC / ACK / 序号 / OTA</text>
+                <text x="140" y="213" font-size="10" opacity=".6">与固件共享的唯一真相，见第 08 章</text>
+                <text x="140" y="256">flutter_blue_plus │ universal_ble │ …</text>
+                <text x="140" y="274" font-size="10" opacity=".6">内部即 MethodChannel / EventChannel 方案</text>
+                <text x="140" y="316">Android BlueDroid GATT │ iOS CoreBluetooth</text>
+                <text x="140" y="329" font-size="10" opacity=".6">WinRT │ BlueZ │ Web Bluetooth</text>
+                <text x="140" y="370">固件 GATT Server（业务 Service / Char）</text>
+                <text x="140" y="383" font-size="10" opacity=".6">真实数据源，也是所有超时的最终裁决者</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <figcaption>四层 Dart 代码 + 两层系统实现 + 一层对端固件。故障定位的顺序应该反过来：先看系统栈日志，再看协议层字节，最后才是 UI 状态。</figcaption>
+      </figure>
+
+      <div class="card">
+        <h3>三个「先别写代码」的检查点</h3>
+        <ul class="l2">
+          <li><strong>硬件确认 BLE</strong>：项目立项时确认硬件用 BLE，这一条写在《需求-硬件对齐表》第一行。经典蓝牙 BR/EDR 没有跨平台方案。</li>
+          <li><strong>协议先于界面</strong>：帧格式、命令字、CRC 算法、序号规则没定，UI 写得再顺也只能返工。</li>
+          <li><strong>权限先于流程</strong>：先说明页、再请求权限，被永久拒绝要有去设置页的路径——这条同时是 iOS 审核要求。</li>
+        </ul>
+      </div>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-2" aria-labelledby="ch-2-h">
+      <div class="chapter-head">
+        <div class="chapter-no">02</div>
+        <h2 id="ch-2-h">原理底座：不懂这些，固件第一次提协议你会听不懂</h2>
+        <p class="lede">BLE 的所有「玄学问题」都能在 ATT 层找到物理解释：为什么必须以 20 字节设计分包、为什么命令队列必须串行、为什么订阅也会撞 GATT 错误。</p>
+      </div>
+
+      <h3>2.1 先分清三样东西</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>技术</th><th>典型设备</th><th>Flutter 支持度</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap"><strong>经典蓝牙 BR/EDR</strong></td><td>耳机、音箱、键盘、打印机、HC-05</td><td>基本无跨平台方案（flutter_bluetooth_serial 仅 Android）；选 BLE 芯片可绕开</td></tr>
+            <tr><td class="nowrap"><strong>BLE 低功耗</strong></td><td>手环、传感器、锁、POS、灯</td><td>✅ 主战场，生态成熟</td></tr>
+            <tr><td class="nowrap"><strong>BLE Mesh</strong></td><td>智能灯组网</td><td>手机端可用但要走 Provisioner 角色，生态小众，先不碰</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>2.2 GAP 角色模型</h3>
+      <ul class="l2">
+        <li><strong>Central</strong>（中心）：扫描广播、发起连接 → 手机 App 几乎总是这个角色。</li>
+        <li><strong>Peripheral</strong>（外设）：发广播、被连接 → App 当「被连接方」是进阶需求（如给电脑配对）。</li>
+        <li>广播者 / 观察者：纯 beacon 场景。</li>
+      </ul>
+      <div class="card accent">
+        <h4>⚠️ Central ≠ Server</h4>
+        <p>GATT Client/Server 是<strong>数据层</strong>概念，与 GAP 角色（Central / Peripheral / Advertiser / Observer）可以交叉：手机（Central）连上外设后，手机是 GATT <strong>Client</strong>，外设是 GATT <strong>Server</strong>。这句搞混，和固件的对话会从一开始就错位。</p>
+      </div>
+
+      <h3>2.3 GATT 数据模型与 ATT 协议（业务 90% 在这里）</h3>
+      <pre><code>Profile → Service(服务) → Characteristic(特征) → Descriptor(描述符)</code></pre>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">概念</th><th>你要记住的</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">UUID</td><td>官方服务用 16 位短码（如 <code>0x180F</code> 电量）；私有业务用 128 位 UUID，和固件一起定</td></tr>
+            <tr><td class="nowrap">Read / Write</td><td>Write 分 <strong>withResponse（可靠、慢）</strong> 和 <strong>withoutResponse（快、可能丢）</strong></td></tr>
+            <tr><td class="nowrap">Notify vs Indicate</td><td>Notify 无 ACK（高频），Indicate 有 ACK（可靠）；订阅本质是写 CCCD 描述符 <code>0x2902</code></td></tr>
+            <tr><td class="nowrap">MTU</td><td>ATT 默认 23 → 有效载荷仅 <strong>20 字节</strong>；协商后可到 247~517。<strong>协议永远按 20B 设计分包，把大 MTU 当优化</strong></td></tr>
+            <tr><td class="nowrap">Properties</td><td>每个特征声明支持哪些操作，读固件文档对齐</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 720 320" role="img" aria-label="ATT 事务时序：Write Request 与 Write Response 成对，Write Command 无应答，CCCD 订阅写成一次 ATT 写事务">
+            <g font-family="Inter, PingFang SC, sans-serif" font-size="11">
+              <g fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="36" y="12" width="148" height="34"/>
+                <rect x="286" y="12" width="148" height="34"/>
+                <rect x="536" y="12" width="148" height="34"/>
+              </g>
+              <g fill="currentColor" text-anchor="middle">
+                <text x="110" y="34">App（Dart / 队列）</text>
+                <text x="360" y="34">Android GATT 栈</text>
+                <text x="610" y="34">外设 GATT Server</text>
+              </g>
+              <g stroke="currentColor" stroke-width="1" stroke-dasharray="2 5" opacity=".45">
+                <line x1="110" y1="46" x2="110" y2="296"/>
+                <line x1="360" y1="46" x2="360" y2="296"/>
+                <line x1="610" y1="46" x2="610" y2="296"/>
+              </g>
+              <g stroke="var(--accent)" stroke-width="1.5" fill="none">
+                <path d="M110 92 H604"/>
+                <path d="M610 132 H116"/>
+                <path d="M110 196 H604" stroke-dasharray="5 4"/>
+                <path d="M110 258 H604"/>
+                <path d="M610 288 H116"/>
+              </g>
+              <g fill="var(--accent)">
+                <path d="M610 92 l-8 -4 v8 z"/>
+                <path d="M110 132 l8 -4 v8 z"/>
+                <path d="M610 196 l-8 -4 v8 z"/>
+                <path d="M610 258 l-8 -4 v8 z"/>
+                <path d="M110 288 l8 -4 v8 z"/>
+              </g>
+              <g fill="currentColor">
+                <text x="362" y="85" text-anchor="middle">Write Request（完整 ATT 事务）</text>
+                <text x="362" y="125" text-anchor="middle">Write Response</text>
+                <text x="362" y="189" text-anchor="middle">Write Command（单向，无应答）</text>
+                <text x="362" y="251" text-anchor="middle">ATT Write Request → CCCD 0x2902（订阅即写）</text>
+                <text x="362" y="281" text-anchor="middle">写入完成</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <figcaption>实线是一问一答，虚线是只发不管。订阅通知看似「读」，实际是一次对 CCCD 的写事务——所以订阅也必须排队，否则会和其他写操作撞出 GATT 错误。</figcaption>
+      </figure>
+
+      <details>
+        <summary>★ 原理深入：ATT 层——「串味 bug」的真正根因（关联 05 命令队列、第 08 章帧格式）</summary>
+        <p>GATT 是建立在 <strong>ATT（Attribute Protocol）</strong> 之上的应用框架，一切 GATT 操作最终都是 ATT 的 PDU（Read Request / Write Request / Handle Value Notification 等）。理解这一层，很多玄学问题就有了物理解释：</p>
+        <ol class="l2">
+          <li><strong>为什么 write withResponse 慢</strong>：一条 Write Request 是一个完整的 ATT 事务（PDU 往返），在当前 connection interval 内必须等对端回应答才能开始下一个事务——这就是<strong>命令队列必须串行</strong>的底层原因。</li>
+          <li><strong>为什么 withoutResponse 快</strong>：Write Command 是单向 PDU，塞进当前连接事件的剩余空隙即可，无需往返——但正因为无确认，<strong>连续快发会塞满外设的接收缓冲导致丢包</strong>（坑 #8）。</li>
+          <li><strong>为什么 MTU 减 3 = 有效载荷</strong>：ATT PDU 头占 3 字节（Opcode 1B + Handle 2B），故 MTU=23 时有效 20B；MTU=247 时有效 244B（write without response 无需 handle 字段，可多用 2 字节）。</li>
+          <li><strong>为什么订阅也占写通道</strong>：订阅 Notify 的本质是向 CCCD（0x2902）发一条 <strong>ATT Write Request</strong>——所以订阅操作也必须走命令队列，不能与其他写并发。</li>
+        </ol>
+      </details>
+
+      <h3>2.4 广播与扫描</h3>
+      <ul class="l2">
+        <li>经典广播 = 31B 主广播 + 31B ScanResponse；<strong>BLE 5 扩展广播单包最大 255B，链式包可拼到约 1650B</strong>——需要更大载荷时按链式设计，但注意扩展广播的外设芯片支持度参差。</li>
+        <li>关键字段：本地名（<strong>极易被截断</strong>）、服务 UUID 列表、<strong>厂商数据 Company ID（2B）+ payload</strong>、Service Data。</li>
+        <li><strong>iBeacon 的本质是 Apple 厂商数据格式</strong>；iOS 上检测 iBeacon 必须用 CoreLocation，CoreBluetooth 扫不到（FBP 明确不支持）。iOS 18+ 走 AccessorySetupKit 时系统直接返回 accessory 对象，同样绕过 CB 的 iBeacon 解析路径。</li>
+        <li>扫描即耗电、即后台受限，永远用<strong>硬件级 ScanFilter</strong>（withServices / 厂商数据前缀）而不是到了 Dart 层再过滤——Dart 层过滤救不了电量和 Android 的扫描启动限频。</li>
+      </ul>
+
+      <h3>2.5 连接参数与吞吐（和固件一起谈的「性能三件套」）</h3>
+      <ul class="l2">
+        <li><strong>Connection Interval</strong>（7.5ms~4s）：决定 notify 延迟和吞吐；Android 可调 <code>requestConnectionPriority</code>；<strong>iOS 由系统私下谈，App 无法指定</strong>。</li>
+        <li>7.5ms 下限是 <strong>Bluetooth Core ≤ 6.1</strong> 的规范；<strong>Core 6.2（2025-11）已把最小连接间隔降至 375μs</strong>。当前多数外设芯片尚未跟进 6.2，按 7.5ms 与固件对线依然成立，但协议文档应写明依据版本，避免芯片厂商质疑。</li>
+        <li><strong>Supervision Timeout</strong>：多久没报文算断开 → 这是「假连接」之源，和固件协商一致（协议统一为 1000ms）。</li>
+        <li>吞吐量级参考：7.5ms interval + DLE + 247 MTU + withoutResponse，<strong>理论峰值 ~100KB/s 级，实测通常 60~90KB/s</strong>；别期待流媒体级吞吐。</li>
+      </ul>
+
+      <details>
+        <summary>★ 原理深入：Supervision Timeout 与连接参数的耦合——「假连接」的真正机制（关联坑 #5、M2 心跳看门狗）</summary>
+        <p>链路层约定：Peripheral 在 Supervision Timeout 内未收到任何来自 Central 的包 → 判定链路丢失。但实践中「App 显示已连接、设备不响应」的机制是：</p>
+        <ol class="l2">
+          <li>App 调 <code>requestConnectionPriority</code> → Android 栈发出 Connection Parameter Update Request；</li>
+          <li>若外设固件未正确响应（拒绝 / 无响应 / 回了非法参数），部分手机栈会让链路停留在<strong>违反规范的参数区间</strong>；</li>
+          <li>链路层实际已无法收发，但<strong>双方都未触发 Supervision Timeout</strong>（timeout 的判定依赖「收到包重置计时器」，参数无效时双方状态机各自卡死）；</li>
+          <li>结果：App 侧状态「已连接」，实际链路已死。</li>
+        </ol>
+        <p><strong>排查命令</strong>：</p>
+        <div class="codeblock"><div class="codebar"><span class="fname">adb</span><button class="copy" type="button">复制</button></div><pre><code>adb shell dumpsys bluetooth_manager</code></pre></div>
+        <p>看 <code>LE Connection</code> 段的 interval / latency / timeout 数值，验证是否满足 Core 规范约束：<code>interval × (latency + 1) × 2 &lt; supervision timeout</code>。不满足即为此症。</p>
+        <p><strong>工程对策</strong>：M2 阶段实现「心跳 + 假连接看门狗」（3 次心跳超时主动 disconnect + 重连），不依赖系统判定。</p>
+      </details>
+
+      <h3>2.6 配对 / 绑定与安全</h3>
+      <ul class="l2">
+        <li><strong>配对</strong> = 建立密钥；<strong>绑定</strong> = 存密钥长期复用。</li>
+        <li>Just Works（无交互确认）/ Passkey（输码）/ OOB；LE Secure Connections。</li>
+        <li>系统级加密 ≠ 业务安全：<strong>鉴权令牌、防重放序号要在你的应用层协议里自己设计</strong>（协议中的 SEQ 序号机制即承担防重放的第一层职责）。</li>
+      </ul>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-3" aria-labelledby="ch-3-h">
+      <div class="chapter-head">
+        <div class="chapter-no">03</div>
+        <h2 id="ch-3-h">平台差异：第一坑埋区</h2>
+        <p class="lede">同一份 Dart 代码，Android 要三段权限、iOS 要一句文案、Web 只能被用户手势唤起。差异不在 API，在权限与后台模型。</p>
+      </div>
+
+      <h3>3.1 Android 权限时间线（必背）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">API 级别</th><th>要求</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">≤ 28</td><td><code>BLUETOOTH</code> / <code>BLUETOOTH_ADMIN</code> 静态 + <code>ACCESS_COARSE_LOCATION</code></td></tr>
+            <tr><td class="nowrap">29–30</td><td><strong><code>ACCESS_FINE_LOCATION</code> 且系统定位服务必须开着</strong>，否则扫描零结果</td></tr>
+            <tr><td class="nowrap">31+（Android 12）</td><td>动态请求 <code>BLUETOOTH_SCAN</code>（<strong><code>neverForLocation</code> 标记可绕开定位</strong>）+ <code>BLUETOOTH_CONNECT</code>；不再需要定位权限</td></tr>
+            <tr><td class="nowrap">13–14</td><td>MTU 行为变化（首个 GATT 客户端主导 517）；前台服务需绑定 <code>foregroundServiceType="connectedDevice"</code></td></tr>
+            <tr><td class="nowrap">15 / 16</td><td>后台扫描 / 连接需前台服务配合，系统杀后台更激进</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card accent">
+        <h4><code>neverForLocation</code> 的决策要点</h4>
+        <p>加此标记后 Android 12+ 扫描不再需要定位权限；但若业务同时要<strong>基于蓝牙广播做位置推断</strong>（如室内定位），就必须保留定位权限、不加此标记——这是 Android 强制的反「扫描定位推断」保护。<strong>二选一</strong>：不能既要扫描、又不要定位权限、又用广播数据推断位置。</p>
+      </div>
+
+      <h3>3.2 iOS / macOS（审核 + 后台重灾区）</h3>
+      <ul class="l2">
+        <li><code>NSBluetoothAlwaysUsageDescription</code> <strong>必填</strong>，文案含糊会被拒审——写清「连接什么设备、做什么用」。</li>
+        <li>后台模式：<code>UIBackgroundModes: bluetooth-central</code>（做客户端）/ <code>bluetooth-peripheral</code>（当外设）；配合 <strong>State Restoration</strong> 才能在被杀后被系统重新唤醒（<strong>约 10 秒处理窗口</strong>）。</li>
+        <li><strong>拿不到 MAC 地址</strong>：iOS identifier 是随机 UUID 且重装会变 → <strong>设备唯一识别靠应用层</strong>（序列号 / 配网绑定时上报云端），不要把 remoteId 当持久身份。</li>
+        <li>iOS 的 MTU 由系统谈，<strong>不能主动 request</strong>。</li>
+        <li>iOS 18+ 出现 <strong>AccessorySetupKit</strong>：系统级附件配对 UI，大一统体验但限制多（universal_ble 已封装 picker）；ASK 直接返回 accessory 对象，绕过 CB 的 iBeacon 解析路径。</li>
+        <li>macOS：App Sandbox 需开 Bluetooth 硬件权限（见 <code>*.entitlements</code>）。</li>
+      </ul>
+
+      <h3>3.3 桌面与 Web</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">平台</th><th>底层</th><th>限制</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">Windows</td><td>WinRT</td><td>权限 / 配对模型不同，选型需支持 WinRT 的插件</td></tr>
+            <tr><td class="nowrap">Linux</td><td>BlueZ / D-Bus</td><td>MTU 不可控</td></tr>
+            <tr><td class="nowrap">Web</td><td>Web Bluetooth</td><td><strong>仅 Chrome / Edge</strong>；requestDevice 必须由用户手势触发；无后台</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>3.4 后台与常驻</h3>
+      <ul class="l2">
+        <li>iOS：<code>bluetooth-central</code> + stateRestore，处理逻辑要在 10s 内完事。</li>
+        <li>Android：前台服务（connectedDevice 类型）+ <code>flutter_foreground_task</code> / workmanager 做周期性重连巡检。</li>
+        <li>国产 ROM 杀后台是常态：引导用户加白名单，但<strong>不要承诺「永不被杀」</strong>。</li>
+      </ul>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-4" aria-labelledby="ch-4-h">
+      <div class="chapter-head">
+        <div class="chapter-no">04</div>
+        <h2 id="ch-4-h">插件选型：先算清 License，再谈生态</h2>
+        <p class="lede">社区最大 ≠ 成本最低。2025-10 起 FBP 商用收费，选型必须把授权写进技术评审记录。</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <caption>版本核实于 2026-11，以 pub.dev 实时为准</caption>
+          <thead>
+            <tr><th></th><th>flutter_blue_plus</th><th>universal_ble</th><th>flutter_reactive_ble</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="nowrap">当前版本</td><td>2.3.x（更新频繁）</td><td>3.1.x</td><td>5.x（更新放缓，选型前核实）</td></tr>
+            <tr><td class="nowrap">维护方</td><td>原个人项目，已获赞助方接管持续维护</td><td>Navideck</td><td>Philips Hue 团队（meethue.com），维护很稳</td></tr>
+            <tr><td class="nowrap">平台</td><td>Android / iOS / macOS / Linux / Web（Win 需 flutter_blue_plus_winrt）</td><td><strong>Android / iOS / macOS / Win / Linux / Web 全 6 端</strong></td><td>仅 Android / iOS</td></tr>
+            <tr><td class="nowrap">角色</td><td>仅 Central</td><td>Central + <strong>Peripheral 模式</strong></td><td>仅 Central</td></tr>
+            <tr><td class="nowrap">iOS ASK / 状态恢复</td><td>有 restoreState</td><td>支持 ASK picker、恢复、closeGattOnDetach</td><td>提供 connectToAdvertisingDevice 预扫描绕坑</td></tr>
+            <tr><td class="nowrap"><strong>License</strong></td><td><strong>⚠️ 自 2025-10 起商用收费</strong>：按企业规模分层（Starter 1–9 人 / Team 10–29 / Business 30–99 / Enterprise 100+），首年 $2999 起、每 2 年续期；<strong>个人 / 非营利 / 教育免费</strong></td><td><strong>BSD-3，商用免费</strong></td><td>BSD-3，商用免费</td></tr>
+            <tr><td class="nowrap">队列</td><td>OperationQueueMode(perDevice)</td><td>queueType auto / 全局 / 单设备 + queueId</td><td>RxAndroidBle 内建</td></tr>
+            <tr><td class="nowrap">错误模型</td><td>异常 + GATT 错码表</td><td>统一 UniversalBleErrorCode（含 nativeCode）</td><td>Reactive 状态流</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card accent">
+        <h3>选型结论</h3>
+        <ul class="l2">
+          <li><strong>大部分项目：优先 <code>universal_ble</code></strong>（平台覆盖最广、免费商用、带外设广播、错误码统一）。社区最大生态是 FBP，但商用需付费授权。</li>
+          <li>只要双端 + 喜欢 Rx 风格：<code>reactive_ble</code> 也够。</li>
+          <li><strong>Peripheral / 广播角色</strong>：universal_ble 自带；备选 flutter_ble_peripheral 之类。</li>
+          <li>经典蓝牙（SPP 打印机、HC-05）：无跨平台好方案，<code>flutter_bluetooth_serial</code>（Android）或转原生模块。</li>
+        </ul>
+      </div>
+
+      <h3>4.1 配套栈（建议默认包）</h3>
+      <ul class="l2">
+        <li>状态管理：<strong>Riverpod</strong>（异步流和 Notifier 契合 BLE）或 Bloc；路由 go_router；日志 logger + 上报（自建 / Sentry）。</li>
+        <li>权限：<strong>permission_handler</strong>（统一两端运行时权限 UX）+ <strong>device_info_plus</strong>（取 Android sdkInt 做权限分支）。</li>
+        <li>OTA：没有开箱即用的通用方案，<strong>都是应用层协议</strong>——见第 08 章；ESP32 可参考 esp_provisioning + Nordic DFU 类协议思路。</li>
+        <li>本地存储：shared_preferences（设备 lastId）/ hive（现场数据）。</li>
+      </ul>
+
+      <h3>4.2 容易被忽略的「技术选型」：和硬件方的耦合度</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">形态</th><th>做法</th><th>代价</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">自研协议</td><td>私有 Service / Char，配网 / OTA 都自己定</td><td>最灵活，适合自控固件团队</td></tr>
+            <tr><td class="nowrap">成品方案</td><td>涂鸦等 IoT 平台的 App SDK + 云</td><td>开发快，但被平台绑定</td></tr>
+            <tr><td class="nowrap">开放协议</td><td>MIDI over BLE 等公开 Profile</td><td>通信简单，但业务受限</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-5" aria-labelledby="ch-5-h">
+      <div class="chapter-head">
+        <div class="chapter-no">05</div>
+        <h2 id="ch-5-h">代码架构：插件必须被关在 feature 里</h2>
+        <p class="lede">用成熟插件意味着通道已经被替你设计好了，代码架构的重点只剩「别让插件类型漏进业务层」。</p>
+      </div>
+
+      <h3>5.1 用成熟插件：重点是「用好」</h3>
+      <ul class="l2">
+        <li>插件回调来自<strong>平台线程</strong>（不是系统主线程 UI），用 Riverpod / State 即可，不需要额外 handler。</li>
+        <li>高频 notify（如 50Hz IMU）<strong>别每个包 setState</strong>，在 service 层合并节流。</li>
+        <li>监听生命周期：<strong>统一 <code>cancelWhenDisconnected</code> / <code>unsubscribe</code>，防止重复订阅</strong>（FBP 社区问题榜第一名）。</li>
+        <li>FBP / universal_ble 都支持 mock，可做单元测试。</li>
+      </ul>
+
+      <h3>5.2 自研通道（特殊需求才走）：Pigeon 优于手写 MethodChannel</h3>
+      <ul class="l2">
+        <li>Pigeon 类型安全 codegen，数据面用 Uint8List 走 BinaryCodec。</li>
+        <li>经典拆分：命令面 + 事件面（notify / 扫描 / 断线）。</li>
+        <li>自研时必须定义<strong>统一错误分类</strong>（连接 / 权限 / 超时 / 设备主动断 / 未知）和<strong>超时重试策略</strong>，否则两端原生实现各写各的。</li>
+      </ul>
+
+      <h3>5.3 推荐分层工程结构</h3>
+      <div class="codeblock"><div class="codebar"><span class="fname">lib/features/device/</span><button class="copy" type="button">复制</button></div><pre><code>lib/features/device/
+  ble/
+    ble_adapters.dart      # 插件依赖注入 + mock 口
+    connection_manager.dart# 状态机: idle→scanning→connecting→discovering→ready→reconnecting
+    command_queue.dart     # 串行发送、单飞、超时、一次性重试
+    protocol/
+      frame.dart           # [0xA5][len][seq][cmd][payload][crc16] —— 双端共享的"圣经"
+      codec.dart           # encode/decode、端序、分包重组
+    device_repository.dart # 业务 POV: 配对、状态上报
+  ota/
+    ota_controller.dart    # 分包序号 + CRC + ACK + 断点续传</code></pre></div>
+
+      <div class="card">
+        <h3>三条关键设计原则（各有原理支撑）</h3>
+        <ol class="l2">
+          <li><strong>插件类型不外泄</strong>（包在本 feature 内）→ 将来换插件 / 自研通道不动业务。</li>
+          <li>一切写操作经命令队列，<strong>绝不允许并发写同一个特征</strong>——每次 Write withResponse 都是一个完整 ATT 事务，并发必然冲突。</li>
+          <li>协议文档（第 08 章）是双端「源码」，固件每次变更<strong>版本号递增、App 校验兼容性</strong>。</li>
+        </ol>
+      </div>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-6" aria-labelledby="ch-6-h">
+      <div class="chapter-head">
+        <div class="chapter-no">06</div>
+        <h2 id="ch-6-h">落地：M0–M4 里程碑与 M1 骨架</h2>
+        <p class="lede">五个里程碑可直接排期。M0 没做，后面所有返工都由它引起；M1 的验收标准是「能连上并能收命令应答」，不是「界面好看」。</p>
+      </div>
+
+      <ol class="steps">
+        <li data-step="0">
+          <h3>需求与硬件协议对齐</h3>
+          <p class="meta">0.5–2 天 · 影响后面所有 · 交付物见第 08 章</p>
+          <p>和固件工程师共签《协议书》：布局图、命令表（帧头 / 长度 / 命令字 / 参数 / CRC 算法）、MTU 预期、广播字段（Company ID、产品码）、配对 / bonding、OTA 方案、<strong>协议版本号机制</strong>。</p>
+          <p class="sub">⚠️ 没有这一步的 BLE 项目后期返工率最高。</p>
+        </li>
+        <li data-step="1">
+          <h3>工程骨架 + 扫描连接 Demo</h3>
+          <p class="meta">0.5–1 周 · 完整代码见本章 6.2–6.12</p>
+          <ul class="l2">
+            <li><code>flutter create</code>，装 universal_ble（或选定的插件），两端权限全配。</li>
+            <li><strong>权限先行 UX</strong>：先说明页再请求权限，被永久拒绝引导去设置。</li>
+            <li>扫描列表页（名称、RSSI、厂商信息）+ 连接 / 断开，用 <strong>nRF Connect 做交叉验证</strong>。</li>
+          </ul>
+        </li>
+        <li data-step="2">
+          <h3>协议打通 + 核心链路</h3>
+          <p class="meta">1–2 周 · 心跳与假连接看门狗在这里落地</p>
+          <ul class="l2">
+            <li>discoverServices → 订阅 notify → 帧解析（CRC / 序号校验）→ 命令队列接入。</li>
+            <li>心跳 + <strong>假连接看门狗</strong>（3 次超时主动 disconnect + 重连）——机制依据见 2.5。</li>
+            <li>断线重连：指数退避（1s / 2s / 4s…上限 30s）+ UI 状态同步。</li>
+          </ul>
+        </li>
+        <li data-step="3">
+          <h3>生产化</h3>
+          <p class="meta">2–4 周 · OTA 与后台是主要工作量</p>
+          <ul class="l2">
+            <li>OTA（分包 + CRC + ACK + 断点 + 进度 UI，协议见 8.5）、配对 / bonding 流程。</li>
+            <li>后台：Android FGS + iOS restoreState。</li>
+            <li>日志分级 + 现场问题可回传（设备名 / 命令摘要 / RSSI）。</li>
+            <li>性能：skipDuplicates、扫描节流、多连接 per-device 队列。</li>
+          </ul>
+        </li>
+        <li data-step="4">
+          <h3>质量与上架</h3>
+          <p class="meta">1–2 周 + 灰度 · 上架前跑第 10 章验收</p>
+          <ul class="l2">
+            <li>真机矩阵：三星 / 小米 / Huawei / OPPO 中端机 ± iOS 15/16/18+ 新老机型。</li>
+            <li>抓包回归：Android HCI 日志（开发者选项 → 生成 btsnoop_hci.log）+ Wireshark；iOS / macOS 用 PacketLogger / Bluetooth Explorer（Xcode Additional Tools）。</li>
+            <li>App Store 审核：权限文案、后台模式合理性解释；Android 高版本真机验证。</li>
+            <li>灰度 + 监控指标（<strong>连接成功率、MTU、超时率</strong>应上报）。</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h3>6.1 M1 骨架目录</h3>
+      <div class="codeblock"><div class="codebar"><span class="fname">lib/</span><button class="copy" type="button">复制</button></div><pre><code>lib/
+├── main.dart
+├── core/
+│   ├── uuids.dart               # 业务 UUID 常量（与附录 A 协议书一致）
+│   └── logger.dart
+├── features/device/
+│   ├── ble/
+│   │   ├── ble_adapter.dart     # 抽象层：隔离 universal_ble，可 mock
+│   │   ├── ble_permissions.dart # 双端权限统一处理
+│   │   ├── command_queue.dart   # 串行命令队列
+│   │   └── frame_codec.dart     # 帧编解码 + CRC16
+│   ├── providers.dart           # Riverpod 注入
+│   ├── scan_page.dart
+│   └── device_detail_page.dart</code></pre></div>
+
+      <div class="card">
+        <h4>API 版本提示</h4>
+        <p>universal_ble 3.x 的具体方法签名以你 lock 版本的 README 为准；骨架已用抽象层 <code>BleAdapter</code> 隔离，换插件 / 换版本只改一处。</p>
+      </div>
+
+      <details>
+        <summary>6.2 pubspec.yaml · 依赖与版本</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">pubspec.yaml</span><button class="copy" type="button">复制</button></div><pre><code>name: ble_app
+environment:
+  sdk: "&gt;=3.5.0 &lt;4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  universal_ble: ^3.1.1          # BSD-3，6 端支持
+  permission_handler: ^11.3.1
+  device_info_plus: ^11.0.0      # 取 Android sdkInt
+  flutter_riverpod: ^2.6.1
+  logger: ^2.4.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.3 AndroidManifest.xml · 权限段（含 neverForLocation 决策）</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">android/app/src/main/AndroidManifest.xml</span><button class="copy" type="button">复制</button></div><pre><code>&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"&gt;
+    &lt;!-- 蓝牙权限：Android 12+ 新模型；neverForLocation 决策见 3.1 --&gt;
+    &lt;uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+                     android:usesPermissionFlags="neverForLocation"
+                     tools:targetApi="s" /&gt;
+    &lt;uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /&gt;
+    &lt;!-- Android ≤11 旧模型：用 maxSdkVersion 限定，避免 12+ 弹多余权限 --&gt;
+    &lt;uses-permission android:name="android.permission.BLUETOOTH"
+                     android:maxSdkVersion="30" /&gt;
+    &lt;uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+                     android:maxSdkVersion="30" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
+                     android:maxSdkVersion="30" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"
+                     android:maxSdkVersion="30" /&gt;
+    &lt;application android:label="ble_app" android:name="${applicationName}"
+                 android:icon="@mipmap/ic_launcher"&gt;
+        &lt;activity android:name=".MainActivity"
+                  android:exported="true"
+                  android:launchMode="singleTop"
+                  android:configChanges="orientation|keyboardHidden|screenSize"&gt;
+            &lt;!-- Flutter 默认 intent-filter 略 --&gt;
+        &lt;/activity&gt;
+    &lt;/application&gt;
+    &lt;uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/&gt;
+&lt;/manifest&gt;</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.4 Info.plist · iOS 文案与后台模式</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">ios/Runner/Info.plist</span><button class="copy" type="button">复制</button></div><pre><code>&lt;key&gt;NSBluetoothAlwaysUsageDescription&lt;/key&gt;
+&lt;string&gt;本应用需要蓝牙以连接你的 XX 设备，用于查看实时数据和接收设备控制指令。&lt;/string&gt;
+&lt;!-- iOS 12 及以下兼容，可保留 --&gt;
+&lt;key&gt;NSBluetoothPeripheralUsageDescription&lt;/key&gt;
+&lt;string&gt;本应用需要蓝牙以连接你的 XX 设备。&lt;/string&gt;
+&lt;!-- M3 再加：后台持续连接 --&gt;
+&lt;key&gt;UIBackgroundModes&lt;/key&gt;
+&lt;array&gt;&lt;string&gt;bluetooth-central&lt;/string&gt;&lt;/array&gt;</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.5 macOS entitlement · 桌面端蓝牙权限</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">macos/Runner/*.entitlements</span><button class="copy" type="button">复制</button></div><pre><code>&lt;key&gt;com.apple.security.device.bluetooth&lt;/key&gt;
+&lt;true/&gt;</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.6 uuids.dart + ble_adapter.dart · 抽象层（架构原则 #1）</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">lib/core/uuids.dart</span><button class="copy" type="button">复制</button></div><pre><code>/// 业务 UUID 常量 —— 与附录 A 协议书 100% 对齐，版本变更时同步
+class Uuids {
+  static const mainService       = '0000ffe0-0000-1000-8000-00805f9b34fb';
+  static const cmdChar           = '0000ffe1-0000-1000-8000-00805f9b34fb'; // write+notify
+  static const otaService        = '0000ffe5-0000-1000-8000-00805f9b34fb';
+  static const otaDataChar       = '0000ffe6-0000-1000-8000-00805f9b34fb';
+  static const otaControlChar    = '0000ffe7-0000-1000-8000-00805f9b34fb';
+  static const batteryService    = '0000180f-0000-1000-8000-00805f9b34fb';
+  static const batteryChar       = '00002a19-0000-1000-8000-00805f9b34fb';
+  /// 厂商 Company ID（示例 0xFFFF 为蓝牙测试保留值，上线换 SIG 正式分配）
+  static const companyIdentifier = 0xFFFF;
+  static const deviceNamePrefix  = 'MY-DEV';
+}</code></pre></div><div class="codeblock"><div class="codebar"><span class="fname">lib/features/device/ble/ble_adapter.dart</span><button class="copy" type="button">复制</button></div><pre><code>import 'dart:async';
+import 'dart:typed_data';
+import 'package:universal_ble/universal_ble.dart';
+/// 抽象层：业务代码只依赖此接口（架构原则 #1）
+abstract class BleAdapter {
+  Stream&lt;BleDevice&gt; get scanStream;
+  Stream&lt;(String deviceId, bool connected, String? error)&gt; get connectionStream;
+  Future&lt;AvailabilityState&gt; availability();
+  Future&lt;bool&gt; isBluetoothOn();
+  Future&lt;void&gt; startScan({ScanFilter? filter});
+  Future&lt;void&gt; stopScan();
+  Future&lt;void&gt; connect(String deviceId, {bool autoConnect = false});
+  Future&lt;void&gt; disconnect(String deviceId);
+  Future&lt;List&lt;BleService&gt;&gt; discoverServices(String deviceId);
+  Future&lt;int&gt; requestMtu(String deviceId, int mtu);
+  Future&lt;void&gt; write(String deviceId, String serviceUuid, String charUuid,
+      Uint8List data, {bool withResponse = true});
+  Stream&lt;Uint8List&gt; subscribeNotify(String deviceId, String serviceUuid, String charUuid);
+  Future&lt;void&gt; unsubscribe(String deviceId, String serviceUuid, String charUuid);
+}
+class UniversalBleAdapter implements BleAdapter {
+  @override
+  Stream&lt;BleDevice&gt; get scanStream =&gt; UniversalBle.scanStream;
+  @override
+  Stream&lt;(String, bool, String?)&gt; get connectionStream =&gt;
+      UniversalBle.connectionStream.map((e) =&gt; (e.deviceId, e.isConnected, e.error));
+  @override
+  Future&lt;AvailabilityState&gt; availability() =&gt; UniversalBle.getBluetoothAvailabilityState();
+  @override
+  Future&lt;bool&gt; isBluetoothOn() async =&gt;
+      await availability() == AvailabilityState.poweredOn;
+  @override
+  Future&lt;void&gt; startScan({ScanFilter? filter}) =&gt; UniversalBle.startScan(scanFilter: filter);
+  @override
+  Future&lt;void&gt; stopScan() =&gt; UniversalBle.stopScan();
+  @override
+  Future&lt;void&gt; connect(String deviceId, {bool autoConnect = false}) =&gt;
+      UniversalBle.connect(deviceId, autoConnect: autoConnect);
+  @override
+  Future&lt;void&gt; disconnect(String deviceId) =&gt; UniversalBle.disconnect(deviceId);
+  @override
+  Future&lt;List&lt;BleService&gt;&gt; discoverServices(String deviceId) =&gt;
+      UniversalBle.discoverServices(deviceId);
+  @override
+  Future&lt;int&gt; requestMtu(String deviceId, int mtu) =&gt;
+      UniversalBle.requestMtu(deviceId, mtu);
+  @override
+  Future&lt;void&gt; write(String deviceId, String serviceUuid, String charUuid,
+      Uint8List data, {bool withResponse = true}) =&gt;
+      UniversalBle.writeValue(deviceId, serviceUuid, charUuid, data,
+          writeTypeWithResponse: withResponse);
+  @override
+  Stream&lt;Uint8List&gt; subscribeNotify(String deviceId, String serviceUuid, String charUuid) {
+    UniversalBle.subscribeNotifications(deviceId, serviceUuid, charUuid);
+    return UniversalBle.onValue.where(
+      (v) =&gt; v.deviceId == deviceId &amp;&amp; v.characteristicUuid == charUuid,
+    ).map((v) =&gt; v.value);
+  }
+  @override
+  Future&lt;void&gt; unsubscribe(String deviceId, String serviceUuid, String charUuid) =&gt;
+      UniversalBle.unsubscribeNotifications(deviceId, serviceUuid, charUuid);
+}</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.7 ble_permissions.dart · 权限先行 UX</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">lib/features/device/ble/ble_permissions.dart</span><button class="copy" type="button">复制</button></div><pre><code>import 'dart:io' show Platform;
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
+enum PermResult { granted, denied, permanentlyDenied }
+class BlePermissions {
+  /// Android 12+：SCAN(neverForLocation)+CONNECT，不需要定位
+  /// Android ≤11：FINE_LOCATION；iOS：蓝牙权限系统统一弹窗
+  static Future&lt;PermResult&gt; ensureScanPermissions() async {
+    if (Platform.isIOS || Platform.isMacOS) {
+      final s = await Permission.bluetooth.status;
+      if (s.isGranted) return PermResult.granted;
+      final r = await Permission.bluetooth.request();
+      return r.isGranted ? PermResult.granted
+          : (r.isPermanentlyDenied ? PermResult.permanentlyDenied : PermResult.denied);
+    }
+    if (Platform.isAndroid) {
+      if (await _sdkInt() &gt;= 31) {
+        final scan = await Permission.bluetoothScan.request();
+        final conn = await Permission.bluetoothConnect.request();
+        if (scan.isGranted &amp;&amp; conn.isGranted) return PermResult.granted;
+        if (scan.isPermanentlyDenied || conn.isPermanentlyDenied) {
+          return PermResult.permanentlyDenied;
+        }
+        return PermResult.denied;
+      }
+      // Android ≤11
+      final loc = await Permission.locationWhenInUse.request();
+      if (loc.isGranted) return PermResult.granted;
+      if (loc.isPermanentlyDenied) return PermResult.permanentlyDenied;
+      return PermResult.denied;
+    }
+    return PermResult.denied;
+  }
+  /// Android ≤11 扫描需系统定位服务开启；权限通过但服务关闭，扫描也是 0 结果
+  static Future&lt;bool&gt; isLocationServiceOn() async =&gt;
+      Platform.isAndroid ? await Permission.locationWhenInUse.serviceStatus.isEnabled : true;
+  static Future&lt;int&gt; _sdkInt() async {
+    if (!Platform.isAndroid) return 0;
+    final info = await DeviceInfoPlugin().androidInfo;
+    return info.version.sdkInt;   // 真实 SDK 版本
+  }
+}</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.8 frame_codec.dart · 帧编解码 + CRC16</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">lib/features/device/ble/frame_codec.dart</span><button class="copy" type="button">复制</button></div><pre><code>import 'dart:typed_data';
+/// 应用层帧：[0xA5][len][seq][cmd][payload...][crc16_lo][crc16_hi]
+/// CRC16-CCITT (poly 0x1021, init 0xFFFF)，字节序 Little-Endian
+class FrameCodec {
+  static const frameHead = 0xA5;
+  static const headerLen = 4;   // head + len + seq + cmd
+  static const crcLen    = 2;
+  static Uint8List encode(int seq, int cmd, Uint8List payload) {
+    final len = 1 + 1 + payload.length; // seq + cmd + payload
+    final out = Uint8List(headerLen + payload.length + crcLen);
+    out[0] = frameHead;
+    out[1] = len;
+    out[2] = seq &amp; 0xFF;
+    out[3] = cmd;
+    out.setRange(4, 4 + payload.length, payload);
+    final crc = crc16Ccitt(out.sublist(0, 4 + payload.length));
+    out[out.length - 2] = crc &amp; 0xFF;
+    out[out.length - 1] = (crc &gt;&gt; 8) &amp; 0xFF;
+    return out;
+  }
+  /// 校验 + 解码；返回 null 表示非法帧
+  static (int seq, int cmd, Uint8List payload)? decode(Uint8List raw) {
+    if (raw.length &lt; headerLen + crcLen) return null;
+    if (raw[0] != frameHead) return null;
+    final len = raw[1];
+    final total = 2 + len + crcLen;              // head+len + len字节 + crc
+    if (raw.length &lt; total) return null;
+    final body = raw.sublist(0, 2 + len);        // CRC 覆盖域
+    final crcExpect = raw[2 + len] | (raw[2 + len + 1] &lt;&lt; 8);
+    final crcActual = crc16Ccitt(body);
+    if (crcExpect != crcActual) return null;
+    // payload 区间为 [4, 2+len)
+    final payload = Uint8List.sublistView(raw, headerLen, 2 + len);
+    return (raw[2], raw[3], payload);
+  }
+  static int crc16Ccitt(List&lt;int&gt; data) {
+    var crc = 0xFFFF;
+    for (final b in data) {
+      crc ^= b &lt;&lt; 8;
+      for (var i = 0; i &lt; 8; i++) {
+        crc = (crc &amp; 0x8000) != 0 ? ((crc &lt;&lt; 1) ^ 0x1021) &amp; 0xFFFF : (crc &lt;&lt; 1) &amp; 0xFFFF;
+      }
+    }
+    return crc;
+  }
+}</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.9 command_queue.dart · 单设备串行命令队列（架构原则 #2）</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">lib/features/device/ble/command_queue.dart</span><button class="copy" type="button">复制</button></div><pre><code>import 'dart:async';
+import 'dart:typed_data';
+import 'frame_codec.dart';
+/// 单设备串行命令队列
+/// 设计依据：Write withResponse = 完整 ATT 事务（见 2.3），必须串行
+class CommandQueue {
+  CommandQueue({required Future&lt;void&gt; Function(Uint8List) writeFn,
+                required Stream&lt;Uint8List&gt; notifyStream})
+      : _writeFn = writeFn, _notifySub = notifyStream.listen(_onNotify);
+  final Future&lt;void&gt; Function(Uint8List) _writeFn;
+  final StreamSubscription&lt;Uint8List&gt; _notifySub;
+  final _tasks = &lt;_Task&gt;[];
+  bool _busy = false;
+  int _seq = 0;
+  bool _closed = false;
+  Uint8List? _lastNotify;
+  void _onNotify(Uint8List v) =&gt; _lastNotify = v;
+  Future&lt;Uint8List&gt; send(int cmd, Uint8List payload,
+      {Duration timeout = const Duration(seconds: 3),
+       bool expectNotify = true,
+       int maxRetries = 1}) {
+    if (_closed) return Future.error(StateError('queue closed'));
+    final c = Completer&lt;Uint8List&gt;();
+    _tasks.add(_Task(seq: ++_seq &amp; 0xFF, cmd: cmd, payload: payload,
+                     timeout: timeout, expectNotify: expectNotify,
+                     maxRetries: maxRetries, completer: c));
+    _pump();
+    return c.future;
+  }
+  Future&lt;void&gt; _pump() async {
+    if (_busy || _tasks.isEmpty) return;
+    _busy = true;
+    final t = _tasks.removeAt(0);
+    var attempt = 0;
+    while (attempt &lt;= t.maxRetries) {
+      _lastNotify = null;
+      final frame = FrameCodec.encode(t.seq, t.cmd, t.payload);
+      try {
+        await _writeFn(frame);
+        final result = await _waitForResponse(t);
+        t.completer.complete(result);
+        break;
+      } catch (_) {
+        attempt++;
+        if (attempt &gt; t.maxRetries) {
+          t.completer.completeError(TimeoutException('cmd 0x${t.cmd.toRadixString(16)} timeout'));
+        } else {
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
+      }
+    }
+    _busy = false;
+    _pump();
+  }
+  Future&lt;Uint8List&gt; _waitForResponse(_Task t) async {
+    final ackCmd = t.cmd | 0x80;                 // 应答帧约定：cmd|0x80
+    final sw = Stopwatch()..start();
+    while (sw.elapsed &lt; t.timeout) {
+      final n = _lastNotify;
+      if (n != null) {
+        final decoded = FrameCodec.decode(n);
+        // 应答匹配：序号一致 且 cmd == 请求|0x80（或协议错误帧 0xFF）
+        if (decoded != null &amp;&amp; decoded.$1 == t.seq &amp;&amp;
+            (decoded.$2 == ackCmd || decoded.$2 == 0xFF)) {
+          return decoded.$3;
+        }
+      }
+      if (!t.expectNotify) {
+        await Future.delayed(const Duration(milliseconds: 50));
+        return Uint8List(0);
+      }
+      await Future.delayed(const Duration(milliseconds: 10));
+    }
+    throw TimeoutException('no response for seq=${t.seq}');
+  }
+  void close() {
+    _closed = true;
+    for (final t in _tasks) {
+      t.completer.completeError(StateError('queue closed'));
+    }
+    _tasks.clear();
+    _notifySub.cancel();
+  }
+}
+class _Task {
+  _Task({required this.seq, required this.cmd, required this.payload,
+         required this.timeout, required this.expectNotify,
+         required this.maxRetries, required this.completer});
+  final int seq, cmd, maxRetries;
+  final Uint8List payload;
+  final Duration timeout;
+  final bool expectNotify;
+  final Completer&lt;Uint8List&gt; completer;
+}</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.10 providers.dart · Riverpod 注入与扫描结果去重</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">lib/features/device/providers.dart</span><button class="copy" type="button">复制</button></div><pre><code>import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'ble/ble_adapter.dart';
+final bleAdapterProvider = Provider&lt;BleAdapter&gt;((ref) =&gt; UniversalBleAdapter());
+/// 扫描结果（按 deviceId 去重）
+final scanResultsProvider = StreamProvider.autoDispose&lt;List&lt;BleDevice&gt;&gt;((ref) async* {
+  final adapter = ref.watch(bleAdapterProvider);
+  final seen = &lt;String&gt;{};
+  final buffer = &lt;BleDevice&gt;[];
+  await for (final d in adapter.scanStream) {
+    if (seen.add(d.deviceId)) {
+      buffer.add(d);
+      yield List.of(buffer);
+    }
+  }
+});
+final connectionStateProvider =
+    StreamProvider.autoDispose.family&lt;(String, bool, String?), String&gt;((ref, deviceId) {
+  return ref.watch(bleAdapterProvider).connectionStream;
+});</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.11 scan_page.dart · 权限 → 定位服务 → 蓝牙开关 → 硬件级过滤</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">lib/features/device/scan_page.dart</span><button class="copy" type="button">复制</button></div><pre><code>import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:universal_ble/universal_ble.dart';
+import 'providers.dart';
+import 'ble/ble_permissions.dart';
+import '../../core/uuids.dart';
+class ScanPage extends ConsumerStatefulWidget {
+  const ScanPage({super.key});
+  @override
+  ConsumerState&lt;ScanPage&gt; createState() =&gt; _ScanPageState();
+}
+class _ScanPageState extends ConsumerState&lt;ScanPage&gt; {
+  bool _scanning = false;
+  Future&lt;void&gt; _startScan() async {
+    // 1) 权限先行 UX
+    final perm = await BlePermissions.ensureScanPermissions();
+    if (perm == PermResult.permanentlyDenied &amp;&amp; mounted) {
+      await showDialog(context: context, builder: (_) =&gt; AlertDialog(
+        title: const Text('需要蓝牙权限'),
+        content: const Text('请到系统设置开启蓝牙权限'),
+        actions: [TextButton(onPressed: openAppSettings, child: const Text('去设置'))],
+      ));
+      return;
+    }
+    if (perm != PermResult.granted) return;
+    // 2) Android ≤11 系统定位服务
+    if (!await BlePermissions.isLocationServiceOn() &amp;&amp; mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Android 11 及以下需开启系统定位服务')));
+      return;
+    }
+    // 3) 蓝牙开关
+    final adapter = ref.read(bleAdapterProvider);
+    if (!await adapter.isBluetoothOn() &amp;&amp; mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('请先打开蓝牙')));
+      return;
+    }
+    // 4) 硬件级 ScanFilter（绝不在 Dart 层过滤）
+    // 注：ScanFilter 字段名以所 lock 版本 README 为准
+    await adapter.startScan(scanFilter: ScanFilter(
+      withServices: [],
+      withManufacturerData: [ManufacturerDataFilter(
+          companyIdentifier: Uuids.companyIdentifier)],
+    ));
+    setState(() =&gt; _scanning = true);
+  }
+  Future&lt;void&gt; _stopScan() async {
+    await ref.read(bleAdapterProvider).stopScan();
+    setState(() =&gt; _scanning = false);
+  }
+  @override
+  Widget build(BuildContext context) {
+    final results = ref.watch(scanResultsProvider);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('扫描设备'),
+        actions: [
+          IconButton(
+            icon: Icon(_scanning ? Icons.stop : Icons.search),
+            onPressed: _scanning ? _stopScan : _startScan,
+          ),
+        ],
+      ),
+      body: results.when(
+        loading: () =&gt; const Center(child: CircularProgressIndicator()),
+        error: (e, _) =&gt; Center(child: Text('错误：$e')),
+        data: (list) =&gt; list.isEmpty
+          ? const Center(child: Text('未发现设备，请确认设备处于广播状态'))
+          : ListView.builder(
+              itemCount: list.length,
+              itemBuilder: (_, i) {
+                final d = list[i];
+                return ListTile(
+                  title: Text(d.name ?? '(未知名称)'),
+                  subtitle: Text('${d.deviceId}  RSSI ${d.rssi ?? '-'}'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () async {
+                    await _stopScan();
+                    if (context.mounted) {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) =&gt; DeviceDetailPage(device: d)));
+                    }
+                  },
+                );
+              },
+            ),
+      ),
+    );
+  }
+}</code></pre></div>
+      </details>
+
+      <details>
+        <summary>6.12 device_detail_page.dart · 连接 + 服务发现 + 命令收发</summary>
+        <div class="codeblock"><div class="codebar"><span class="fname">lib/features/device/device_detail_page.dart</span><button class="copy" type="button">复制</button></div><pre><code>import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:universal_ble/universal_ble.dart';
+import 'providers.dart';
+import 'ble/command_queue.dart';
+class DeviceDetailPage extends ConsumerStatefulWidget {
+  const DeviceDetailPage({super.key, required this.device});
+  final BleDevice device;
+  @override
+  ConsumerState&lt;DeviceDetailPage&gt; createState() =&gt; _DeviceDetailPageState();
+}
+class _DeviceDetailPageState extends ConsumerState&lt;DeviceDetailPage&gt; {
+  CommandQueue? _queue;
+  String _status = '未连接';
+  List&lt;BleService&gt; _services = const [];
+  @override
+  void initState() {
+    super.initState();
+    _connectAndSetup();
+  }
+  Future&lt;void&gt; _connectAndSetup() async {
+    setState(() =&gt; _status = '连接中…');
+    final adapter = ref.read(bleAdapterProvider);
+    try {
+      await adapter.connect(widget.device.deviceId);
+      setState(() =&gt; _status = '发现服务…');
+      final services = await adapter.discoverServices(widget.device.deviceId);
+      // MTU：尽力而为，不作为前提（协议按 20B 设计）
+      try { await adapter.requestMtu(widget.device.deviceId, 247); } catch (_) {}
+      final notifyStream = adapter.subscribeNotify(
+          widget.device.deviceId, '0000ffe0-0000-1000-8000-00805f9b34fb',
+          '0000ffe1-0000-1000-8000-00805f9b34fb');
+      _queue = CommandQueue(
+        writeFn: (Uint8List frame) =&gt; adapter.write(
+            widget.device.deviceId, '0000ffe0-0000-1000-8000-00805f9b34fb',
+            '0000ffe1-0000-1000-8000-00805f9b34fb', frame,
+            withResponse: true),
+        notifyStream: notifyStream,
+      );
+      setState(() { _services = services; _status = '已连接'; });
+    } catch (e) {
+      setState(() =&gt; _status = '连接失败：$e');
+    }
+  }
+  Future&lt;void&gt; _sendPing() async {
+    if (_queue == null) return;
+    try {
+      final resp = await _queue!.send(0x01, Uint8List.fromList([0x00]));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ping 应答：${resp.map((b) =&gt; '0x${b.toRadixString(16)}').join(' ')}')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('超时/失败：$e')));
+    }
+  }
+  @override
+  void dispose() {
+    _queue?.close();
+    ref.read(bleAdapterProvider).disconnect(widget.device.deviceId);
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.device.name ?? '设备')),
+      body: Column(children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('状态：$_status', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text('服务数：${_services.length}'),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _queue == null ? null : _sendPing,
+                           child: const Text('发送 Ping (0x01)')),
+          ]),
+        ),
+        const Divider(),
+        Expanded(child: ListView(children: [
+          for (final s in _services)
+            ExpansionTile(title: Text(s.uuid), children: [
+              for (final c in s.characteristics ?? const &lt;BleCharacteristic&gt;[])
+                ListTile(dense: true,
+                         title: Text('Char ${c.uuid}'),
+                         subtitle: Text('props: ${c.properties}')),
+            ]),
+        ])),
+      ]),
+    );
+  }
+}</code></pre></div>
+      </details>
+
+      <div class="check-head">
+        <h3 style="margin:0">6.13 M1 验收自查</h3>
+        <span class="check-count" data-check-count>0 / 0</span>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox" id="m1a"><label for="m1a">双端实机扫描能列出目标设备（nRF Connect 同步可见）</label></li>
+        <li><input type="checkbox" id="m1b"><label for="m1b">权限拒绝路径：永久拒绝 → 引导设置页</label></li>
+        <li><input type="checkbox" id="m1c"><label for="m1c">Android 11 真机：关闭系统定位服务 → 弹提示</label></li>
+        <li><input type="checkbox" id="m1d"><label for="m1d">连接 → 服务发现 → notify 订阅 → Ping 应答链路打通</label></li>
+        <li><input type="checkbox" id="m1e"><label for="m1e">命令队列连发 10 条不报 GATT 错误</label></li>
+        <li><input type="checkbox" id="m1f"><label for="m1f"><strong>改完原生 / 新装插件必须 stop &amp; 重跑</strong>（热重载不加载原生插件）</label></li>
+      </ul>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-7" aria-labelledby="ch-7-h">
+      <div class="chapter-head">
+        <div class="chapter-no">07</div>
+        <h2 id="ch-7-h">实战 Top 14 坑</h2>
+        <p class="lede">左边是现象，右边是处置。第 5 条单独展开——它是 Android 上最贵的一次联调。</p>
+      </div>
+
+      <div>
+<div class="pit"><div class="pit-no">01</div><div><p>热重载不加载原生插件</p><p class="fix">→ 改完原生 / 新装插件必须 stop & 重跑</p></div></div>
+<div class="pit"><div class="pit-no">02</div><div><p>订阅重复：onValueReceived 多次 listen</p><p class="fix">→ 统一 cancelWhenDisconnected</p></div></div>
+<div class="pit"><div class="pit-no">03</div><div><p>断线后必须重新 discoverServices + 重新 subscribe（两端都这样）</p><p class="fix">→ 重连流程里显式重建订阅，不要复用旧对象</p></div></div>
+<div class="pit"><div class="pit-no">04</div><div><p>默认 MTU 只有 20B 有效载荷</p><p class="fix">→ 大 MTU 是优化不是前提（见 2.3）</p></div></div>
+<div class="pit"><div class="pit-no">05</div><div><p>Android GATT_ERROR 133 万金油失败</p><p class="fix">→ 见下方专述的四级处置顺序</p></div></div>
+<div class="pit"><div class="pit-no">06</div><div><p>Android ≤11 扫描不见设备</p><p class="fix">→ 先看定位服务开关、再检查权限</p></div></div>
+<div class="pit"><div class="pit-no">07</div><div><p>iOS 拿 remoteId 做持久 ID 会翻车</p><p class="fix">→ 用应用层唯一标识（序列号 / 云端绑定）</p></div></div>
+<div class="pit"><div class="pit-no">08</div><div><p>withoutResponse 无限连发</p><p class="fix">→ 控制 in-flight 或间隔，交给固件 ACK</p></div></div>
+<div class="pit"><div class="pit-no">09</div><div><p>同设备被其他 App / 系统占用</p><p class="fix">→ systemDevices() 先查再连</p></div></div>
+<div class="pit"><div class="pit-no">10</div><div><p>startScan 狂调</p><p class="fix">→ Android 12 起：30 秒窗口内最多 5 次启动扫描；监控 isScanning</p></div></div>
+<div class="pit"><div class="pit-no">11</div><div><p>广播带 ScanResponse 才放得下名字 + 厂商数据</p><p class="fix">→ 跟固件对齐 AD 结构（见 8.7）</p></div></div>
+<div class="pit"><div class="pit-no">12</div><div><p>iOS 后台订阅被杀</p><p class="fix">→ State Restoration + 10s 窗口内完成</p></div></div>
+<div class="pit"><div class="pit-no">13</div><div><p>UI 卡顿：在扫描回调里做重活</p><p class="fix">→ 扫描结果先进 service 层节流</p></div></div>
+<div class="pit"><div class="pit-no">14</div><div><p>模拟器不支持 BLE；Web 不支持后台且仅 Chromium</p><p class="fix">→ 真机验证，对齐平台能力再许诺需求</p></div></div>
+      </div>
+
+      <details open>
+        <summary>★ 坑 #5 专述：GATT_ERROR 133 的机理与处置优先级</summary>
+        <p>133 对应 HAL 层 <code>GATT_ERROR</code>（0x85），底层常见触发：连接参数协商失败、连接已占用未释放、controller 内部状态机异常、广播 PDU 校验失败、<strong>配对超时</strong>。</p>
+        <p>处置顺序（按收益排序）：</p>
+        <ol class="l2">
+          <li><code>gatt.close()</code> 释放后 <strong>250~500ms 退避重试</strong>（最多 3 次）；</li>
+          <li><code>refresh()</code> 反射清 GATT 缓存（API 未公开但广泛使用）；</li>
+          <li>切换 <code>TRANSPORT_LE</code>（<code>connectGatt(context, autoConnect, callback, TRANSPORT_LE)</code>）；</li>
+          <li>检查外设广播 interval 是否过密（&lt;100ms 的广播会显著增加 133 概率）。</li>
+        </ol>
+        <p>Android 14+ 上 133 出现率显著上升；新版插件（FBP / universal_ble）内部已加自动重试，<strong>自研通道必须自己实现</strong>这套处置。</p>
+      </details>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-8" aria-labelledby="ch-8-h">
+      <div class="chapter-head">
+        <div class="chapter-no">08</div>
+        <h2 id="ch-8-h">协议模板：可以发固件签字的那一份</h2>
+        <p class="lede">这份文档是<strong>双端源码</strong>：固件实现、App 实现、测试用例都以它为准。任何字段变更必须版本号递增并更新修订记录。</p>
+      </div>
+
+      <div class="card accent">
+        <h4>使用方式</h4>
+        <p>对应 App 端代码为第 06 章的 FrameCodec / CommandQueue。建议将 <code>frame_codec.dart</code> 与固件端 CRC 实现放同一 CI 跑黄金样本对拍——签字前先让机器同意。</p>
+      </div>
+
+      <h3>8.0 文档信息</h3>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><td class="nowrap">协议名称</td><td>XXX 设备应用层通信协议</td></tr>
+            <tr><td class="nowrap">协议版本</td><td>1.0（PROTOCOL_VERSION = 0x01）</td></tr>
+            <tr><td class="nowrap">适用范围</td><td>XXX 产品线 App ↔ 固件 GATT 通信</td></tr>
+            <tr><td class="nowrap">传输通道</td><td>Service <code>FFE0</code> / Characteristic <code>FFE1</code>（Write + Notify）</td></tr>
+            <tr><td class="nowrap">字节序</td><td><strong>Little-Endian</strong>（CRC 传输时低字节在前）</td></tr>
+            <tr><td class="nowrap">签字</td><td>固件：__________ 　App：__________ 　项目：__________ 　日期：__________</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>8.1 传输层约定</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">项</th><th>约定</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">MTU 策略</td><td><strong>协议按 MTU=23（有效载荷 20B）设计分包</strong>；MTU 协商成功后可单帧承载更多 payload，但<strong>固件必须兼容 20B 场景</strong></td></tr>
+            <tr><td class="nowrap">广播</td><td>31B 主广播 + 31B ScanResponse（格式见 8.7）；如需扩展广播按 Core 5 单包 255B / 链式 ~1650B 设计并单独评审</td></tr>
+            <tr><td class="nowrap">连接参数</td><td>Connection Interval 协商目标 15~30ms（依据 Core 6.1 的 7.5ms~4s 区间，见 2.5）；<strong>Supervision Timeout 双端统一 1000ms</strong></td></tr>
+            <tr><td class="nowrap">写特征</td><td><strong>Write With Response</strong>（控制命令）；高频数据可单独开 withoutResponse 通道（另行协商）</td></tr>
+            <tr><td class="nowrap">Notify</td><td>高优先级数据走 Notify；应答帧也走 Notify</td></tr>
+            <tr><td class="nowrap">串行约束</td><td>同一时刻<strong>只能有一个未完成的 ATT 写事务</strong>（App 命令队列串行）；固件不应主动并发 notify 多条业务消息到同一 CCCD</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>8.2 帧格式（App ↔ 固件 双向统一）</h3>
+      <div class="codeblock"><div class="codebar"><span class="fname">frame layout</span><button class="copy" type="button">复制</button></div><pre><code>偏移  长度  字段       说明
+0     1    HEADER     0xA5（固定帧头）
+1     1    LEN        seq+cmd+payload 总长度（1 + 1 + N），不含帧头/CRC
+2     1    SEQ        序号 0x00~0xFF 循环递增；App 请求与固件应答共用一个序号
+3     1    CMD        命令字（请求）；应答 = CMD | 0x80（见 8.3）
+4..N  N    PAYLOAD    变长负载，N = LEN - 2
+N+4   2    CRC16      CRC16-CCITT(0x1021, init 0xFFFF)，覆盖 HEADER..PAYLOAD 全部字节，
+                      低字节在前</code></pre></div>
+      <p><strong>总帧长</strong>：<code>4 + N + 2</code> 字节。MTU=23 时最大 payload N=17；MTU=247 时最大 N=241。</p>
+
+      <h3>8.3 命令字与应答规则</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">CMD</th><th class="nowrap">名称</th><th class="nowrap">方向</th><th>Payload 说明</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">0x01</td><td class="nowrap">PING</td><td class="nowrap">App→FW</td><td>空</td></tr>
+            <tr><td class="nowrap">0x81</td><td class="nowrap">PING_ACK</td><td class="nowrap">FW→App</td><td><code>[fw_version_major, fw_version_minor, protocol_version]</code>（3 字节）</td></tr>
+            <tr><td class="nowrap">0x02</td><td class="nowrap">GET_STATUS</td><td class="nowrap">App→FW</td><td>空</td></tr>
+            <tr><td class="nowrap">0x82</td><td class="nowrap">STATUS_ACK</td><td class="nowrap">FW→App</td><td><code>[battery_u8, state_u8, error_u8]</code>（3 字节）</td></tr>
+            <tr><td class="nowrap">0x03</td><td class="nowrap">SET_CONFIG</td><td class="nowrap">App→FW</td><td><code>[key_u8, value_u16_le]</code>（3 字节，单 key 单帧）</td></tr>
+            <tr><td class="nowrap">0x83</td><td class="nowrap">CONFIG_ACK</td><td class="nowrap">FW→App</td><td><code>[key_u8, result_u8]</code>（0=OK, 1=unsupported_key, 2=value_range_error）</td></tr>
+            <tr><td class="nowrap">0x10</td><td class="nowrap">OTA_START</td><td class="nowrap">App→FW</td><td><code>[fw_total_size_u32_le, fw_crc32_le, fw_version_u16_le, window_size_u8]</code>（11 字节）</td></tr>
+            <tr><td class="nowrap">0x90</td><td class="nowrap">OTA_START_ACK</td><td class="nowrap">FW→App</td><td><code>[result_u8, resume_offset_u32_le]</code>（5 字节；resume_offset &gt; 0 表示续传）</td></tr>
+            <tr><td class="nowrap">0x11</td><td class="nowrap">OTA_DATA</td><td class="nowrap">App→FW</td><td><code>[seq_u16_le, data...N]</code>（2+N，N 由 MTU 决定，含在 LEN 字段）</td></tr>
+            <tr><td class="nowrap">0x91</td><td class="nowrap">OTA_DATA_ACK</td><td class="nowrap">FW→App</td><td><code>[ack_seq_u16_le, status_u8]</code>（0=OK, 1=crc_err, 2=out_of_order）</td></tr>
+            <tr><td class="nowrap">0x12</td><td class="nowrap">OTA_END</td><td class="nowrap">App→FW</td><td><code>[total_packets_u16_le]</code></td></tr>
+            <tr><td class="nowrap">0x92</td><td class="nowrap">OTA_END_ACK</td><td class="nowrap">FW→App</td><td><code>[result_u8]</code>（0=校验通过待激活，1=crc32_mismatch，2=size_mismatch）</td></tr>
+            <tr><td class="nowrap">0x13</td><td class="nowrap">OTA_REBOOT</td><td class="nowrap">App→FW</td><td>空</td></tr>
+            <tr><td class="nowrap">0x93</td><td class="nowrap">OTA_REBOOT_ACK</td><td class="nowrap">FW→App</td><td>空（收到即断链进入 bootloader）</td></tr>
+            <tr><td class="nowrap">0xFE</td><td class="nowrap">LOG_EVENT</td><td class="nowrap">FW→App</td><td><code>[level_u8, msg...N]</code>（调试用，量产关闭）</td></tr>
+            <tr><td class="nowrap">0xFF</td><td class="nowrap">PROTOCOL_ERROR</td><td class="nowrap">FW→App</td><td><code>[err_code_u8, bad_seq_u8]</code>（帧格式 / CRC 错误统一回报）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>应答规则</h3>
+        <ol class="l2">
+          <li>每条请求必须有一条应答（CMD|0x80），<strong>超时判定由 App 侧执行</strong>（默认 3s，对应 CommandQueue 的 timeout）。</li>
+          <li>固件收到非法帧（CRC 错、LEN 越界、未知 CMD）：回复 <code>PROTOCOL_ERROR(0xFF)</code>，<strong>不更新 SEQ</strong>。</li>
+          <li><strong>版本协商在 PING 阶段完成</strong>（机制见 8.8）。</li>
+        </ol>
+      </div>
+
+      <h3>8.4 CRC16-CCITT 参考实现（双端对拍用）</h3>
+      <div class="codeblock"><div class="codebar"><span class="fname">dart · crc16Ccitt</span><button class="copy" type="button">复制</button></div><pre><code>int crc16Ccitt(List&lt;int&gt; data) {
+  var crc = 0xFFFF;
+  for (final b in data) {
+    crc ^= b &lt;&lt; 8;
+    for (var i = 0; i &lt; 8; i++) {
+      crc = (crc &amp; 0x8000) != 0 ? ((crc &lt;&lt; 1) ^ 0x1021) &amp; 0xFFFF : (crc &lt;&lt; 1) &amp; 0xFFFF;
+    }
+  }
+  return crc;
+}</code></pre></div><div class="codeblock"><div class="codebar"><span class="fname">c · crc16_ccitt</span><button class="copy" type="button">复制</button></div><pre><code>uint16_t crc16_ccitt(const uint8_t *data, size_t len) {
+    uint16_t crc = 0xFFFF;
+    for (size_t i = 0; i &lt; len; i++) {
+        crc ^= (uint16_t)data[i] &lt;&lt; 8;
+        for (int b = 0; b &lt; 8; b++) {
+            crc = (crc &amp; 0x8000) ? ((crc &lt;&lt; 1) ^ 0x1021) &amp; 0xFFFF
+                                 : (crc &lt;&lt; 1) &amp; 0xFFFF;
+        }
+    }
+    return crc;
+}</code></pre></div>
+      <p class="sub">黄金样本：双端 CI 必须输出一致，签字时填入实际值。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>输入</th><th class="nowrap">期望 CRC</th></tr></thead>
+          <tbody>
+            <tr><td><code>A5 03 01 01 00</code>（PING）</td><td class="nowrap">0x____</td></tr>
+            <tr><td><code>A5 05 02 10 10 00 00 00 10</code>（OTA_START 示例）</td><td class="nowrap">0x____</td></tr>
+            <tr><td><code>A5 06 03 11 01 00 AA BB CC</code>（OTA_DATA 3B）</td><td class="nowrap">0x____</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>8.5 OTA 分包协议</h3>
+      <div class="codeblock"><div class="codebar"><span class="fname">OTA flow</span><button class="copy" type="button">复制</button></div><pre><code>[App] ─ OTA_START(total_size, fw_crc32, fw_version, window_size) ──→ [FW]
+[App] ←─ OTA_START_ACK(result, resume_offset) ─────────── [FW]
+   ├── result=0 且 resume_offset=0 → 全新传输
+   ├── result=0 且 resume_offset&gt;0 → 断点续传，从该偏移继续
+   └── result≠0 → 中止
+[App] ─ OTA_DATA(seq=0, chunk) ──→ [FW]
+[App] ─ OTA_DATA(seq=1, chunk) ──→ [FW]
+   ... 连续发送 window_size 包 ...
+[App] ←─ OTA_DATA_ACK(ack_seq=已收到的最大连续 seq, status) [FW]
+[App] 收到 ACK 后再发下一窗口；若 2s 未收到 ACK → 重发当前窗口
+...
+[App] ─ OTA_END(total_packets) ──→ [FW]     ← 全部分包发送完
+[App] ←─ OTA_END_ACK(result) ──── [FW]      ← 固件做整包 CRC32 校验
+[App] ─ OTA_REBOOT ──→ [FW]
+[App] ←─ OTA_REBOOT_ACK ──→ [FW] → 进入 bootloader</code></pre></div>
+
+      <h4>8.5.2 关键设计决策</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">项</th><th>决策</th><th>理由</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">分块大小</td><td>MTU=23 时 data=13B（帧头 4 + seq 2 + data 13 + crc 2 = 21 ≤ 20）；MTU=247 时 data=239B</td><td><strong>双端都按当前协商 MTU 动态计算</strong>，App 启动 OTA 前调 <code>requestMtu(247)</code> 并以实际返回值为准</td></tr>
+            <tr><td class="nowrap">窗口大小</td><td>默认 8（可在 OTA_START 协商 1~32）</td><td>窗口太小吞吐低；太大丢包重传成本高</td></tr>
+            <tr><td class="nowrap">ACK 粒度</td><td><strong>按窗口 ACK</strong>（非逐包），<code>ack_seq</code> 为已收到的<strong>最大连续</strong>包序号</td><td>吞吐与可靠的平衡；丢包时 App 重发 <code>[ack_seq+1, ...]</code></td></tr>
+            <tr><td class="nowrap">序号</td><td><code>seq_u16_le</code> 从 0 开始递增，<strong>不循环</strong></td><td>2^16 包 = 32 万包，远超固件体积；简化实现，无需处理 wrap-around</td></tr>
+            <tr><td class="nowrap">整包校验</td><td>固件在 OTA_END 时<strong>对整包做 CRC32</strong>（而非逐包 CRC16 复算）</td><td>双重校验：帧级 CRC16 防传输误码，文件级 CRC32 防重组错位</td></tr>
+            <tr><td class="nowrap">断点续传</td><td>固件持久化「已写入 flash 的字节数」到 OTA_START_ACK 的 <code>resume_offset</code></td><td>App 重启 / 断链后重连即可续传，避免重传整包</td></tr>
+            <tr><td class="nowrap">防砖</td><td>固件 bootloader 必须实现「双分区 + 回滚」——新固件启动后 30s 内未上报心跳 → 自动回滚旧分区</td><td>App 端无法 100% 保证升级成功，<strong>固件侧兜底是硬要求</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>8.5.3 状态机（固件侧）</h4>
+      <div class="codeblock"><div class="codebar"><span class="fname">OTA state machine</span><button class="copy" type="button">复制</button></div><pre><code>IDLE ─OTA_START─→ READY_FOR_DATA
+READY_FOR_DATA ─receive window─→ VERIFYING_WINDOW
+VERIFYING_WINDOW ──ok──→ READY_FOR_DATA (send OTA_DATA_ACK)
+VERIFYING_WINDOW ──fail──→ READY_FOR_DATA (send OTA_DATA_ACK with status≠0)
+READY_FOR_DATA ─OTA_END─→ VERIFYING_IMAGE
+VERIFYING_IMAGE ──ok──→ PENDING_REBOOT
+VERIFYING_IMAGE ──fail──→ IDLE (回 OTA_END_ACK result=1/2)
+PENDING_REBOOT ─OTA_REBOOT─→ BOOTLOADER</code></pre></div>
+
+      <h3>8.6 错误码总表</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">码</th><th class="nowrap">名称</th><th>含义</th><th>处置建议</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">0x00</td><td class="nowrap">OK</td><td>成功</td><td>—</td></tr>
+            <tr><td class="nowrap">0x01</td><td class="nowrap">UNSUPPORTED_CMD</td><td>命令字未定义</td><td>App 提示协议版本不匹配</td></tr>
+            <tr><td class="nowrap">0x02</td><td class="nowrap">PAYLOAD_LENGTH</td><td>LEN 字段与实际不符</td><td>App 端重试 1 次，再失败上报日志</td></tr>
+            <tr><td class="nowrap">0x03</td><td class="nowrap">CRC_ERROR</td><td>帧级 CRC16 错</td><td>由 PROTOCOL_ERROR 帧（0xFF）触发，App 退避重试</td></tr>
+            <tr><td class="nowrap">0x04</td><td class="nowrap">SEQ_MISMATCH</td><td>序号错位（不应出现，App 队列保证串行）</td><td>上报 bug</td></tr>
+            <tr><td class="nowrap">0x05</td><td class="nowrap">STATE_ERROR</td><td>当前状态不允许此命令（如未 START 就 OTA_DATA）</td><td>App 重新走流程</td></tr>
+            <tr><td class="nowrap">0x06</td><td class="nowrap">BATTERY_LOW</td><td>电量不足以执行此操作（如 OTA）</td><td>App 提示充电</td></tr>
+            <tr><td class="nowrap">0x07</td><td class="nowrap">AUTH_REQUIRED</td><td>需要先配对 / 鉴权</td><td>App 触发配对流程</td></tr>
+            <tr><td class="nowrap">0x08</td><td class="nowrap">FLASH_ERROR</td><td>固件内部 flash 操作失败</td><td>OTA 失败，提示用户联系售后</td></tr>
+            <tr><td class="nowrap">0x09</td><td class="nowrap">BUSY</td><td>固件忙（如正在 OTA 中收到其他命令）</td><td>App 退避后重试</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>8.7 广播格式约定</h3>
+      <p><strong>ScanResponse（31B）中的厂商数据段</strong>（AD Type 0xFF）：</p>
+      <div class="codeblock"><div class="codebar"><span class="fname">manufacturer data</span><button class="copy" type="button">复制</button></div><pre><code>[company_id_lo, company_id_hi]    2B   Bluetooth SIG 分配的 Company Identifier
+[product_id]                      1B   产品线代码（同公司内区分产品）
+[fw_major, fw_minor]              2B   当前固件版本（便于 App 广播阶段过滤）
+[mode_flag]                       1B   bit0: 是否可配网；bit1: 是否在 OTA 模式；其余保留
+[reserved...]                     N    保留，填 0</code></pre></div>
+      <p><strong>本地名（AD Type 0x09）</strong>：完整名放 ScanResponse，主广播用 Shortened Name（0x08）——31B 主广播要塞 Flags + Service UUID List + Short Name，<strong>名字极易被截断</strong>，App 过滤时用 <code>namePrefix</code> 而非完整匹配。</p>
+
+      <h3>8.8 版本协商与兼容性策略</h3>
+      <ol class="l2">
+        <li><strong>协议版本号字段</strong>：PING_ACK 携带 <code>protocol_version</code>（当前 0x01）。</li>
+        <li><strong>兼容规则</strong>：App 支持区间 <code>[MIN_PROTO, MAX_PROTO]</code>（编译期常量，v1.0 时 <code>[0x01, 0x01]</code>）；落在区间内正常通信；高于 MAX → 提示「请升级 App」；低于 MIN → 提示「设备固件过旧，请升级」。</li>
+        <li><strong>演进规则</strong>：新增字段<strong>只能追加在 payload 末尾</strong>；变更既有字段含义必须 bump 协议版本并新增 CMD 字段，<strong>不修改旧 CMD 的语义</strong>。</li>
+        <li><strong>版本号不占帧头</strong>——为省 1 字节，版本号通过 PING 动态协商，协议文本维护修订记录即可。</li>
+      </ol>
+
+      <div class="check-head">
+        <h3 style="margin:0">8.9 联调 Checklist（发版前双端签字）</h3>
+        <span class="check-count" data-check-count>0 / 0</span>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox" id="a9a"><label for="a9a">CRC 黄金样本三组对拍一致</label></li>
+        <li><input type="checkbox" id="a9b"><label for="a9b">PING → PING_ACK 链路稳定 100 次无失败</label></li>
+        <li><input type="checkbox" id="a9c"><label for="a9c">STATUS 链路：电量 / 状态 / 错误值与实际一致</label></li>
+        <li><input type="checkbox" id="a9d"><label for="a9d">OTA 全新传输：100KB / 1MB / 5MB 三档固件均成功</label></li>
+        <li><input type="checkbox" id="a9e"><label for="a9e">OTA 断点续传：在 30% 时断电 → 重连 → 续传 → 成功激活</label></li>
+        <li><input type="checkbox" id="a9f"><label for="a9f">OTA CRC32 错误注入：人为篡改 1 字节 → OTA_END_ACK result=1</label></li>
+        <li><input type="checkbox" id="a9g"><label for="a9g">OTA 防砖验证：刷入坏固件 → 30s 内自动回滚</label></li>
+        <li><input type="checkbox" id="a9h"><label for="a9h">Supervision Timeout 双端一致（1000ms）</label></li>
+        <li><input type="checkbox" id="a9i"><label for="a9i">MTU 协商失败（强制 23）场景全链路回归</label></li>
+        <li><input type="checkbox" id="a9j"><label for="a9j">扫描过滤：厂商数据 product_id 隔离同公司其他产品</label></li>
+        <li><input type="checkbox" id="a9k"><label for="a9k">协议错误帧（0xFF）触发路径验证（人为发送 CRC 错误帧）</label></li>
+      </ul>
+      <button class="reset-btn" type="button" data-reset>清空以上勾选</button>
+
+      <h3>8.10 修订记录</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">版本</th><th class="nowrap">日期</th><th>变更内容</th><th class="nowrap">作者</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">1.0</td><td class="nowrap">2026-11</td><td>初版：帧格式 + CRC16 + OTA 窗口协议 + 版本协商</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-9" aria-labelledby="ch-9-h">
+      <div class="chapter-head">
+        <div class="chapter-no">09</div>
+        <h2 id="ch-9-h">工具链、资源与版本差异</h2>
+        <p class="lede">BLE 联调有一半时间花在「证明问题在谁那边」。下面这套工具的作用就是让这句话有证据。</p>
+      </div>
+
+      <h3>9.1 常备工具链</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">用途</th><th>工具</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">通用探测器</td><td>nRF Connect for Mobile / Desktop（必装）、LightBlue（iOS）</td></tr>
+            <tr><td class="nowrap">抓包</td><td>Android 蓝牙 HCI 日志 → Wireshark；iOS / macOS PacketLogger / Bluetooth Explorer</td></tr>
+            <tr><td class="nowrap">固件侧配合</td><td>要求固件采集<strong>广播 / 连接 / 断连日志</strong>，联调事半功倍</td></tr>
+            <tr><td class="nowrap">现场问题</td><td>App 内 verbose 日志等级开关 + 远端拉取</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <details>
+        <summary>9.2 学习资源（按需）</summary>
+        <ul class="l2">
+          <li>NovelBits.io BLE 教程（概念最系统）、Bluetooth Core / GATT 官方规范（当字典查）。</li>
+          <li>Apple CoreBluetooth 文档（尤其 Background Best Practices）。</li>
+          <li>Android Bluetooth LE / permissions 官方文档。</li>
+          <li>所选插件 README 的 "Common Problems" 章节——FBP 的这份文档本身就是一份 BLE 坑大全。</li>
+        </ul>
+      </details>
+
+      <h3>9.3 与上一版（v1.0）的差异说明</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>供原读者对照：哪些事实被修正、哪些是新增</caption>
+          <thead><tr><th class="nowrap">类型</th><th>内容</th><th class="nowrap">位置</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">事实修正</td><td>F1 连接间隔：Core 6.2 起 375μs（原文 7.5ms 为 Core ≤6.1 规范）</td><td class="nowrap">2.5</td></tr>
+            <tr><td class="nowrap">事实修正</td><td>F2 扩展广播：单包 255B，链式 ~1650B（原文「255B」为单包上限）</td><td class="nowrap">2.4</td></tr>
+            <tr><td class="nowrap">事实修正</td><td>F3 FBP 商用 License 细化（2025-10 起，分层定价）</td><td class="nowrap">4.0</td></tr>
+            <tr><td class="nowrap">事实修正</td><td>F4 universal_ble 版本核准（3.1.x）</td><td class="nowrap">4.0</td></tr>
+            <tr><td class="nowrap">事实修正</td><td>F5 ASK 绕过 iBeacon 解析路径的补充</td><td class="nowrap">2.4 / 3.2</td></tr>
+            <tr><td class="nowrap">原理补充</td><td>P1 ATT 层：事务 / MTU-3 / CCCD 订阅原理</td><td class="nowrap">2.3 ★</td></tr>
+            <tr><td class="nowrap">原理补充</td><td>P2 Supervision Timeout 与连接参数耦合的「假连接」机制 + dumpsys 排查</td><td class="nowrap">2.5 ★</td></tr>
+            <tr><td class="nowrap">原理补充</td><td>P3 GATT_ERROR 133 成因与四级处置顺序</td><td class="nowrap">07 ★</td></tr>
+            <tr><td class="nowrap">新增章节</td><td>M1 完整工程骨架（代码）</td><td class="nowrap">06</td></tr>
+            <tr><td class="nowrap">新增交付物</td><td>《BLE 应用层协议模板》可签字版</td><td class="nowrap">08</td></tr>
+            <tr><td class="nowrap">代码修正</td><td>FrameCodec.decode 的 payload 切片区间（原少 1 字节）；CommandQueue 应答匹配条件（cmd|0x80）；_sdkInt 真实实现（device_info_plus）</td><td class="nowrap">6.7–6.9</td></tr>
+            <tr><td class="nowrap">笔误修正</td><td>「康昔」→角色、「House ID」→Company ID、「无体验界」→无交互确认、「Novexbits」→NovelBits、btsnoop 日志路径补充、CAMPR 表述规范化等 8 处</td><td class="nowrap">各章</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h4>已知局限</h4>
+        <ul class="l2">
+          <li>universal_ble 具体 API 签名以 lock 版本 README 为准（抽象层已隔离成本）；</li>
+          <li>黄金样本 CRC 值需签字时以真实数据填入；</li>
+          <li>协议模板的命令字表需按实际业务增删；</li>
+          <li>对 FBP 文档质量的评价基于社区口碑，非官方背书。</li>
+        </ul>
+      </div>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <section class="chapter" id="ch-10" aria-labelledby="ch-10-h">
+      <div class="chapter-head">
+        <div class="chapter-no">10</div>
+        <h2 id="ch-10-h">自测与文档自检</h2>
+        <p class="lede">五道题覆盖这条链路的四个断点：ATT 事务、MTU、假连接、协议兼容。</p>
+      </div>
+
+      <ol class="quiz">
+        <li>
+          为什么「订阅通知」也会引发 GATT 错误，而不是一个纯读操作？
+          <details><summary>看答案</summary><p>订阅的本质是向 CCCD（0x2902）发一条 ATT Write Request，占用的就是写通道。它必须和业务写一起进命令队列串行，否则并发写会撞出 GATT 错误（见 2.3）。</p></details>
+        </li>
+        <li>
+          固件支持 247 MTU，你按 244 字节分包，现场部分机型却一直丢包。最可能的原因？
+          <details><summary>看答案</summary><p>MTU 协商是<strong>链路双方共同结果</strong>，iOS 由系统决定，Android 部分机型或旧固件会退回 23。协议必须按 20B 有效载荷设计，用协商返回值动态计算分块，而不是按最大值写死（见 8.1 / 8.5.2）。</p></details>
+        </li>
+        <li>
+          App 显示「已连接」，发命令却全部超时，且没有任何断线回调。怎么查？
+          <details><summary>看答案</summary><p>典型「假连接」：连接参数协商失败后链路已死但双方都没触发 Supervision Timeout。用 <code>adb shell dumpsys bluetooth_manager</code> 看 LE Connection 段的 interval / latency / timeout，验证 <code>interval × (latency+1) × 2 &lt; timeout</code> 是否成立。工程上靠心跳 + 3 次超时主动重连兜底（见 2.5）。</p></details>
+        </li>
+        <li>
+          固件新增一个字段，App 老版本收到后解析全乱。协议该怎么设计才不出这种事？
+          <details><summary>看答案</summary><p>新增字段只能追加在 payload 末尾；老版本按 LEN 截断读取即可忽略尾部。改变既有字段含义必须 bump 协议版本并新增 CMD，不修改旧 CMD 语义（见 8.8）。</p></details>
+        </li>
+        <li>
+          为什么命令队列要做「单飞 + 超时 + 一次性重试」，而不是并发发送提速？
+          <details><summary>看答案</summary><p>Write withResponse 是完整 ATT 事务，同一时刻只允许一个未完成写事务，并发只会制造 GATT 错误；且重试必须有上限，否则超时命令会在设备恢复后重复执行。吞吐靠 withoutResponse 通道与窗口 ACK，不靠并发写（见 2.3 / 6.9）。</p></details>
+        </li>
+      </ol>
+
+      <details>
+        <summary>文档自检报告</summary>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>检查项</th><th>结果</th></tr></thead>
+            <tbody>
+              <tr><td>结构融合（非拼接）：修正内嵌对应章节、原理内嵌知识底座、骨架承接 M1、协议承接 M0、差异表提供对照索引</td><td>✅</td></tr>
+              <tr><td>知识关联：每章标注关联章节；原理 → 架构 → 代码 → 协议四层闭环（ATT 事务 → 命令队列设计 → CommandQueue 实现 → 协议串行约束）</td><td>✅</td></tr>
+              <tr><td>事实时效：FBP License（2025-10 商用分层收费）、Core 6.2 375μs、扩展广播链式 1650B、universal_ble 3.1.x、Android 12 扫描限频，均标注「以 pub.dev / 官方文档实时为准」</td><td>✅</td></tr>
+              <tr><td>代码质量：修正 2 处实质性 bug（decode 切片、应答匹配）；权限分支以真实 sdkInt 判断；队列 close 时 reject in-flight</td><td>✅</td></tr>
+              <tr><td>协议可签字度：传输层约定与原理逐条对应；CRC 双端实现 + 黄金样本占位；OTA 状态机 + 防砖硬要求；联调 checklist 11 项</td><td>✅</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+  </main>
+</div>
+
+<footer class="layout" style="border-top:1px solid var(--rule);color:var(--muted);font-size:.8rem">
+  <span>Flutter BLE 应用开发全指南 · 瑞士网格风格 · 单文件自包含，无外部请求</span>
+</footer>
+<script>
+(function () {
+  var KEY = 'docforge:' + location.pathname
+  var body = document.body
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-mode-btn]'))
+  var chapters = Array.prototype.slice.call(document.querySelectorAll('.chapter'))
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'))
+  var progress = document.getElementById('progress')
+  var label = document.querySelector('[data-progress-label]')
+  var i = 0
+
+  function store(k, v) { try { localStorage.setItem(KEY + ':' + k, v) } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(KEY + ':' + k) } catch (e) { return null } }
+
+  function setMode(mode, remember) {
+    body.dataset.mode = mode
+    buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.modeBtn === mode)) })
+    if (remember) store('mode', mode)
+    if (mode === 'deck') show(i)
+  }
+  function show(index) {
+    i = Math.max(0, Math.min(chapters.length - 1, index))
+    chapters.forEach(function (c, n) { c.classList.toggle('is-current', n === i) })
+    if (chapters[i]) chapters[i].scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }
+  function setCurrent(id) {
+    tocLinks.forEach(function (a) { a.setAttribute('aria-current', String(a.getAttribute('href') === '#' + id)) })
+  }
+
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () { setMode(b.dataset.modeBtn, true) })
+  })
+
+  document.addEventListener('keydown', function (e) {
+    if (body.dataset.mode !== 'deck') { if (e.key === 'Escape') setMode('atlas', true); return }
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(i + 1) }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(i - 1) }
+    if (e.key === 'Home') { e.preventDefault(); show(0) }
+    if (e.key === 'End') { e.preventDefault(); show(chapters.length - 1) }
+    if (e.key === 'Escape') setMode('atlas', true)
+  })
+
+  tocLinks.forEach(function (a) {
+    a.addEventListener('click', function () { setCurrent(a.getAttribute('href').slice(1)) })
+  })
+
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) { if (entry.isIntersecting) setCurrent(entry.target.id) })
+    }, { rootMargin: '-15% 0px -70% 0px' })
+    chapters.forEach(function (c) { io.observe(c) })
+  }
+
+  /* 复制代码块 */
+  document.querySelectorAll('.codeblock').forEach(function (block) {
+    var btn = block.querySelector('.copy')
+    var pre = block.querySelector('pre')
+    if (!btn || !pre) return
+    btn.addEventListener('click', function () {
+      var text = pre.innerText
+      var done = function () {
+        btn.textContent = '已复制'
+        btn.dataset.copied = 'true'
+        setTimeout(function () { btn.textContent = '复制'; btn.dataset.copied = 'false' }, 1600)
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback() })
+      } else { fallback() }
+      function fallback() {
+        var ta = document.createElement('textarea')
+        ta.value = text
+        ta.setAttribute('readonly', '')
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        try { document.execCommand('copy') } catch (e) {}
+        document.body.removeChild(ta)
+        done()
+      }
+    })
+  })
+
+  /* 清单持久化（按章分组计数） */
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.checklist input[type="checkbox"]'))
+  var groups = Array.prototype.slice.call(document.querySelectorAll('.chapter')).map(function (sec) {
+    return { boxes: Array.prototype.slice.call(sec.querySelectorAll('.checklist input[type="checkbox"]')), label: sec.querySelector('[data-check-count]') }
+  }).filter(function (g) { return g.boxes.length && g.label })
+  function paintChecks() {
+    groups.forEach(function (g) {
+      var on = g.boxes.filter(function (b) { return b.checked }).length
+      g.label.textContent = on + ' / ' + g.boxes.length
+    })
+  }
+  try {
+    var savedChecks = JSON.parse(load('checks') || '{}')
+    boxes.forEach(function (b) { if (savedChecks[b.id]) b.checked = true })
+  } catch (e) {}
+  function saveChecks() {
+    var state = {}
+    boxes.forEach(function (b) { if (b.checked) state[b.id] = 1 })
+    store('checks', JSON.stringify(state))
+    paintChecks()
+  }
+  boxes.forEach(function (b) { b.addEventListener('change', saveChecks) })
+  var reset = document.querySelector('[data-reset]')
+  if (reset) reset.addEventListener('click', function () {
+    boxes.forEach(function (b) { b.checked = false })
+    saveChecks()
+  })
+
+  /* 已学进度 */
+  function doneSet() {
+    try { return new Set(JSON.parse(load('done') || '[]')) } catch (e) { return new Set() }
+  }
+  function paintDone() {
+    var set = doneSet()
+    if (label) label.textContent = '已学 ' + set.size + ' / ' + chapters.length
+    document.querySelectorAll('[data-done]').forEach(function (btn) {
+      var sec = btn.closest('.chapter')
+      var on = sec && set.has(sec.id)
+      btn.dataset.done = String(!!on)
+      btn.textContent = on ? '✓ 已标记（点击取消）' : '标记本章已学'
+    })
+  }
+  document.querySelectorAll('[data-done]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var sec = btn.closest('.chapter')
+      if (!sec) return
+      var set = doneSet()
+      if (set.has(sec.id)) set.delete(sec.id); else set.add(sec.id)
+      store('done', JSON.stringify(Array.from(set)))
+      paintDone()
+    })
+  })
+
+  window.addEventListener('scroll', function () {
+    var max = document.documentElement.scrollHeight - window.innerHeight
+    if (progress) progress.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%'
+  }, { passive: true })
+
+  var fromUrl = new URLSearchParams(location.search).get('mode')
+  setMode(fromUrl || load('mode') || 'atlas', false)
+  paintDone()
+  paintChecks()
+})();
+</script>
+</body>
+</html>

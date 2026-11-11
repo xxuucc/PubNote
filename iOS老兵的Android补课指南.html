@@ -1,0 +1,1261 @@
+<!doctype html>
+<html lang="zh-CN" data-style="swiss-grid" data-purpose="knowledge">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iOS 老兵的 Android 补课指南</title>
+<meta name="description" content="把 iOS 心智模型平移并纠偏到 Android：构建、适配、运行时、Flutter 集成、打包签名、发布、运维、安全八层体系与发布自检清单。">
+<meta name="author" content="PubNote">
+<style>
+:root {
+  --paper: #ffffff;
+  --bg: #f7f7f5;
+  --ink: #111111;
+  --muted: #6b6b6b;
+  --accent: #0047ab;
+  --accent-bg: #f0f4f8;
+  --rule: #e5e5e5;
+  --code-bg: #111111;
+  --code-ink: #ffffff;
+  --radius: 0px;
+  --font-body: "Inter","Helvetica Neue","PingFang SC","Noto Sans SC",sans-serif;
+  --font-display: var(--font-body);
+  --font-mono: "JetBrains Mono","SF Mono",ui-monospace,monospace;
+  --measure: 68ch;
+  --space: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #1b1d21;
+    --bg: #0e0f11;
+    --ink: #ededed;
+    --muted: #9a9a9a;
+    --accent: #7ba7ff;
+    --accent-bg: rgba(123,167,255,.14);
+    --rule: #2a2c31;
+    --code-bg: #0e0f11;
+    --code-ink: #ededed;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); line-height: 1.75;
+  font-size: 16px; text-wrap: pretty;
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto; } }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+code, kbd, pre { font-family: var(--font-mono); font-size: .9em; }
+p code, li code, td code { background: var(--accent-bg); padding: .1em .35em; }
+pre {
+  padding: calc(var(--space) * 2); border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--code-bg); color: var(--code-ink); overflow: auto; line-height: 1.6;
+}
+pre code { font-size: .86em; }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.22; text-wrap: balance; margin: 0 0 .4em; }
+h1 { font-size: clamp(2.074rem, 4.4vw, 3.052rem); letter-spacing: -.02em; }
+h2 { font-size: clamp(1.44rem, 2.4vw, 1.95rem); letter-spacing: -.01em; }
+h3 { font-size: 1.16rem; }
+h4 { font-size: .95rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+p, li { max-width: var(--measure); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ── 外壳 ───────────────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 20; display: flex; gap: calc(var(--space) * 2);
+  align-items: center; padding: calc(var(--space) * 1.5) calc(var(--space) * 3);
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.topbar .doc-title { font-weight: 600; font-size: .9rem; margin-right: auto; letter-spacing: .01em; }
+.modes { display: flex; gap: 4px; }
+.modes button {
+  font: inherit; font-size: .82rem; padding: 8px 12px; min-height: 40px; cursor: pointer;
+  color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: var(--radius);
+}
+.modes button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+.progress { position: fixed; inset: 0 auto auto 0; height: 2px; background: var(--accent); width: 0; z-index: 30; }
+
+.layout {
+  display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: calc(var(--space) * 7);
+  max-width: 1240px; margin: 0 auto; padding: calc(var(--space) * 7) calc(var(--space) * 4) calc(var(--space) * 12);
+}
+.toc { position: sticky; top: 86px; align-self: start; font-size: .84rem; max-height: 82vh; overflow: auto; }
+.toc .toc-head { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); padding: 0 0 10px 12px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+.toc a { display: block; padding: 6px 0 6px 12px; border-left: 2px solid var(--rule); color: var(--muted); text-decoration: none; }
+.toc a:hover { color: var(--ink); }
+.toc a[aria-current="true"] { border-color: var(--accent); color: var(--ink); font-weight: 600; }
+main { min-width: 0; }
+.chapter { padding: calc(var(--space) * 7) 0; border-top: 1px solid var(--rule); scroll-margin-top: 80px; }
+.chapter:first-of-type { border-top: 0; padding-top: 0; }
+.chapter-head { display: block; margin-bottom: calc(var(--space) * 2); }
+.chapter-no {
+  display: inline-block; font-family: var(--font-mono); font-size: .74rem; color: var(--accent);
+  letter-spacing: .18em; padding-bottom: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--accent);
+}
+.lede { font-size: 1.06rem; color: var(--ink); }
+.sub { color: var(--muted); font-size: .92rem; }
+.kicker { font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0 0 .6em; }
+
+.card { border: 1px solid var(--rule); border-radius: var(--radius); padding: calc(var(--space) * 3); margin: calc(var(--space) * 3) 0; background: var(--paper); }
+.card.accent { border-left: 3px solid var(--accent); }
+.card.flat { background: transparent; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(var(--space) * 2); }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(var(--space) * 2); }
+@media (max-width: 780px) { .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); } }
+.l2 { margin: calc(var(--space) * 2) 0; padding-left: 1.1em; }
+.l2 li { margin: .45em 0; }
+
+/* 表格 */
+.table-wrap { overflow-x: auto; margin: calc(var(--space) * 3) 0; border: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+caption { text-align: left; font-size: .8rem; color: var(--muted); padding: 8px 0; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+thead th { background: var(--accent-bg); font-weight: 600; font-size: .82rem; letter-spacing: .02em; white-space: nowrap; }
+tbody tr:last-child td { border-bottom: 0; }
+td.nowrap, th.nowrap { white-space: nowrap; }
+
+/* 披露层 */
+details { border-top: 1px solid var(--rule); padding: calc(var(--space) * 1.5) 0; }
+details:last-child { border-bottom: 1px solid var(--rule); }
+details > summary { cursor: pointer; color: var(--accent); font-size: .88rem; min-height: 32px; display: flex; align-items: center; gap: .4em; }
+details > summary::marker { color: var(--accent); }
+details[open] > summary { color: var(--ink); font-weight: 600; }
+details > *:not(summary) { margin-left: 0; }
+
+figure { margin: calc(var(--space) * 4) 0; }
+figure svg { width: 100%; height: auto; display: block; color: var(--ink); }
+figcaption { font-size: .82rem; color: var(--muted); margin-top: var(--space); max-width: var(--measure); }
+figure .fig-frame { border: 1px solid var(--rule); padding: calc(var(--space) * 2); background: var(--paper); }
+
+mark { background: var(--accent-bg); color: inherit; padding: 0 .2em; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: .74rem; letter-spacing: .04em; border: 1px solid var(--rule); padding: 1px 7px; color: var(--muted); }
+.quiz { padding-left: 1.2em; }
+.quiz > li { margin: calc(var(--space) * 1.5) 0; }
+.quiz details { border: 0; padding: 4px 0; }
+
+/* 清单 */
+.checklist { list-style: none; padding: 0; margin: calc(var(--space) * 2) 0; }
+.checklist li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; align-items: start; padding: 9px 0; border-bottom: 1px solid var(--rule); max-width: none; }
+.checklist input { width: 18px; height: 18px; margin: 4px 0 0; accent-color: var(--accent); cursor: pointer; }
+.checklist label { cursor: pointer; font-size: .93rem; }
+.checklist input:checked + label { color: var(--muted); text-decoration: line-through; }
+.check-head { display: flex; align-items: baseline; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.check-count { font-family: var(--font-mono); font-size: .78rem; color: var(--accent); }
+.reset-btn { font: inherit; font-size: .78rem; padding: 6px 12px; min-height: 34px; background: transparent; border: 1px solid var(--rule); color: var(--muted); cursor: pointer; border-radius: var(--radius); }
+
+/* 坑清单 */
+.pit { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+.pit-no { font-family: var(--font-mono); font-size: .8rem; color: var(--accent); padding-top: .25em; }
+.pit p { margin: 0; }
+.pit .fix { color: var(--muted); font-size: .88rem; }
+
+/* 术语表 */
+.terms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
+.terms div { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.terms dt { font-weight: 600; font-size: .9rem; }
+.terms dd { margin: 2px 0 0; color: var(--muted); font-size: .86rem; }
+@media (max-width: 780px) { .terms { grid-template-columns: minmax(0, 1fr); } }
+
+/* 三种模式 */
+body[data-mode="deck"] .layout { grid-template-columns: minmax(0, 1fr); max-width: 960px; }
+body[data-mode="deck"] .toc { display: none; }
+body[data-mode="deck"] .chapter { display: none; border: 0; padding: 0; min-height: 62vh; }
+body[data-mode="deck"] .chapter.is-current { display: block; }
+body[data-mode="deck"] details { display: block; }
+body[data-mode="deck"] details > *:not(summary) { display: block; }
+body[data-mode="learn"] .chapter .quiz summary { color: var(--ink); }
+body:not([data-mode="learn"]) .done-toggle { display: none; }
+.done-toggle { margin-top: calc(var(--space) * 2); font: inherit; font-size: .78rem; padding: 7px 12px; min-height: 34px; background: transparent; border: 1px solid var(--rule); color: var(--muted); cursor: pointer; border-radius: var(--radius); }
+.done-toggle[data-done="true"] { border-color: var(--accent); color: var(--accent); }
+.done { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--muted); font-family: var(--font-mono); }
+.hero-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: calc(var(--space) * 4) 0; }
+.hero-meta div { background: var(--paper); padding: 18px; }
+.hero-meta dt { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.hero-meta dd { margin: 6px 0 0; font-size: .92rem; }
+@media (max-width: 780px) { .hero-meta { grid-template-columns: minmax(0, 1fr); } }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); padding: calc(var(--space) * 4) calc(var(--space) * 2) calc(var(--space) * 10); }
+  .toc { position: static; order: 2; max-height: none; }
+}
+@media print {
+  .topbar, .toc, .progress, .modes, .reset-btn, .done-toggle { display: none !important; }
+  :root {
+    --paper: #ffffff; --bg: #ffffff; --ink: #111111; --muted: #6b6b6b;
+    --accent: #0047ab; --accent-bg: #f0f4f8; --rule: #e5e5e5;
+    --code-bg: #f7f7f5; --code-ink: #111111;
+  }
+  body { background: var(--bg); font-size: 10.5pt; }
+  .layout { display: block; max-width: none; padding: 0; }
+  .chapter { display: block !important; break-inside: auto; page-break-inside: auto; border-top: 1px solid var(--rule); }
+  details { display: block; }
+  details > *:not(summary) { display: block; }
+  details > summary { color: var(--ink); }
+  a { color: inherit; text-decoration: none; }
+  pre { background: var(--code-bg); color: var(--ink); border-color: var(--rule); }
+  thead th { background: var(--accent-bg); }
+  h2, h3 { break-after: avoid; }
+  figure, table, pre, .card { break-inside: avoid; }
+}
+</style>
+</head>
+<body data-mode="atlas">
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <span class="doc-title">iOS 老兵的 Android 补课指南</span>
+  <div class="modes" role="group" aria-label="阅读模式">
+    <button type="button" data-mode-btn="deck" aria-pressed="false">演示</button>
+    <button type="button" data-mode-btn="atlas" aria-pressed="true">查阅</button>
+    <button type="button" data-mode-btn="learn" aria-pressed="false">学习</button>
+  </div>
+  <span class="done" data-progress-label>已学 0 / 0</span>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="目录">
+    <div class="toc-head">目录</div>
+    <a href="#ch-0" aria-current="true">00 · 定位与用法</a>
+    <a href="#ch-1">01 · 心智模型映射</a>
+    <a href="#ch-2">02 · 知识体系总览</a>
+    <a href="#ch-3">03 · 工程与构建（A）</a>
+    <a href="#ch-4">04 · 机型与适配（B）</a>
+    <a href="#ch-5">05 · 运行时集成（C）</a>
+    <a href="#ch-6">06 · Flutter 集成（D）</a>
+    <a href="#ch-7">07 · 打包与签名（E）</a>
+    <a href="#ch-8">08 · 发布（F）</a>
+    <a href="#ch-9">09 · 质量与运维（G）</a>
+    <a href="#ch-10">10 · 安全（H）</a>
+    <a href="#ch-11">11 · 高频坑清单</a>
+    <a href="#ch-12">12 · 30 天补齐路线</a>
+    <a href="#ch-13">13 · 发布前自检</a>
+    <a href="#ch-14">14 · 术语与自测</a>
+    <a href="#ch-15">15 · 文档自检报告</a>
+  </nav>
+
+  <main>
+    <!-- ══ 00 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-0" aria-labelledby="ch-0-h">
+      <p class="kicker">v1.0 · 2025 时效基线</p>
+      <h1 id="ch-0-h">iOS 老兵的<br>Android 补课指南</h1>
+      <p class="lede">这不是从零学 Android 的教材，而是把你已有的 iOS 心智模型<mark>平移 + 纠偏</mark>到 Android 的导航图。每个知识块都标注与 iOS 的差异点，以及 iOS 开发者最容易踩的坑。</p>
+
+      <div class="hero-meta">
+        <div>
+          <dt>目标读者</dt>
+          <dd>多年 iOS 经验、Flutter 经验尚浅的开发者</dd>
+        </div>
+        <div>
+          <dt>时效基线</dt>
+          <dd>Android 15（API 35）/ Gradle 8.x / AGP 8.x / Flutter 3.x / 2025 年 Play 商店政策</dd>
+        </div>
+        <div>
+          <dt>使用顺序</dt>
+          <dd>第 1 章映射表建全局观 → 第 2 章体系树逐章补齐 → 第 11 章坑清单 → 第 13 章发布自检</dd>
+        </div>
+      </div>
+
+      <div class="card accent">
+        <h3>一句话结论</h3>
+        <p>Android 的技术难点不在语法，而在<strong>三个 iOS 没有的维度</strong>：可编程的构建体系、设备与厂商的持续碎片化、以及一套不可逆的签名 / 版本 / 合规资产链。把这三件事按顺序补齐，iOS 经验就能直接复用六成以上。</p>
+      </div>
+
+      <h2>两个颠覆性认知</h2>
+      <p class="sub">iOS 经验直接套用会出事故的地方，入职第一周就要接受。</p>
+      <div class="grid2">
+        <div class="card">
+          <h4>认知一 · 碎片化是产品级风险</h4>
+          <p>iOS 只需适配 6~8 种屏幕；Android 要面对上百种 DPI 组合、十几代系统版本共存、三星/小米/华为等厂商深度定制 ROM。适配不是"做完就好"，是持续工程。</p>
+        </div>
+        <div class="card">
+          <h4>认知二 · 签名密钥不可再生</h4>
+          <p>iOS 证书丢了重签即可；Android 上应用签名密钥丢了，除非接入了 Google Play App Signing（托管正式密钥），否则没有任何官方途径找回。这是入职第一天就该落库备份的事。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 01 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-1" aria-labelledby="ch-1-h">
+      <div class="chapter-head">
+        <div class="chapter-no">01</div>
+        <div>
+          <h2 id="ch-1-h">心智模型映射：从 iOS 到 Android 的概念翻译</h2>
+          <p class="lede">这张表是全文的索引，后续章节都是对表项的展开。</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <caption>iOS → Android 概念对照（14 组高频项）</caption>
+          <thead>
+            <tr><th>iOS 概念</th><th>Android 对应</th><th>关键差异（必须记住）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="nowrap">Xcode + .xcodeproj</td><td class="nowrap">Android Studio + Gradle</td><td>构建配置是<strong>代码</strong>（Kotlin DSL 文本），不是 GUI 设置</td></tr>
+            <tr><td class="nowrap">Info.plist</td><td class="nowrap">AndroidManifest.xml</td><td>权限需运行时动态申请（iOS 也一样），但 Android 的权限模型按 API 版本分多档演进</td></tr>
+            <tr><td class="nowrap">Certificates（可吊销重发）</td><td class="nowrap">Keystore（.jks / .keystore）</td><td><strong>丢失不可恢复</strong>——丢了上传密钥且没接入 Play 签名，等于永远失去该应用身份</td></tr>
+            <tr><td class="nowrap">TestFlight</td><td class="nowrap">Play Console 内部 / 封闭测试轨道</td><td>新个人账号封闭测试需 <strong>12 名测试员连续参与 14 天</strong>才能申请正式发布</td></tr>
+            <tr><td class="nowrap">App Store 审核数天</td><td class="nowrap">Play 审核通常数小时~2 天</td><td>但 Play 的事后政策扫描更严，违规可能下架甚至封号</td></tr>
+            <tr><td class="nowrap">Universal Links（AASA）</td><td class="nowrap">App Links（assetlinks.json）</td><td>机制同构：域名下放 JSON 验证文件；另有不需要验证的 Deep Links（等同 scheme 跳转）</td></tr>
+            <tr><td class="nowrap">Keychain</td><td class="nowrap">Keystore + EncryptedSharedPreferences / DataStore</td><td>Android Keystore 存密钥而非直接存数据，落地需组合使用</td></tr>
+            <tr><td class="nowrap">@objc 桥接 / Method Channel</td><td class="nowrap">Platform Channel</td><td>Flutter 两侧代码都要写；Android 侧用 Kotlin</td></tr>
+            <tr><td class="nowrap">Instruments / Time Profiler</td><td class="nowrap">Android Studio Profiler / Perfetto</td><td>Android 有 <strong>ANR</strong>（主线程阻塞 5s+）这一 iOS 没有的独立崩溃类别</td></tr>
+            <tr><td class="nowrap">Jetsam 杀后台</td><td class="nowrap">LMK + Doze 模式</td><td>Android 对后台更激进，且厂商定制省电策略会额外杀进程</td></tr>
+            <tr><td class="nowrap">UI 缩放只有 Dynamic Type</td><td class="nowrap">字体缩放（fontScale）+ 显示尺寸</td><td><code>sp</code> 会随用户字体缩放，布局必须可伸缩，<code>dp</code> 写死行高会出 bug</td></tr>
+            <tr><td class="nowrap">Launch Storyboard</td><td class="nowrap">SplashScreen API（Android 12+）</td><td>系统强制冷启动画面，不能像 iOS 那样自定长启动动画</td></tr>
+            <tr><td class="nowrap">CFBundleVersion</td><td class="nowrap">versionCode（整数递增）</td><td><strong>必须严格单调递增</strong>，无法回退；versionName 才是用户可见版本号</td></tr>
+            <tr><td class="nowrap">单一 App Store</td><td class="nowrap">Google Play + 国内数十家商店</td><td>国内无 GMS，推送 / 定位 / 支付全要换方案，且需多渠道分包</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <details>
+        <summary>L3 · 最容易"翻译错"的三项，展开看反例</summary>
+        <p><strong>Keystore：</strong>iOS 开发者习惯"证书过期→重新生成→重新签名"，这套动作在 Android 上是灾难。签名密钥是应用在市场里的身份指纹，微信/高德等 SDK 把你的 SHA-1 指纹写进了他们的后台，密钥一换，所有平台的绑定同时失效。</p>
+        <p><strong>targetSdk：</strong>它不是一个"最低支持版本"式的数字，而是"我愿意接受哪一档系统行为约束"的声明。调高它等于主动打开一批新限制（边到边、前台服务类型、通知权限），必须配一轮完整回归。</p>
+        <p><strong>Build Configuration：</strong>iOS 的 Configuration 主要切编译宏和签名；Android 的 flavor 能替换整个源码目录与资源目录，编译期就能产出行为不同的 App，这是"渠道包"这件事成立的技术前提。</p>
+      </details>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 02 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-2" aria-labelledby="ch-2-h">
+      <div class="chapter-head">
+        <div class="chapter-no">02</div>
+        <div>
+          <h2 id="ch-2-h">知识体系总览：八层章节树</h2>
+          <p class="lede">从构建到安全共八层，依赖顺序自上而下：上层不稳，下层的所有工作都会被反复返工。</p>
+        </div>
+      </div>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 720 400" role="img" aria-label="Android 补课体系八层分层图：A 工程与构建、B 机型与适配、C 运行时集成、D Flutter 集成、E 打包签名、F 发布、G 质量运维、H 安全">
+            <g font-family="Inter, PingFang SC, sans-serif" font-size="12">
+              <line x1="150" y1="24" x2="150" y2="376" stroke="currentColor" stroke-width="1" opacity=".35"/>
+              <g fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="160" y="16" width="520" height="40"/>
+                <rect x="160" y="62" width="470" height="40"/>
+                <rect x="160" y="108" width="420" height="40"/>
+                <rect x="160" y="154" width="470" height="40"/>
+                <rect x="160" y="200" width="380" height="40"/>
+                <rect x="160" y="246" width="330" height="40"/>
+                <rect x="160" y="292" width="300" height="40"/>
+                <rect x="160" y="338" width="260" height="40"/>
+              </g>
+              <g fill="currentColor" font-family="JetBrains Mono, monospace" font-size="11" opacity=".55">
+                <text x="20" y="41">LAYER A</text>
+                <text x="20" y="87">LAYER B</text>
+                <text x="20" y="133">LAYER C</text>
+                <text x="20" y="179">LAYER D</text>
+                <text x="20" y="225">LAYER E</text>
+                <text x="20" y="271">LAYER F</text>
+                <text x="20" y="317">LAYER G</text>
+                <text x="20" y="363">LAYER H</text>
+              </g>
+              <g fill="currentColor">
+                <text x="176" y="41">A 工程与构建 · Gradle / 依赖 / 变体</text>
+                <text x="176" y="87">B 机型与适配 · 屏幕 / 版本 / 厂商</text>
+                <text x="176" y="133">C 运行时集成 · 权限 / 组件 / 后台 / 深链</text>
+                <text x="176" y="179">D Flutter 集成 · Manifest / Channel / 插件</text>
+                <text x="176" y="225">E 打包签名 · Keystore / AAB / R8</text>
+                <text x="176" y="271">F 发布 · Play / 国内商店 / 灰度</text>
+                <text x="176" y="317">G 质量运维 · 崩溃 / ANR / 矩阵</text>
+                <text x="176" y="363">H 安全 · 明文 / 暴露 / 加固</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <figcaption>条形长度代表这一层在补课时间里的相对权重：构建（A）与适配（B）吃掉最多时间，安全（H）多数项目只在发布前扫一遍。依赖是自上而下的——A 层的版本矩阵没对齐，后面所有构建都会连环报错。</figcaption>
+      </figure>
+
+      <details>
+        <summary>L3 · 八层与章节的对应关系（原始章节树）</summary>
+<pre><code>Android 补课体系
+├── A. 工程与构建层      → 第 3 章
+│   ├── A1 Gradle 构建体系（对标 Xcode 配置）
+│   ├── A2 依赖管理与冲突治理
+│   └── A3 构建变体（Build Types × Flavors）
+├── B. 机型与系统适配层  → 第 4 章
+│   ├── B1 屏幕适配（DPI / dp / sp / 折叠屏 / 分屏）
+│   ├── B2 系统版本碎片化与 targetSdk 政策
+│   ├── B3 厂商碎片化（小米 / 华为 / 三星…）
+│   └── B4 输入与系统行为差异（返回键 / 边到边 / 深色 / RTL）
+├── C. 运行时与系统集成层 → 第 5 章
+│   ├── C1 权限模型演进（API 23→35 分水岭）
+│   ├── C2 组件模型（四大组件 ≠ iOS App 生命周期）
+│   ├── C3 进程与后台（LMK / Doze / 前台服务）
+│   └── C4 深链与外部跳转
+├── D. Flutter Android 侧集成层 → 第 6 章
+│   ├── D1 AndroidManifest 与 Flutter 的交界
+│   ├── D2 Platform Channel 全类型实战
+│   ├── D3 插件生态与原生依赖治理
+│   └── D4 Flutter 与 AGP/Gradle 版本兼容矩阵
+├── E. 打包与签名层      → 第 7 章
+│   ├── E1 签名体系（Keystore / Play App Signing）
+│   ├── E2 AAB vs APK / ABI 拆分 / 16KB 对齐
+│   ├── E3 构建优化（R8 / 资源收缩 / 分包）
+│   └── E4 国内多渠道打包
+├── F. 发布层            → 第 8 章
+│   ├── F1 Google Play 发布全流程
+│   ├── F2 国内应用商店发布（资质 / 备案）
+│   └── F3 灰度与版本策略
+├── G. 质量与运维层      → 第 9 章
+│   ├── G1 崩溃 / ANR / Vitals 监控
+│   ├── G2 兼容性测试矩阵
+│   └── G3 热修与合规更新
+└── H. 安全层            → 第 10 章
+    ├── H1 网络安全配置与明文传输
+    ├── H2 数据存储与组件暴露
+    └── H3 加固与反逆向</code></pre>
+      </details>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 03 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-3" aria-labelledby="ch-3-h">
+      <div class="chapter-head">
+        <div class="chapter-no">03</div>
+        <div>
+          <h2 id="ch-3-h">工程与构建层（A）</h2>
+          <p class="lede">iOS 开发者的最大不适应：Android 的一切构建设置都是文本代码。改签名、加依赖、配渠道，都是改文件 + git 提交，没有 GUI 面板。</p>
+        </div>
+      </div>
+
+      <h3>3.1 Gradle：Android 的"可编程 Xcode"</h3>
+      <pre><code>android/
+├── settings.gradle(.kts)                      # 声明哪些模块参与构建、插件仓库
+├── build.gradle(.kts) [根]                    # 全局插件版本（AGP / Kotlin 版本锁定在此）
+├── gradle/wrapper/gradle-wrapper.properties   # Gradle 本体版本（分发版本）
+└── app/build.gradle(.kts)                     # 模块级：applicationId、SDK 版本、签名、依赖</code></pre>
+
+      <ul class="l2">
+        <li><code>applicationId</code>（如 <code>com.company.app</code>）≈ iOS Bundle ID，<strong>发布后永不可改</strong>，改了等于新 App。</li>
+        <li>三个 SDK 版本号的语义：<code>minSdk</code>（最低支持系统版本，低于则无法安装）/ <code>targetSdk</code>（声明"已按此版本行为适配"，<strong>影响系统对你的行为限制</strong>）/ <code>compileSdk</code>（编译用 API 版本，尽量最新）。</li>
+        <li>版本号规则：<code>versionCode</code> 整数递增（上传商店后不可降级）；<code>versionName</code> 是展示字符串（"2.3.1"）。</li>
+        <li>Flutter 项目建议写 <code>minSdk = flutter.minSdkVersion</code>，跟随 Flutter 引擎要求，避免手写死版本。</li>
+        <li>【坑】<code>targetSdk</code> 不只是数字：设为 35，系统会强制启用 Android 15 的边到边显示等新行为——改 targetSdk = 一轮真回归测试，不是改配置了事。</li>
+      </ul>
+
+      <details>
+        <summary>L3 · AGP / Gradle / Kotlin 版本对齐矩阵（Flutter 项目高频事故源）</summary>
+        <p>AGP（Android Gradle Plugin）、Gradle 本体、Kotlin 插件三者版本<strong>强约束</strong>（如 AGP 8.x 要求 Gradle 8.x、JDK 17）。Flutter 升级后经常报 "requires Gradle X / AGP Y"。</p>
+        <p>处理顺序：查 Flutter 官方兼容表 → 升 Gradle wrapper → 升 AGP → 升 Kotlin 插件 → <code>./gradlew clean</code>。升级 Android Studio 时它可能顺手改坏这些版本，<strong>每次升级 Studio 后先跑一次构建</strong>。</p>
+      </details>
+
+      <h3>3.2 依赖管理</h3>
+      <ul class="l2">
+        <li>依赖仓库：Google Maven + Maven Central（对标 CocoaPods trunk）；国内项目常加阿里云镜像解决下载慢。</li>
+        <li>【坑】依赖冲突：两个库共同依赖不同版本的同一个库时，Gradle 默认取<strong>最高版本</strong>，可能引发运行时 <code>NoClassDefFoundError</code>。用 <code>./gradlew app:dependencies</code> 查看依赖树，冲突时用 <code>resolutionStrategy</code> 强制统一。</li>
+        <li>AndroidX 是现代库的统一前缀（对标 UIKit 系框架），非 AndroidX 的旧 support 库已死，见到 <code>com.android.support:*</code> 说明这个库不要用。</li>
+        <li>【iOS 习惯纠偏】iOS 依赖锁在 <code>Podfile.lock</code>；Android 对应 <code>gradle.lockfile</code>（默认不开启）。建议开启 <code>dependencyLocking</code>，否则某三方库发个坏版本，你的 CI 就炸了。</li>
+      </ul>
+
+      <h3>3.3 构建变体：Build Types 与 Product Flavors</h3>
+      <pre><code>BuildTypes：debug / release（+ 自定义，如 staging）——对标 iOS 的 Build Configuration
+Flavors：free / paid；或国内渠道 google / huawei / xiaomi / oppo…——对标多个 Target</code></pre>
+      <p>两者<strong>笛卡尔积</strong>组合成变体（如 <code>xiaomiRelease</code>）。渠道差异（不同商店统计 SDK、图标、支付 SDK）全部声明在 flavor 的 <code>dimension</code> 里，一份代码出 N 个渠道包。</p>
+
+<pre><code>// app/build.gradle.kts 示例
+android {
+    buildTypes {
+        release {
+            isMinifyEnabled = true          // 开 R8 混淆
+            isShrinkResources = true        // 收缩未用资源
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),
+                          "proguard-rules.pro")
+        }
+    }
+    flavorDimensions += "channel"
+    productFlavors {
+        create("google") { dimension = "channel"; applicationIdSuffix = ".g" }
+        create("huawei")  { dimension = "channel" }
+    }
+}</code></pre>
+
+      <div class="card accent">
+        <h4>关键差异</h4>
+        <p>iOS 不会在编译期改变代码逻辑结构；Android 的 flavor 可以替换<strong>整个源码目录</strong>（<code>src/huawei/java/...</code> 优先于 <code>src/main/</code>），可实现渠道级真差异，不只是配置差异。</p>
+      </div>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 04 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-4" aria-labelledby="ch-4-h">
+      <div class="chapter-head">
+        <div class="chapter-no">04</div>
+        <div>
+          <h2 id="ch-4-h">机型与系统适配层（B）</h2>
+          <p class="lede">iOS 上"适配"是一次性任务；Android 上它是一条持续的产品风险线。</p>
+        </div>
+      </div>
+
+      <h3>4.1 屏幕适配</h3>
+      <p><strong>单位体系</strong>（对照 iOS 的 pt）：</p>
+      <ul class="l2">
+        <li><code>dp</code>：密度无关像素，≈ iOS 的 pt。物理像素 = dp × 屏幕密度。</li>
+        <li><code>sp</code>：随用户系统字体缩放倍数缩放的 dp——<strong>所有文字用 sp</strong>，行高 / 间距用 dp。用户把字体调到 1.3 倍时，写死 dp 的文字行会截断，这是 iOS 开发者最常见的适配 bug。</li>
+        <li>密度桶：mdpi(1x) / hdpi(1.5x) / xhdpi(2x) / xxhdpi(3x) / xxxhdpi(4x)。图标类资源按桶出图，或统一用 Vector Drawable（XML 矢量，对标 PDF 矢量资产，强烈推荐，一份文件全密度通吃）。</li>
+      </ul>
+
+      <p><strong>布局响应性要求比 iOS 高：</strong></p>
+      <ul class="l2">
+        <li>分屏（Android 7+）、自由窗口、<strong>折叠屏展开</strong>（大屏手机秒变平板）——Activity 可能随时改变尺寸，必须保证布局自适应，不能假设"竖屏全屏"。</li>
+        <li><code>android:resizeableActivity="true"</code> 是默认预期；Flutter 应用整体自适应较好，但要处理<strong>键盘弹出</strong>（Android 键盘默认遮挡输入框，Flutter 中需设 <code>resizeToAvoidBottomInset</code> 并实测各厂商键盘行为——国产 ROM 键盘高度上报经常不准，这是知名坑）。</li>
+        <li>刘海屏：Android 用 <code>WindowInsets</code> 体系获取安全区（对标 <code>env(safe-area-inset-*)</code>）。Flutter 的 <code>SafeArea</code> 默认可用，但 Android 15 边到边强制后需实测沉浸状态栏是否被内容穿透。</li>
+      </ul>
+
+      <h3>4.2 系统版本碎片化与 targetSdk 政策（硬性合规线）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>API 版本演进与商店强制要求时间线</caption>
+          <thead><tr><th class="nowrap">API 版本</th><th>商店强制要求（更新时间线）</th><th>对开发者的关键影响</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">API 26</td><td>（历史）</td><td>通知必须走 NotificationChannel，否则通知<strong>静默丢失</strong></td></tr>
+            <tr><td class="nowrap">API 29</td><td>Scoped Storage 生效</td><td>不能随意读写公共存储，改用 MediaStore / SAF</td></tr>
+            <tr><td class="nowrap">API 31</td><td>—</td><td>四大组件必须<strong>显式声明 <code>android:exported</code></strong>，含 intent-filter 的组件不写直接装不上</td></tr>
+            <tr><td class="nowrap">API 33</td><td>—</td><td>通知权限改为运行时申请（<code>POST_NOTIFICATIONS</code>）；引入 Photo Picker</td></tr>
+            <tr><td class="nowrap">API 34</td><td>2024-08-31 起更新需 target ≥ 34</td><td>前台服务必须声明<strong>具体类型</strong>（camera / location / mediaPlayback 等），滥用被拒</td></tr>
+            <tr><td class="nowrap">API 35</td><td><strong>2025-08-31 起新应用与更新需 target ≥ 35</strong></td><td>边到边强制启用；16KB 内存页要求（见下）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h4>16KB 内存页对齐（2025 新硬线，Flutter 项目必查）</h4>
+        <p>自 2025-11-01 起，target Android 15+ 且含<strong>原生 so 库</strong>的应用必须按 16KB 页对齐，否则 Play 拒收（2026-05-01 起完全封锁更新）。Flutter 引擎及含 native code 的插件（ffmpeg / sqlite / 加密库等）需升级到已对齐版本。</p>
+        <p>验证方式：NDK 28+ 构建，或用 <code>llvm-readelf -l</code> 检查 so 的 LOAD 段对齐值 ≥ 16384。Flutter 主线引擎已适配，<strong>风险在旧插件</strong>，集成前查插件 changelog。</p>
+      </div>
+
+      <p class="sub">【工作流建议】每年 8 月底是 Play 的 targetSdk 死线（"最新系统版本发布 1 年内必须 target"），把"annual targetSdk 升级 + 回归测试"写进团队日历。</p>
+
+      <h3>4.3 厂商碎片化（OEM ROM）——iOS 完全没有的维度</h3>
+      <p>同一份 APK 在小米、华为、三星上表现可能<strong>不同</strong>，因为厂商深度定制了系统行为。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">厂商问题域</th><th>典型现象</th><th>应对</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">自启动管理</td><td>用户不手动允许"自启动"，推送进程被杀、收不到通知</td><td>引导用户到设置页开启；UI 上做"保活指引"页面</td></tr>
+            <tr><td class="nowrap">省电杀后台</td><td>MIUI / EMUI 激进的电池优化直接杀后台服务</td><td>申请电池优化白名单（<code>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS</code>，商店审核会追问用途）；接受"保不住"的现实，靠厂商推送通道兜底</td></tr>
+            <tr><td class="nowrap">推送通道</td><td>国内无 GMS → 没有 FCM</td><td>华为 Push Kit、小米 Push、OPPO / vivo Push、厂商聚合 SDK（个推 / 极光）。iOS 一套 APNs 通吃的体验在国内 Android <strong>不存在</strong></td></tr>
+            <tr><td class="nowrap">键盘与手势</td><td>各家键盘高度上报、全面屏手势区域不同</td><td>真机测试；键盘相关交互留余量</td></tr>
+            <tr><td class="nowrap">权限入口差异</td><td>自动跳转权限设置页在部分 ROM 失效</td><td>跳转失败降级为"请到设置 &gt; 应用管理"文案引导</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card accent">
+        <h4>测试策略结论</h4>
+        <p>真机矩阵至少覆盖：小米（MIUI / 澎湃 OS）、华为（HarmonyOS，注意新华为设备已是鸿蒙 NEXT，<strong>不再兼容 APK</strong>，需单独评估是否出鸿蒙版）、OPPO / vivo、三星（国际标准行为参照）、一台原生 Android（Pixel，验证无厂商干扰时的标准行为）。</p>
+        <p>模拟器只能覆盖行为基线，<strong>省电 / 推送 / 键盘问题只有真机能暴露</strong>。</p>
+      </div>
+
+      <h3>4.4 系统行为差异速查</h3>
+      <ul class="l2">
+        <li><strong>返回键 / 手势</strong>：iOS 没有系统返回概念。Android 有返回手势 / 按键，Flutter 用 <code>WillPopScope</code> / <code>PopScope</code> 处理拦截（Android 14+ 预测性返回手势还要求提前声明）。左滑返回 App 内导航 ≠ 系统返回，两套都要处理。</li>
+        <li><strong>深色模式</strong>：Android 系统级切换，<code>values-night/</code> 资源目录自动切换。Flutter 的 <code>MediaQuery.platformBrightness</code> 可用，但原生页面、启动画面、通知图标要单独适配。</li>
+        <li><strong>RTL</strong>：阿拉伯语等从右向左布局。iOS 你可能没做过 RTL；Android 布局属性要用 start/end 而非 left/right（Flutter 的 <code>EdgeInsetsDirectional</code> 等）。接国际项目前确认需求。</li>
+        <li><strong>图标</strong>：Adaptive Icon（前景层 + 背景层 XML），不同启动器可能裁成圆 / 方 / 圆角方。给一层 PNG 会被各家启动器压变形。启动画面用 SplashScreen API，无法自定义展示时长。</li>
+      </ul>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 05 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-5" aria-labelledby="ch-5-h">
+      <div class="chapter-head">
+        <div class="chapter-no">05</div>
+        <div>
+          <h2 id="ch-5-h">运行时与系统集成层（C）</h2>
+          <p class="lede">不要用 AppDelegate 的心智理解 Android：它没有单一入口，任何一个组件都可能被系统或别的 App 单独拉起。</p>
+        </div>
+      </div>
+
+      <h3>5.1 权限模型：一个权限的"三段式"认知</h3>
+      <p>Android 权限 = <strong>Manifest 声明 + 运行时请求 + 用户可能永久拒绝</strong>，且行为随 API 版本漂移。</p>
+      <ul class="l2">
+        <li><strong>安装时权限</strong>（<code>normal</code> 级）：INTERNET、VIBRATE 等，声明即得（对标 iOS 无感权限）。</li>
+        <li><strong>运行时权限</strong>（<code>dangerous</code> 级，API 23+）：相机、定位、麦克风、存储等。必须在交互时机请求（Flutter 用 <code>permission_handler</code> 统一封装）。</li>
+        <li><strong>"不再询问"状态</strong>：用户两次拒绝后系统不再弹窗——必须检测 <code>shouldShowRequestPermissionRationale</code> 引导去设置页（iOS 只有一次 denied 后只能引导设置，Android 这里的状态机更复杂）。</li>
+        <li><strong>特殊权限</strong>：<code>SYSTEM_ALERT_WINDOW</code>（悬浮窗）、电池优化白名单等，要去<strong>系统设置页</strong>手动开，运行时 API 只能发起跳转。</li>
+      </ul>
+
+      <details>
+        <summary>L3 · 近年的"降级替换"趋势（Android 正在向 iOS 隐私模型收敛）</summary>
+        <ul class="l2">
+          <li>精确 / 模糊定位二选一（API 31+，对标 iOS 精确位置开关）；</li>
+          <li>仅本次允许（对标 iOS "Allow Once"）；</li>
+          <li>照片<strong>部分授权</strong>（API 34，对标 iOS Limited Photos）；</li>
+          <li>Photo Picker（API 33+）：<strong>无需任何权限</strong>即可选图，优先用它替代读存储权限。</li>
+        </ul>
+      </details>
+
+      <h3>5.2 组件模型：四大组件</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">组件</th><th>职责</th><th>与 iOS 的差异</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">Activity</td><td>可交互界面（≈ UIViewController）</td><td>多个 Activity 以栈（Task / Back Stack）管理，别的 App 可以直接跳到你的某一个 Activity</td></tr>
+            <tr><td class="nowrap">Service / 前台服务</td><td>后台任务载体</td><td>API 34 起必须声明类型且用途不符会被拒审；常驻服务必须挂常驻通知</td></tr>
+            <tr><td class="nowrap">BroadcastReceiver</td><td>系统事件监听</td><td>对标 iOS 通知但跨 App；Android 13 起大部分系统广播需动态注册</td></tr>
+            <tr><td class="nowrap">ContentProvider</td><td>跨 App 数据共享</td><td>相册、通讯录通过它读取，iOS 侧无对等物</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="sub">Flutter 应用通常只有一个 Activity（<code>FlutterActivity</code>），多数 iOS 转型者感知不到；但接 SDK（支付、登录）时 SDK 会插自己的 Activity，返回栈行为就变复杂了。</p>
+      <p>常驻后台服务（音乐、导航、运动）必须挂常驻通知——用户会看到你的"永远杀不掉的通知"，这是产品体验设计的一部分，不是纯技术细节。</p>
+
+      <h3>5.3 进程与后台：比 iOS 更激进的"被杀"世界</h3>
+      <ul class="l2">
+        <li><strong>LMK</strong>：内存不足按优先级杀进程（对标 Jetsam，但阈值与策略更激进且厂商可改）。</li>
+        <li><strong>Doze 模式</strong>：设备静止 / 息屏后进入深度休眠，定时器、网络被系统批量延迟（iOS 无此级别限制）。AlarmManager 的精确闹钟需要 <code>SCHEDULE_EXACT_ALARM</code> 权限（API 31+ 需用户授权）。</li>
+        <li><strong>给 Flutter 开发者的实操结论</strong>：任何"离开 App 后台继续做事"的需求（上传、下载、倒计时通知），都要走前台服务 + 常驻通知的路线，纯 Dart 层的 Timer 在后台会被冻结。社区方案：<code>flutter_background_service</code>、workmanager（对标 iOS 的 BGTaskScheduler，但 Android 端调度更不确定——<strong>WorkManager 只保证"最终执行"，不保证准时</strong>）。</li>
+      </ul>
+
+      <h3>5.4 深链</h3>
+      <ul class="l2">
+        <li><strong>Deep Link</strong>（自定义 scheme，<code>myapp://page</code>）：无验证，任何 App 都能声明同 scheme → <strong>有劫持风险</strong>，仅作兜底。</li>
+        <li><strong>App Links</strong>（https 链接）：域名下托管 <code>/.well-known/assetlinks.json</code>（内容含应用签名的 SHA-256 指纹）→ 系统验证通过后 https 链接直接进 App 不弹选择框。与 iOS 的 AASA + Universal Links 机制完全同构，理解成本为零。区别：验证更宽松，但失败时静默降级为"弹应用选择框"，排查时要主动看 <code>adb shell pm verify-app-links</code> 结果。</li>
+        <li>Flutter 中处理：<code>go_router</code> 等路由库声明 scheme / host，在 Activity 的 <code>onNewIntent</code> 时把 intent 传给 Flutter（Flutter 默认已处理热重启后的 deep link，但<strong>冷启动时</strong>的 initial link 要确认路由库版本支持）。</li>
+      </ul>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 06 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-6" aria-labelledby="ch-6-h">
+      <div class="chapter-head">
+        <div class="chapter-no">06</div>
+        <div>
+          <h2 id="ch-6-h">Flutter Android 侧集成层（D）</h2>
+          <p class="lede">iOS 转 Flutter 最容易漏改的不是 Dart 代码，而是 android/app/src/main/AndroidManifest.xml。</p>
+        </div>
+      </div>
+
+      <h3>6.1 AndroidManifest：Flutter 项目的"信息中枢"</h3>
+      <ul class="l2">
+        <li>权限声明（<code>&lt;uses-permission&gt;</code>）、显示名（<code>android:label</code>）、主题、<code>android:exported</code>；</li>
+        <li>深链 intent-filter 挂在 FlutterActivity 上；</li>
+        <li>【坑】release 包关掉调试网络配置残留；</li>
+        <li>【坑】<code>android:allowBackup="true"</code> 默认开启——本地明文存储的用户 token 会被系统备份到云端，敏感数据要么加密，要么在 backup rules 里排除。</li>
+      </ul>
+
+      <h3>6.2 Platform Channel 实战要点</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">通道类型</th><th>语义</th><th>典型场景</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">MethodChannel</td><td>请求-响应（一次调用一次返回）</td><td>调用原生 SDK 单个方法</td></tr>
+            <tr><td class="nowrap">EventChannel</td><td>原生 → Dart 持续数据流</td><td>传感器、电量变化、推送到达</td></tr>
+            <tr><td class="nowrap">BasicMessageChannel</td><td>双向自由消息</td><td>高频双向通信</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>易错细节</h4>
+      <ul class="l2">
+        <li>通道名两端必须完全一致（字符串硬编码容易拼错，建议放常量文件）；</li>
+        <li>数据仅支持<strong>可编解码类型</strong>（null / bool / num / String / List / Map / Uint8List），自定义对象要自己写 Codec——iOS 侧转 JSON 字典是最省事的方案；</li>
+        <li>主线程约定：Android 侧 MethodChannel 默认在<strong>主线程</strong>回调，耗时要切协程 / 线程再 <code>invokeMethod</code> 回主线程；</li>
+        <li><strong>生命周期错配</strong>：页面销毁后 Dart 侧还有 invokeMethod → 原生侧判空防崩；原生侧在 Activity 重建（旋转 / 进程恢复）后用旧 channel 回调 → Dart 已收不到，EventChannel 要在 <code>onListen</code> / <code>onCancel</code> 中正确注册注销。</li>
+      </ul>
+
+<pre><code>// Android 侧：耗时任务不要阻塞主线程
+class PayChannel(private val activity: Activity) : MethodChannel.MethodCallHandler {
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        if (call.method != "pay") return result.notImplemented()
+        CoroutineScope(Dispatchers.IO).launch {
+            val ok = runCatching { doPay(call.argument("orderId")!!) }.getOrDefault(false)
+            activity.runOnUiThread { result.success(ok) }   // 回调切回主线程
+        }
+    }
+}</code></pre>
+
+      <h3>6.3 插件与原生依赖治理</h3>
+      <ul class="l2">
+        <li><code>pubspec.yaml</code> 引插件后，<strong>Android 侧的真实依赖树在 <code>android/build.gradle</code> 生成的产物里</strong>——插件本身还会带 Gradle 依赖（对标：一个 CocoaPods 里嵌套了 SPM 依赖）。冲突时在 <code>app/build.gradle</code> 用 <code>configurations.all { resolutionStrategy }</code> 强制版本。</li>
+        <li>插件质量三查：①是否仍在维护（Flutter 版本升级后旧插件是最常见的编译障碍）；②是否有原生依赖（涉及 16KB 对齐、so 冲突）；③是否要求升 minSdk（有的插件强制 minSdk 24+，会把整包最低版本抬上去——<strong>这是选型时就该看的</strong>）。</li>
+        <li>需要写自定义插件时：Flutter 命令生成 Plugin 模板，Kotlin 写 Android 侧，FFI（<code>dart:ffi</code>）适合纯计算型原生调用（对标 C 互操作）。</li>
+      </ul>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 07 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-7" aria-labelledby="ch-7-h">
+      <div class="chapter-head">
+        <div class="chapter-no">07</div>
+        <div>
+          <h2 id="ch-7-h">打包与签名层（E）</h2>
+          <p class="lede">先弄清签名，再谈打包。一套密钥，两个角色。</p>
+        </div>
+      </div>
+
+      <h3>7.1 签名体系</h3>
+      <div class="grid2">
+        <div class="card">
+          <h4>上传密钥</h4>
+          <p>你本地持有的 <code>.jks</code> 文件 + 密码，用于给上传到 Play 的包签名。丢了可以重置。</p>
+        </div>
+        <div class="card accent">
+          <h4>App 签名密钥</h4>
+          <p>接入 Play App Signing 后由 Google 托管的"正式身份"，Google 用它重签后分发给用户。<strong>丢了这个身份就没了。</strong></p>
+        </div>
+      </div>
+
+      <p>【与 iOS 的核心差异】iOS 签名证书丢了重签即可（Apple 会校验你账号身份）；Android 一旦丢失正式签名密钥，没有任何找回渠道，应用等于报废（用户无法升级，只能以新 applicationId 重新发布）。</p>
+
+      <div class="card">
+        <h4>签名密钥管理制度（入职 / 立项第一天做）</h4>
+        <ol class="l2">
+          <li>keystore 文件 + 密码 + alias 入密码管理器 / 公司保险库，<strong>绝不进 git</strong>；</li>
+          <li>CI 打包用环境变量 / 密钥管理服务注入（<code>key.properties</code> 只进 <code>.gitignore</code>）；</li>
+          <li>接入 Play App Signing，让 Google 托管正式密钥（上传密钥丢了可重置）；</li>
+          <li>记录 keystore 的 SHA-256 指纹——它同时用于 App Links 验证、第三方 SDK 平台（微信 / 高德等）注册。</li>
+        </ol>
+      </div>
+
+<pre><code>// 标准签名配置写法（密码不进 git）
+val keystoreProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) load(f.inputStream())
+}
+signingConfigs {
+    create("release") {
+        storeFile = keystoreProps["storeFile"]?.let { file(it) }
+        storePassword = keystoreProps["storePassword"] as String?
+        keyAlias = keystoreProps["keyAlias"] as String?
+        keyPassword = keystoreProps["keyPassword"] as String?
+    }
+}</code></pre>
+
+      <h3>7.2 AAB vs APK、ABI、16KB</h3>
+      <ul class="l2">
+        <li><strong>AAB（Android App Bundle）</strong>：Play 商店强制要求（2021-08 起新应用），上传的是"中间格式"，Google 按设备动态生成按需分发的 APK（Split APKs）——用户只下载自己设备需要的资源和 ABI，包体积普遍降 30%+。<code>flutter build appbundle</code> 产出。注意 AAB <strong>不能直接安装到手机测试</strong>，本地测试用 <code>bundletool</code> 转真 APK 或直接打 APK。</li>
+        <li><strong>国内商店不收 AAB，只收通用 APK</strong>——国内项目构建链是双轨：Play 走 AAB，国内各商店走 <code>flutter build apk --split-per-abi</code> 或 fat APK。</li>
+        <li><strong>ABI</strong>：<code>armeabi-v7a</code>（32 位老设备）/ <code>arm64-v8a</code>（主流 64 位）/ <code>x86_64</code>（模拟器）。Play 要求 64 位（arm64）必含；<code>--split-per-abi</code> 拆分后单包体积减半以上。</li>
+        <li><strong>16KB 对齐</strong>（见 4.2）：含原生 so 的应用 target 35 时的 Play 硬门槛，上传前自查。</li>
+      </ul>
+
+      <h3>7.3 构建优化（release 包质量三件事）</h3>
+      <ol class="l2">
+        <li><strong>R8 混淆与收缩</strong>：<code>isMinifyEnabled = true</code> + <code>isShrinkResources = true</code>。Flutter 引擎与 Kotlin / Flutter 插件自带 consumer rules，但<strong>反射调用的原生 SDK（支付、推送、序列化库）需要手动 keep 规则</strong>，否则 release 包运行时闪退而 debug 正常——"debug 好好的，release 一启动就崩"，九成是混淆规则没写。</li>
+        <li><strong>符号上传</strong>：混淆后崩溃堆栈是乱码（<code>a.b.c</code>），要把 R8 生成的 <code>mapping.txt</code> 归档并上传 Crashlytics / Sentry 才能还原堆栈。iOS 的 dSYM 上传心智完全平移。<strong>每个 versionCode 的 mapping 都要留档</strong>，丢失 = 该版本崩溃无法解读。</li>
+        <li><strong>启动性能</strong>：Flutter 冷启动白屏常见于低端机与国产 ROM，手段：启动画面适配（默认系统 splash）+ Dart 主隔离预初始化 + 关注 Android Vitals 的 TTFD 指标。</li>
+      </ol>
+
+<pre><code># 出包三条命令（Play / 国内 / 自测）
+./gradlew :app:bundleRelease                 # AAB → Play
+flutter build apk --split-per-abi --release  # 分 ABI APK → 国内商店
+flutter build apk --release                  # fat APK → 自测 / 分发
+./gradlew app:dependencies > deps.txt        # 依赖树快照，随版本归档</code></pre>
+
+      <h3>7.4 国内多渠道打包</h3>
+      <ul class="l2">
+        <li>渠道维度用 flavor 或 <code>walle</code>（美团方案，基于 V2 签名写入渠道信息，秒级出包）实现；</li>
+        <li>每个渠道的统计 SDK 初始化开关 + 各商店的隐私声明差异，在 flavor 源目录隔离；</li>
+        <li>【坑】多渠道 × 多 buildType 的变体数量爆炸（4 渠道 × 2 = 8 个变体），CI 要显式指定要构建的变体，别全量跑。</li>
+      </ul>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 08 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-8" aria-labelledby="ch-8-h">
+      <div class="chapter-head">
+        <div class="chapter-no">08</div>
+        <div>
+          <h2 id="ch-8-h">发布层（F）</h2>
+          <p class="lede">发布是 Android 上唯一"iOS 经验几乎零平移"的一块：多商店、多资质、多审核标准。</p>
+        </div>
+      </div>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 720 180" role="img" aria-label="发布流水线：构建 → 签名 → 测试轨道 → 分阶段放量 → 观察 Vitals">
+            <g font-family="Inter, PingFang SC, sans-serif" font-size="12">
+              <g fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="12" y="56" width="126" height="56"/>
+                <rect x="168" y="56" width="126" height="56"/>
+                <rect x="324" y="56" width="126" height="56"/>
+                <rect x="480" y="56" width="126" height="56"/>
+                <rect x="636" y="56" width="72" height="56"/>
+              </g>
+              <g fill="currentColor" text-anchor="middle">
+                <text x="75" y="79">构建产物</text>
+                <text x="75" y="97" font-size="10" opacity=".6">AAB + APK</text>
+                <text x="231" y="79">签名</text>
+                <text x="231" y="97" font-size="10" opacity=".6">Keystore / Play</text>
+                <text x="387" y="79">测试轨道</text>
+                <text x="387" y="97" font-size="10" opacity=".6">内测 → 封闭</text>
+                <text x="543" y="79">分阶段放量</text>
+                <text x="543" y="97" font-size="10" opacity=".6">10% → 50% → 100%</text>
+                <text x="672" y="79">Vitals</text>
+                <text x="672" y="97" font-size="10" opacity=".6">24h 观察</text>
+              </g>
+              <g stroke="var(--accent)" stroke-width="1.6" fill="none">
+                <path d="M138 84 H160"/><path d="M294 84 H316"/><path d="M450 84 H472"/><path d="M606 84 H628"/>
+              </g>
+              <g fill="var(--accent)">
+                <path d="M160 84 l-7 -4 v8 z"/><path d="M316 84 l-7 -4 v8 z"/><path d="M472 84 l-7 -4 v8 z"/><path d="M628 84 l-7 -4 v8 z"/>
+              </g>
+              <g fill="currentColor" font-size="10" opacity=".6">
+                <text x="12" y="136">每一个箭头都可能退回上一步：签名错 → 重建；测试轨道不达标 → 重发；Vitals 崩溃率超线 → 暂停放量并出更高 versionCode 的修复版。</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <figcaption>发布不是一次动作，而是一条带回流边的流水线。Android 的回滚只能"向前修"——已装到用户手机上的版本无法撤回，所以每个环节都要能停住。</figcaption>
+      </figure>
+
+      <h3>8.1 Google Play 发布全流程</h3>
+      <pre><code>内部测试（Internal，≤100 人，秒级分发）
+  → 封闭测试（Closed，邮件列表 / Google Group）
+  → 开放测试（Open，可从商店页加入）
+  → 正式版（Production，支持分阶段放量）</code></pre>
+
+      <h4>硬性合规清单（2025 口径）</h4>
+      <ul class="l2">
+        <li>targetSdk ≥ 35（2025-08-31 起新应用与更新的要求；每年 8 月底滚动上调）；</li>
+        <li>含原生 so 的应用支持 16KB 页对齐（2025-11-01 起 target 35 强制）；</li>
+        <li>AAB 格式上传；</li>
+        <li>接入 Play App Signing；</li>
+        <li><strong>新个人开发者账号</strong>：首个应用需先建封闭测试轨道，<strong>12 名测试员连续选择参与 14 天</strong>后才能申请正式发布（2024-12 起从 20 人降为 12 人；组织账号与老账号豁免；每个新 App 都要重新走一遍）——直接影响发布排期，<strong>提前 3 周规划</strong>；</li>
+        <li>数据安全表单（Data Safety）：声明收集哪些数据、是否共享——与代码实际行为必须一致，撒谎会被下架；</li>
+        <li>隐私政策 URL（必须可公网访问）；</li>
+        <li>内容分级问卷、目标受众（含儿童则触发更严政策）、广告声明；</li>
+        <li>商店素材：图标 512×512、功能图 1024×500、各机型截图。</li>
+      </ul>
+
+      <p><strong>审核与放量</strong>：Play 初审通常数小时~2 天，但事后机器 + 人工扫描持续进行；正式发布用<strong>分阶段放量</strong>（如先 10% → 50% → 100%），崩溃率异常可暂停放量——这是比 iOS 更细粒度的发布控制，建议默认开启。</p>
+      <p><strong>上架后立即做的</strong>：Play Console 的 Pre-launch Report（自动真机测试）与 Android Vitals 基线确认。</p>
+
+      <h3>8.2 国内应用商店发布</h3>
+      <div class="card">
+        <h4>前置资质（比技术更容易卡住流程的部分）</h4>
+        <ol class="l2">
+          <li><strong>软件著作权（软著）</strong>：多数商店上架必备，申请周期数周，提前办；</li>
+          <li><strong>ICP 备案 / App 备案</strong>：2023 年起工信部要求 App 备案（主体备案 + App 备案），无备案号商店直接拒收——国内发布的硬门槛，走企业主体 + 服务器在国内；</li>
+          <li>《隐私政策》符合《个人信息保护法》《网络安全法》：权限用途逐条说明、SDK 清单披露（第三方 SDK 收集信息也要列）；</li>
+          <li>特定行业需额外资质：金融类牌照、医疗类审批、教育类备案等；</li>
+          <li>各家商店（华为 / 小米 / OPPO / vivo / 应用宝…）各自注册开发者账号（企业账号需营业执照 + 对公验证），每个商店的审核标准、素材尺寸、更新说明规范都不同，首次全流程预留 2~4 周。</li>
+        </ol>
+      </div>
+
+      <p><strong>技术差异清单</strong>：无 GMS → 推送用厂商通道 / 聚合 SDK；支付接微信 / 支付宝（非 IAP 垄断，虚拟商品也可以走第三方支付——与 iOS 30% 抽成规则完全不同）；地图 / 定位换高德 / 百度（对标换掉 MapKit）；商店审核对权限滥用、强制索权、启动弹窗极敏感——"启动即弹权限"在国内商店是高频驳回项，权限请求要跟功能场景绑定。</p>
+      <p><strong>多渠道发布节奏</strong>：建议主版本统一日发布，但各商店审核时长不一（1~7 天），用 CI 出渠道包 + 各商店后台分别提审，建立渠道发布状态表跟踪。</p>
+
+      <h3>8.3 版本与灰度策略</h3>
+      <ul class="l2">
+        <li>版本号策略：<code>versionCode</code> 建议用规则化数字（如 <code>MMmmpp</code> 或构建流水号），保证单调且可追溯；</li>
+        <li>灰度：Play 用分阶段放量；国内商店多数支持"按比例发布"（华为 / 小米有类似能力），部分商店只能全量——<strong>以最慢的商店为准规划回滚预案</strong>；</li>
+        <li>回滚：Android <strong>不能撤回已装版本</strong>，只能发布更高 versionCode 的修复版——所以"发版前真机冒烟 + 灰度观察 24h Vitals"是纪律不是建议。</li>
+      </ul>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 09 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-9" aria-labelledby="ch-9-h">
+      <div class="chapter-head">
+        <div class="chapter-no">09</div>
+        <div>
+          <h2 id="ch-9-h">质量与运维层（G）</h2>
+          <p class="lede">Android 的线上质量多了一个 iOS 没有的独立类别：ANR。而它还会反过来惩罚你的商店排名。</p>
+        </div>
+      </div>
+
+      <h3>9.1 监控三件套</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="nowrap">维度</th><th>工具</th><th>与 iOS 的差异</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">崩溃</td><td>Crashlytics / Sentry</td><td>多了 <strong>ANR</strong> 类别（主线程 5s 无响应，用户可弹"关闭应用"）——ANR 往往是 Flutter 侧主隔离阻塞或原生主线程 IO 引起</td></tr>
+            <tr><td class="nowrap">性能基线</td><td>Android Vitals（Play Console 内置，免费）</td><td>直接影响<strong>商店搜索排名</strong>（崩溃率 / ANR 率过高会被降权甚至警示）——Play 特有的运营级惩罚</td></tr>
+            <tr><td class="nowrap">自定义性能</td><td>Firebase Performance / 自建</td><td>关注冷启动（TTFD）、页面帧率</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>ANR 排查必备技能</strong>：会读 <code>/data/anr/</code> traces（或通过 Play Console 下载聚合的 ANR 堆栈）——主线程在等锁 / 等 binder / 做 IO 是三大常见原因。</p>
+
+      <h3>9.2 兼容性测试矩阵（最低配置建议）</h3>
+      <ul class="l2">
+        <li><strong>真机 5 台</strong>：Pixel（标准行为）+ 三星（国际市占第一）+ 小米 + 华为 / 荣耀 + OPPO / vivo（任选）；</li>
+        <li><strong>系统版本</strong>：最低支持版本 1 台 + 最新正式版 1 台；</li>
+        <li><strong>状态矩阵</strong>：深色模式开 / 关、字体缩放 1.0 / 1.3、分屏、弱网（飞行模式切换）、权限全拒 / 全给、进程被杀后恢复（开发者选项里"不保留活动"打开后回归一遍，模拟激进后台）；</li>
+        <li>Play Console 的设备目录可查真实机型分布，<strong>按用户分布配测试机</strong>，不按情怀配。</li>
+      </ul>
+
+      <h3>9.3 Flutter 特有的质量项</h3>
+      <ul class="l2">
+        <li>Dart 主隔离阻塞同样会引发 ANR（用户手势事件在平台线程分发到 Dart 后被阻塞）——耗时计算用 <code>compute()</code> / <code>Isolate.run</code>；</li>
+        <li>插件升级后<strong>必须回归原生侧行为</strong>（权限申请文案、通知、deeplink），因为插件可能内含原生代码变更；</li>
+        <li>崩溃日志两套体系并存：Dart 异常（Flutter Error）与原生崩溃（tombstone / NDK crash），Crashlytics 两边都要配（<code>FlutterError.onError</code> + <code>PlatformDispatcher.onError</code>）。</li>
+      </ul>
+
+<pre><code>// 崩溃双通道接入
+FlutterError.onError = (details) {
+  FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+};
+PlatformDispatcher.instance.onError = (error, stack) {
+  FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+  return true;   // 阻止默认的进程终止
+};</code></pre>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 10 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-10" aria-labelledby="ch-10-h">
+      <div class="chapter-head">
+        <div class="chapter-no">10</div>
+        <div>
+          <h2 id="ch-10-h">安全层（H）</h2>
+          <p class="lede">Android 的安全基线比 iOS 松，但暴露面更大：组件可被任意 App 调用，安装包可被任意反编译。</p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h4>明文传输</h4>
+          <p>Android 9+ 默认禁 cleartext HTTP；要用 HTTP 必须在 <code>networkSecurityConfig</code> 显式放行——这是 iOS ATS 的同构物，理解成本为零。</p>
+        </div>
+        <div class="card">
+          <h4>组件暴露</h4>
+          <p><code>exported="true"</code> 的 Activity / Service 可被任意第三方 App 调起。敏感页面加签名校验或设 <code>exported="false"</code>。</p>
+        </div>
+        <div class="card">
+          <h4>数据存储</h4>
+          <p>敏感数据用 EncryptedSharedPreferences / <code>flutter_secure_storage</code>（底层 Keystore）；<code>allowBackup</code> 排除敏感文件；调试残留（<code>debuggable</code>、日志、测试后门）在 release 中关闭。</p>
+        </div>
+        <div class="card">
+          <h4>加固与反逆向</h4>
+          <p>国内发布惯例接入加固（腾讯乐固 / 360 / 爱加密等），防 dex 反编译与二次打包；Play 侧用 R8 + Play Integrity API（对标 DeviceCheck / App Attest）。</p>
+        </div>
+      </div>
+
+      <div class="card accent">
+        <h4>密钥安全（把前文串起来的一条线）</h4>
+        <p>任何硬编码在客户端的 secret 都视为公开（与 iOS 同理）。高德 / 微信等平台的 App 签名绑定（用你的 keystore 指纹绑定 SDK）是 Android 侧防冒用的主要手段——<strong>这就是为什么 keystore 指纹变更要走全平台更新流程</strong>，也反过来要求 keystore 终身不变。</p>
+      </div>
+
+<pre><code>&lt;!-- AndroidManifest：只放行确实需要明文的那一个域名 --&gt;
+&lt;application android:networkSecurityConfig="@xml/network_security_config" ... &gt;
+&lt;!-- res/xml/network_security_config.xml --&gt;
+&lt;network-security-config&gt;
+    &lt;base-config cleartextTrafficPermitted="false" /&gt;
+    &lt;domain-config cleartextTrafficPermitted="true"&gt;
+        &lt;domain includeSubdomains="false"&gt;legacy.internal.example&lt;/domain&gt;
+    &lt;/domain-config&gt;
+&lt;/network-security-config&gt;</code></pre>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 11 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-11" aria-labelledby="ch-11-h">
+      <div class="chapter-head">
+        <div class="chapter-no">11</div>
+        <div>
+          <h2 id="ch-11-h">高频坑清单（按事故概率排序）</h2>
+          <p class="lede">这 12 条是 iOS 转 Android 的真实事故分布，不是理论清单。每条都能回溯到前面某一章。</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="pit"><div class="pit-no">01</div><div><p>release 包闪退、debug 正常</p><p class="fix">→ R8 混淆缺 keep 规则（第 7.3）</p></div></div>
+        <div class="pit"><div class="pit-no">02</div><div><p>targetSdk 升级后通知 / 前台服务 / 边到边行为全变</p><p class="fix">→ 把 targetSdk 升级当版本发布做，跑完整回归（第 4.2）</p></div></div>
+        <div class="pit"><div class="pit-no">03</div><div><p>国产 ROM 收不到推送 / 后台被杀</p><p class="fix">→ 没接厂商推送通道 + 未引导用户开自启动（第 4.3）</p></div></div>
+        <div class="pit"><div class="pit-no">04</div><div><p>发布后发现 minSdk / 权限问题被商店拒</p><p class="fix">→ 提审前用第 13 章清单核对（第 8 章）</p></div></div>
+        <div class="pit"><div class="pit-no">05</div><div><p>字体缩放后布局崩坏</p><p class="fix">→ 文字行高用 dp 写死（第 4.1）</p></div></div>
+        <div class="pit"><div class="pit-no">06</div><div><p>深链冷启动失效</p><p class="fix">→ initial link 未处理或 assetlinks.json 指纹不匹配（第 5.4）</p></div></div>
+        <div class="pit"><div class="pit-no">07</div><div><p>Flutter / AGP / Gradle 版本矩阵升级连环报错</p><p class="fix">→ 按官方兼容表顺序升（第 3.1）</p></div></div>
+        <div class="pit"><div class="pit-no">08</div><div><p>上传 versionCode 重复被拒</p><p class="fix">→ CI 固定从流水号取 versionCode（第 7.4 / 8.3）</p></div></div>
+        <div class="pit"><div class="pit-no">09</div><div><p>混淆后 mapping 丢失，崩溃无法解读</p><p class="fix">→ mapping 随 versionCode 归档（第 7.3）</p></div></div>
+        <div class="pit"><div class="pit-no">10</div><div><p>keystore 存在个人电脑里</p><p class="fix">→ 立即按第 7.1 制度迁移</p></div></div>
+        <div class="pit"><div class="pit-no">11</div><div><p>Android 15 上页面内容被状态栏穿透</p><p class="fix">→ 边到边强制后未适配 WindowInsets（第 4.1）</p></div></div>
+        <div class="pit"><div class="pit-no">12</div><div><p>含旧 native 插件被 Play 拒收</p><p class="fix">→ 16KB 对齐（第 4.2）</p></div></div>
+      </div>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 12 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-12" aria-labelledby="ch-12-h">
+      <div class="chapter-head">
+        <div class="chapter-no">12</div>
+        <div>
+          <h2 id="ch-12-h">30 天补齐路线（按依赖顺序）</h2>
+          <p class="lede">每周一个可交付产物，产出物不达标就不进下一周——因为下一周的坑都建立在这一周的产物上。</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <caption>四周路线与验收产物</caption>
+          <thead><tr><th class="nowrap">周</th><th>目标</th><th>产出物</th></tr></thead>
+          <tbody>
+            <tr><td class="nowrap">第 1 周</td><td>环境 + Gradle + 构建变体（第 3 章）</td><td>一个带 2 个 flavor、能出 debug / release 的 Flutter 工程</td></tr>
+            <tr><td class="nowrap">第 2 周</td><td>适配 + 权限 + 生命周期（第 4、5 章）</td><td>深色模式 + 字体缩放 + 权限全流程 Demo，真机 3 台过一遍</td></tr>
+            <tr><td class="nowrap">第 3 周</td><td>Platform Channel + 打包签名（第 6、7 章）</td><td>自写一个 MethodChannel 插件；完成签名配置 + AAB / APK 双产物 + mapping 归档</td></tr>
+            <tr><td class="nowrap">第 4 周</td><td>发布 + 运维（第 8、9 章）</td><td>走通 Play 封闭测试轨道（12 人 × 14 天，与开发并行启动）；接入 Crashlytics + Vitals；建立渠道发布状态表</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>学习材料优先级</strong>：官方文档 developer.android.com（权威且更新及时）&gt; Flutter 官方 Android integration 文档 &gt; 各商店开发者后台文档（政策以后台为准，第三方教程过时率高）。</p>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 13 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-13" aria-labelledby="ch-13-h">
+      <div class="chapter-head">
+        <div class="chapter-no">13</div>
+        <div>
+          <h2 id="ch-13-h">发布前自检清单</h2>
+          <p class="lede">逐项打勾，进度本地保存。任何一项空着就不要提交审核。</p>
+        </div>
+      </div>
+
+      <div class="check-head">
+        <h3 style="margin:0">构建与签名</h3>
+        <span class="check-count" data-check-count>0 / 0</span>
+      </div>
+      <ul class="checklist" data-checklist="build">
+        <li><input type="checkbox" id="c1"><label for="c1">versionCode 严格递增且 CI 自动生成</label></li>
+        <li><input type="checkbox" id="c2"><label for="c2">keystore 异地备份 + 接入 Play App Signing（或国内密钥双人保管）</label></li>
+        <li><input type="checkbox" id="c3"><label for="c3">release 开启 R8 + 资源收缩，mapping.txt 已归档上传</label></li>
+        <li><input type="checkbox" id="c4"><label for="c4">release 包真机（非模拟器）完成冒烟测试</label></li>
+        <li><input type="checkbox" id="c5"><label for="c5">依赖树已审查（<code>gradlew dependencies</code>），无重复 / 冲突版本</label></li>
+      </ul>
+
+      <h3>合规与适配</h3>
+      <ul class="checklist" data-checklist="compat">
+        <li><input type="checkbox" id="c6"><label for="c6">targetSdk 达到当年 Play 要求（2025 年：≥ 35）</label></li>
+        <li><input type="checkbox" id="c7"><label for="c7">含原生 so 时已验证 16KB 对齐</label></li>
+        <li><input type="checkbox" id="c8"><label for="c8">所有含 intent-filter 组件显式声明 exported</label></li>
+        <li><input type="checkbox" id="c9"><label for="c9">前台服务声明了正确类型且用途匹配</label></li>
+        <li><input type="checkbox" id="c10"><label for="c10">通知已接入 NotificationChannel；API 33+ 通知权限运行时申请</label></li>
+        <li><input type="checkbox" id="c11"><label for="c11">深色模式 / 字体缩放 1.3 / 分屏 / 深链冷启动实测通过</label></li>
+        <li><input type="checkbox" id="c12"><label for="c12">权限申请文案与功能场景绑定（国内审核红线）</label></li>
+      </ul>
+
+      <h3>发布</h3>
+      <ul class="checklist" data-checklist="release">
+        <li><input type="checkbox" id="c13"><label for="c13">Play：数据安全表单与实际行为一致；隐私政策可访问；封闭测试要求已满足（新个人账号 12 人 × 14 天）</label></li>
+        <li><input type="checkbox" id="c14"><label for="c14">国内：软著 + App 备案号 + SDK 收集清单披露齐备；各商店素材按其规范裁切</label></li>
+        <li><input type="checkbox" id="c15"><label for="c15">崩溃 / ANR 监控已接入并验证能收到测试事件</label></li>
+        <li><input type="checkbox" id="c16"><label for="c16">分阶段放量已开启，回滚预案（更高 versionCode 热修）已就绪</label></li>
+        <li><input type="checkbox" id="c17"><label for="c17">各渠道推送通道在 release 包真机实测送达</label></li>
+      </ul>
+
+      <h3>Flutter 专项</h3>
+      <ul class="checklist" data-checklist="flutter">
+        <li><input type="checkbox" id="c18"><label for="c18">Dart 侧无主隔离长阻塞（列表滚动、JSON 解析走 Isolate）</label></li>
+        <li><input type="checkbox" id="c19"><label for="c19">插件 minSdk 要求未抬高整体 minSdk（或已评估接受）</label></li>
+        <li><input type="checkbox" id="c20"><label for="c20">Platform Channel 生命周期错配已防护（空判断 + 注销）</label></li>
+        <li><input type="checkbox" id="c21"><label for="c21">release 包深链 / 通知 / 权限等原生交互全部回归</label></li>
+      </ul>
+      <button class="reset-btn" type="button" data-reset>清空勾选</button>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 14 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-14" aria-labelledby="ch-14-h">
+      <div class="chapter-head">
+        <div class="chapter-no">14</div>
+        <div>
+          <h2 id="ch-14-h">术语表与自测</h2>
+          <p class="lede">先扫术语消除歧义，再用 5 道题验一下哪一章还没读透。</p>
+        </div>
+      </div>
+
+      <h3>术语表</h3>
+      <dl class="terms">
+        <div><dt>AGP（Android Gradle Plugin）</dt><dd>Gradle 上构建 Android 的插件，与 Gradle 本体、Kotlin 插件强版本约束。</dd></div>
+        <div><dt>applicationId</dt><dd>应用在市场里的唯一身份，≈ Bundle ID，发布后不可更改。</dd></div>
+        <div><dt>targetSdk</dt><dd>声明"已按该版本系统行为适配"，决定系统对你施加哪些限制，不是最低支持版本。</dd></div>
+        <div><dt>Build Type / Flavor</dt><dd>前者切 debug/release 编译配置，后者切渠道与业务变体，二者笛卡尔积形成 variant。</dd></div>
+        <div><dt>dp / sp</dt><dd>密度无关像素 / 随字体缩放的可伸缩单位；间距用 dp，文字用 sp。</dd></div>
+        <div><dt>LMK / Doze</dt><dd>低内存杀进程机制 / 深度休眠模式，二者共同造成 Android 后台被激进回收。</dd></div>
+        <div><dt>ANR</dt><dd>Application Not Responding，主线程 5s 无响应，iOS 没有的独立崩溃类别。</dd></div>
+        <div><dt>AAB</dt><dd>Android App Bundle，Play 强制上传格式，按设备动态下发 Split APK。</dd></div>
+        <div><dt>Play App Signing</dt><dd>Google 托管正式签名密钥的服务，使上传密钥可重置。</dd></div>
+        <div><dt>16KB 页对齐</dt><dd>native so 的 LOAD 段需按 16384 字节对齐，2025 起 Play 的硬门槛。</dd></div>
+        <div><dt>assetlinks.json</dt><dd>App Links 的域名验证文件，内含应用签名 SHA-256 指纹。</dd></div>
+        <div><dt>mapping.txt</dt><dd>R8 混淆映射表，用于还原崩溃堆栈，必须按 versionCode 归档。</dd></div>
+      </dl>
+
+      <h3>自测 · 5 题</h3>
+      <ol class="quiz">
+        <li>
+          把 <code>targetSdk</code> 从 34 改到 35，为什么不能当作"改个数字"？
+          <details><summary>看答案</summary><p>它声明你接受 Android 15 的行为约束：边到边显示强制启用、前台服务类型、16KB 对齐等同时生效。这会改变运行期行为，必须配一轮完整回归，按版本发布的流程走。</p></details>
+        </li>
+        <li>
+          用户把系统字体调到 1.3 倍，你的页面文字被截断。最可能的原因？
+          <details><summary>看答案</summary><p>文字容器的高度用 dp 写死。文字用 sp 会随 fontScale 放大，而 dp 高度不变，于是裁切。文字区域应改为可伸缩约束（wrap_content / minHeight），不要用固定 dp 行高。</p></details>
+        </li>
+        <li>
+          debug 包一切正常，release 包启动即崩。优先查什么？
+          <details><summary>看答案</summary><p>R8 混淆规则。反射调用的支付 / 推送 / 序列化 SDK 需要 keep 规则，否则类名被改后反射找不到类，抛 ClassNotFound / NoSuchMethod。同时确认 mapping.txt 已归档，否则堆栈无法解读。</p></details>
+        </li>
+        <li>
+          推送在 Pixel 上正常，在小米 / 华为上收不到。为什么？
+          <details><summary>看答案</summary><p>国内无 GMS，FCM 不可用；且 MIUI / EMUI 的自启动管理与省电策略会杀后台进程。需要接厂商推送通道（或聚合 SDK），并引导用户开启自启动与电池优化白名单。</p></details>
+        </li>
+        <li>
+          为什么 Android 发布后"回滚"这个词不成立？
+          <details><summary>看答案</summary><p>已安装到用户设备上的版本无法撤回，市场也不允许降低 versionCode。唯一路径是发布更高 versionCode 的修复版，因此灰度观察与真机冒烟是发布流程的组成部分。</p></details>
+        </li>
+      </ol>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+
+    <!-- ══ 15 ══════════════════════════════════════════ -->
+    <section class="chapter" id="ch-15" aria-labelledby="ch-15-h">
+      <div class="chapter-head">
+        <div class="chapter-no">15</div>
+        <div>
+          <h2 id="ch-15-h">文档自检报告</h2>
+          <p class="lede">这份文档是怎么被检查过的，以及它明确不覆盖什么。</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>检查项</th><th>结果</th></tr></thead>
+          <tbody>
+            <tr><td>时效性数据核实（targetSdk 35 死线 2025-08-31、16KB 强制 2025-11-01、封闭测试 12 人 × 14 天为 2024-12 调整后口径、AAB 强制、Play App Signing）</td><td>已检索核实（2025 口径），文中标注具体日期便于后续维护</td></tr>
+            <tr><td>覆盖四大领域（机型适配 / 代码集成 / 打包方案 / 发布流程）</td><td>分别对应第 4、6、7、8 章，另补构建体系、权限合规、运维监控、安全四章</td></tr>
+            <tr><td>iOS 经验平移是否贯穿全文</td><td>每章含"与 iOS 的差异"锚点；第 1 章映射总表 + 第 11 章坑清单专章</td></tr>
+            <tr><td>可执行性</td><td>含配置代码片段、命令、清单；清单带判定标准而非泛泛而谈</td></tr>
+            <tr><td>结构完整性</td><td>第 2 章体系树与正文章节一一对应；第 13 章清单可回溯到章节编号</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h4>已知局限</h4>
+        <ul class="l2">
+          <li>国内商店政策与资质流程随地区 / 时间变动大，文中给出通用框架，执行前须以各商店后台当期要求为准；</li>
+          <li>鸿蒙 NEXT（不再兼容 APK）仅作风险提示，未展开鸿蒙开发体系；</li>
+          <li>文中版本号（AGP / Gradle 具体组合）以官方兼容表为准，未固化具体数字以防过时。</li>
+        </ul>
+      </div>
+      <button class="done-toggle" type="button" data-done="false">标记本章已学</button>
+    </section>
+  </main>
+</div>
+
+<footer class="layout" style="border-top:1px solid var(--rule);color:var(--muted);font-size:.8rem">
+  <span>iOS 老兵的 Android 补课指南 v1.0 · 瑞士网格风格 · 单文件自包含，无外部请求</span>
+</footer>
+
+<script>
+(function () {
+  var KEY = 'docforge:' + location.pathname
+  var body = document.body
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-mode-btn]'))
+  var chapters = Array.prototype.slice.call(document.querySelectorAll('.chapter'))
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'))
+  var progress = document.getElementById('progress')
+  var label = document.querySelector('[data-progress-label]')
+  var i = 0
+
+  function store(k, v) { try { localStorage.setItem(KEY + ':' + k, v) } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(KEY + ':' + k) } catch (e) { return null } }
+
+  function setMode(mode, remember) {
+    body.dataset.mode = mode
+    buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.modeBtn === mode)) })
+    if (remember) store('mode', mode)
+    if (mode === 'deck') show(i)
+  }
+  function show(index) {
+    i = Math.max(0, Math.min(chapters.length - 1, index))
+    chapters.forEach(function (c, n) { c.classList.toggle('is-current', n === i) })
+    if (chapters[i]) chapters[i].scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }
+
+  /* ── 已学进度 ─────────────────────────────── */
+  function doneSet() {
+    try { return new Set(JSON.parse(load('done') || '[]')) } catch (e) { return new Set() }
+  }
+  function paintDone() {
+    var set = doneSet()
+    if (label) label.textContent = '已学 ' + set.size + ' / ' + chapters.length
+    document.querySelectorAll('[data-done]').forEach(function (btn) {
+      var sec = btn.closest('.chapter')
+      var on = sec && set.has(sec.id)
+      btn.dataset.done = String(!!on)
+      btn.textContent = on ? '✓ 已标记（点击取消）' : '标记本章已学'
+    })
+  }
+  document.querySelectorAll('[data-done]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var sec = btn.closest('.chapter')
+      if (!sec) return
+      var set = doneSet()
+      if (set.has(sec.id)) set.delete(sec.id); else set.add(sec.id)
+      store('done', JSON.stringify(Array.from(set)))
+      paintDone()
+    })
+  })
+
+  /* ── 清单持久化 ───────────────────────────── */
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.checklist input[type="checkbox"]'))
+  var counts = Array.prototype.slice.call(document.querySelectorAll('[data-check-count]'))
+  function paintChecks() {
+    var on = boxes.filter(function (b) { return b.checked }).length
+    counts.forEach(function (c) { c.textContent = on + ' / ' + boxes.length })
+  }
+  function saveChecks() {
+    var state = {}
+    boxes.forEach(function (b) { if (b.checked) state[b.id] = 1 })
+    store('checks', JSON.stringify(state))
+    paintChecks()
+  }
+  try {
+    var saved = JSON.parse(load('checks') || '{}')
+    boxes.forEach(function (b) { if (saved[b.id]) b.checked = true })
+  } catch (e) {}
+  boxes.forEach(function (b) { b.addEventListener('change', saveChecks) })
+  var reset = document.querySelector('[data-reset]')
+  if (reset) reset.addEventListener('click', function () {
+    boxes.forEach(function (b) { b.checked = false })
+    saveChecks()
+  })
+
+  /* ── 模式与快捷键 ─────────────────────────── */
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () { setMode(b.dataset.modeBtn, true); if (b.dataset.modeBtn === 'deck') show(i) })
+  })
+  document.addEventListener('keydown', function (e) {
+    if (body.dataset.mode !== 'deck') { if (e.key === 'Escape') setMode('atlas', true); return }
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(i + 1) }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(i - 1) }
+    if (e.key === 'Home') { e.preventDefault(); show(0) }
+    if (e.key === 'End') { e.preventDefault(); show(chapters.length - 1) }
+    if (e.key === 'Escape') setMode('atlas', true)
+  })
+
+  /* ── 目录高亮与进度条 ─────────────────────── */
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return
+        tocLinks.forEach(function (a) { a.setAttribute('aria-current', String(a.getAttribute('href') === '#' + entry.target.id)) })
+      })
+    }, { rootMargin: '-15% 0px -70% 0px' })
+    chapters.forEach(function (c) { io.observe(c) })
+  }
+  window.addEventListener('scroll', function () {
+    var max = document.documentElement.scrollHeight - window.innerHeight
+    if (progress) progress.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%'
+  }, { passive: true })
+
+  var fromUrl = new URLSearchParams(location.search).get('mode')
+  setMode(fromUrl || load('mode') || 'atlas', false)
+  paintDone()
+  paintChecks()
+})();
+</script>
+</body>
+</html>
